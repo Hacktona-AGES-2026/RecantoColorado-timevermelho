@@ -16,7 +16,7 @@ import {
   type SnapshotInfo,
   type StatusFila,
 } from "@/lib/api";
-import { BarraPrazo, Delta, SeloClasse } from "@/components/fila-ui";
+import { BarraPrazo, Delta, IndicadorRebaixamento, SeloClasse } from "@/components/fila-ui";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -507,6 +507,7 @@ function TabelaFila({ itens }: { itens: ItemFila[] }) {
                       ★ regra
                     </span>
                   )}
+                  <IndicadorRebaixamento estado={it.rebaixamento} />
                   {it.reavaliacoes > 0 && (
                     <span
                       className="rounded bg-amber-500/15 px-1 text-[10px] font-semibold text-amber-700 dark:text-amber-400"

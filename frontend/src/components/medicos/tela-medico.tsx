@@ -6,7 +6,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { ArrowLeftIcon, ChevronLeftIcon, ChevronRightIcon, InfoIcon, RefreshCwIcon, StethoscopeIcon } from "lucide-react";
 import { api, CLASSES, type ClasseSwalis, type Especialidade, type FilaMedico, type GrupoMedico, type Medico } from "@/lib/api";
-import { BarraPrazo, SeloClasse } from "@/components/fila-ui";
+import { BarraPrazo, IndicadorRebaixamento, SeloClasse } from "@/components/fila-ui";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -257,7 +257,10 @@ function TabelaMedico({ dados, avaliacao }: { dados: FilaMedico; avaliacao: bool
               <TableCell className="text-right font-semibold tabular-nums">{posicaoNaLista}</TableCell>
               <TableCell className="text-muted-foreground text-right tabular-nums">{it.posicao ?? "—"}</TableCell>
               <TableCell>
-                <SeloClasse classe={it.classe} />
+                <div className="flex items-center gap-1">
+                  <SeloClasse classe={it.classe} />
+                  <IndicadorRebaixamento estado={it.rebaixamento} />
+                </div>
               </TableCell>
               <TableCell className="max-w-56">
                 <Link href={href} className="block truncate font-medium hover:underline" onClick={(e) => e.stopPropagation()}>

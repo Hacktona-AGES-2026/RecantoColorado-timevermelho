@@ -15,15 +15,27 @@ const ROTULO_ACAO: Record<TipoAjuste, string> = {
   ALTERAR_CLASSE: "Mudar classe",
   CONFIRMAR_SAIDA: "Confirmar saída",
   RECUSAR_SAIDA: "Recusar saída",
+  SUGERIR_REBAIXAMENTO: "Sugerir rebaixamento",
+  CONFIRMAR_REBAIXAMENTO: "Confirmar rebaixamento",
+  REJEITAR_REBAIXAMENTO: "Rejeitar rebaixamento",
+  REBAIXAMENTO_BLOQUEADO: "Rebaixamento bloqueado",
+};
+
+const ROTULO_ESTADO: Record<string, string> = {
+  CONFIRMADO: "Rebaixamento confirmado pelo regulador",
+  REJEITADO: "Rebaixamento rejeitado: a classe vigente foi mantida",
+  BLOQUEADO: "Rebaixamento bloqueado: paciente oncológico não tem a classe reduzida",
 };
 
 const MIN_JUSTIFICATIVA = 10;
 
 /** Painel onde o regulador dá a última palavra. Toda decisão exige justificativa. */
 export function PainelDecisao({ detalhe, aoDecidir }: { detalhe: PacienteDetalhe; aoDecidir: () => void }) {
-  const { item, sinalSaida } = detalhe;
+  const { item, sinalSaida, rebaixamento } = detalhe;
   const temSaida = !!sinalSaida || item.status !== "ATIVA";
+  const pendente = rebaixamento?.estado === "PENDENTE" ? rebaixamento : null;
   const acoes: TipoAjuste[] = ["CONFIRMAR_CLASSE", "ALTERAR_CLASSE"];
+  if (pendente) acoes.push("CONFIRMAR_REBAIXAMENTO", "REJEITAR_REBAIXAMENTO");
   if (temSaida) acoes.push("CONFIRMAR_SAIDA", "RECUSAR_SAIDA");
 
   const [acao, setAcao] = useState<TipoAjuste>("CONFIRMAR_CLASSE");
@@ -37,11 +49,10 @@ export function PainelDecisao({ detalhe, aoDecidir }: { detalhe: PacienteDetalhe
   const acaoValida = acoes.includes(acao) ? acao : "CONFIRMAR_CLASSE";
   const justOk = justificativa.trim().length >= MIN_JUSTIFICATIVA;
   const classeOk = acaoValida !== "ALTERAR_CLASSE" || (classeNova !== null && classeNova !== item.classe);
-  const rebaixaOnco =
-    acaoValida === "ALTERAR_CLASSE" &&
-    item.oncologico &&
-    classeNova !== null &&
-    CLASSES.indexOf(classeNova) > CLASSES.indexOf(item.classe);
+  // classe menos urgente que a vigente: vira rebaixamento sugerido (não vale até o regulador confirmar)
+  const ehRebaixamento =
+    acaoValida === "ALTERAR_CLASSE" && classeNova !== null && CLASSES.indexOf(classeNova) > CLASSES.indexOf(item.classe);
+  const rotuloEnviar = ehRebaixamento ? "Sugerir rebaixamento" : ROTULO_ACAO[acaoValida];
 
   async function enviar(e: React.FormEvent) {
     e.preventDefault();
@@ -76,6 +87,32 @@ export function PainelDecisao({ detalhe, aoDecidir }: { detalhe: PacienteDetalhe
       </CardHeader>
       <CardContent>
         <form onSubmit={enviar} className="flex flex-col gap-3">
+          {pendente && (
+            <div className="rounded-lg border border-violet-500/40 bg-violet-500/10 p-2 text-xs">
+              <p className="flex flex-wrap items-center gap-1 font-medium">
+                Rebaixamento sugerido, aguardando o regulador: <SeloClasse classe={pendente.classeVigente} /> →{" "}
+                <SeloClasse classe={pendente.classeProposta} />
+              </p>
+              <p className="text-muted-foreground mt-0.5">
+                A classe {item.classe} continua valendo até a decisão. Sugerido por {pendente.sugeridoPor}.
+              </p>
+              <p className="mt-1">
+                <span className="font-medium">Fatores:</span> {pendente.fatores}
+              </p>
+              {pendente.evidencias && (
+                <p className="mt-0.5">
+                  <span className="font-medium">Evidências:</span> {pendente.evidencias}
+                </p>
+              )}
+            </div>
+          )}
+          {rebaixamento && !pendente && (
+            <p className="text-muted-foreground text-xs">
+              {ROTULO_ESTADO[rebaixamento.estado]} ({rebaixamento.classeVigente} → {rebaixamento.classeProposta}
+              {rebaixamento.decididoPor ? `, ${rebaixamento.decididoPor}` : ""}).
+            </p>
+          )}
+
           {sinalSaida && (
             <div className="rounded-lg border border-amber-500/40 bg-amber-500/10 p-2 text-xs">
               <p className="font-medium">Saída sugerida: {sinalSaida.rotulo}</p>
@@ -111,13 +148,15 @@ export function PainelDecisao({ detalhe, aoDecidir }: { detalhe: PacienteDetalhe
             <div className="flex flex-col gap-1.5">
               <span className="text-xs font-medium">Nova classe</span>
               <div className="flex flex-wrap gap-1.5">
-                {CLASSES.map((c) => (
+                {CLASSES.map((c) => {
+                  const bloqueada = item.oncologico && CLASSES.indexOf(c) > CLASSES.indexOf(item.classe);
+                  return (
                   <button
                     key={c}
                     type="button"
-                    disabled={c === item.classe}
+                    disabled={c === item.classe || bloqueada}
                     onClick={() => setClasseNova(c)}
-                    title={INFO_CLASSE[c].nome}
+                    title={bloqueada ? "Bloqueado: paciente oncológico não tem a classe reduzida" : INFO_CLASSE[c].nome}
                     className={cn(
                       "rounded-md p-0.5 ring-2 ring-transparent transition disabled:cursor-not-allowed disabled:opacity-40",
                       classeNova === c && "ring-primary",
@@ -125,15 +164,29 @@ export function PainelDecisao({ detalhe, aoDecidir }: { detalhe: PacienteDetalhe
                   >
                     <SeloClasse classe={c} />
                   </button>
-                ))}
+                  );
+                })}
               </div>
-              {rebaixaOnco && (
+              {item.oncologico && (
                 <p className="text-xs text-amber-700 dark:text-amber-400">
-                  Atenção: paciente oncológico. A regra de ouro impede que ele fique abaixo de quem não tem urgência; o
-                  sistema pode recusar este rebaixamento.
+                  Paciente oncológico: a classe {item.classe} pode subir, mas nunca ser reduzida (nem de A1 para A2).
+                </p>
+              )}
+              {ehRebaixamento && (
+                <p className="text-xs text-violet-700 dark:text-violet-300">
+                  Classe menos urgente que a vigente: isto registra um rebaixamento sugerido. A classe {item.classe} continua
+                  valendo até o regulador confirmar ou rejeitar.
                 </p>
               )}
             </div>
+          )}
+
+          {(acaoValida === "CONFIRMAR_REBAIXAMENTO" || acaoValida === "REJEITAR_REBAIXAMENTO") && pendente && (
+            <p className="text-muted-foreground text-xs">
+              {acaoValida === "CONFIRMAR_REBAIXAMENTO"
+                ? `A classe passa de ${item.classe} para ${pendente.classeProposta}.`
+                : `A classe ${item.classe} é mantida; a sugestão fica no histórico.`}
+            </p>
           )}
 
           {(acaoValida === "CONFIRMAR_SAIDA" || acaoValida === "RECUSAR_SAIDA") && (
@@ -171,7 +224,7 @@ export function PainelDecisao({ detalhe, aoDecidir }: { detalhe: PacienteDetalhe
           )}
 
           <Button type="submit" disabled={!justOk || !classeOk || enviando}>
-            {enviando ? "Registrando…" : ROTULO_ACAO[acaoValida]}
+            {enviando ? "Registrando…" : rotuloEnviar}
           </Button>
 
           {impacto && <CartaoImpacto impacto={impacto} aoFechar={() => setImpacto(null)} />}

@@ -20,7 +20,7 @@ Garantias:
 - A regra de ouro é uma restrição explícita, checada a cada recálculo nas duas filas.
 - Na **fila operacional** (a da tela), ela vale sobre a situação clínica atual, inclusive eventos novos. Uma promoção manual sem evidência não passa à frente de quem tem câncer.
 - Na **fila de referência** (o `fila_priorizada.csv`), ela vale com exatamente a definição do verificador oficial.
-- O regulador não consegue rebaixar um paciente com câncer abaixo de A2.
+- Nenhuma classe cai sem o regulador: um rebaixamento é só sugerido (com fatores e evidências) e vale depois que o regulador confirma; se ele rejeita, a classe vigente fica. Paciente com câncer nunca tem a classe reduzida, nem de A1 para A2.
 - As prioridades são propostas, e a decisão é do regulador.
 
 **Demo ao vivo:** na tela de Alertas, "Simular chegada de novos eventos" registra eventos sintéticos em pacientes reais e mostra a fila reagindo. "Reiniciar demo" volta ao dataset original (reiniciar o backend também volta).

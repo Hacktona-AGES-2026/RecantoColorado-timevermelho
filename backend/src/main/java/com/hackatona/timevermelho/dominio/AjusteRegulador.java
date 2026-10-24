@@ -35,4 +35,11 @@ public class AjusteRegulador {
     private String justificativa;
     private String autor;
     private LocalDateTime criadoEm;
+    /** Rebaixamento sugerido pelo recálculo automático (e não por uma pessoa). */
+    private boolean automatico;
+    /** Ao confirmar o rebaixamento, a classe volta a seguir a calculada (em vez de fixar classeNova). */
+    private boolean seguirCalculada;
+    /** Evidências da classe proposta, para o regulador decidir (rebaixamentos). */
+    @Column(length = 4000)
+    private String evidencias;
 }

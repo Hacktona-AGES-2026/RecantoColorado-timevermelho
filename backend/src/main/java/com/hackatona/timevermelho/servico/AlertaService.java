@@ -1,14 +1,20 @@
 package com.hackatona.timevermelho.servico;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.stereotype.Service;
 
 import com.hackatona.timevermelho.api.dto.Dtos;
+import com.hackatona.timevermelho.dominio.AjusteRegulador;
+import com.hackatona.timevermelho.dominio.AjusteReguladorRepository;
 import com.hackatona.timevermelho.dominio.AlertaRepository;
+import com.hackatona.timevermelho.dominio.TipoAjuste;
 import com.hackatona.timevermelho.motor.Reavaliacao;
 import com.hackatona.timevermelho.motor.ResultadoPaciente;
 import com.hackatona.timevermelho.motor.StatusFila;
@@ -22,10 +28,12 @@ public class AlertaService {
 
     private final FilaService fila;
     private final AlertaRepository alertas;
+    private final AjusteReguladorRepository ajustes;
 
-    public AlertaService(FilaService fila, AlertaRepository alertas) {
+    public AlertaService(FilaService fila, AlertaRepository alertas, AjusteReguladorRepository ajustes) {
         this.fila = fila;
         this.alertas = alertas;
+        this.ajustes = ajustes;
     }
 
     public Dtos.Alertas alertas() {
@@ -61,6 +69,85 @@ public class AlertaService {
                         r.getSinalSaida().evidencia(), r.getSinalSaida().fonte()))
                 .toList();
 
-        return new Dtos.Alertas(recentes, reavaliacao, saidas);
+        return new Dtos.Alertas(recentes, reavaliacao, saidas, rebaixamentos());
+    }
+
+    /** Um ciclo de rebaixamento: a sugestão (ou o bloqueio) e, se houver, a decisão do regulador. */
+    private static final class Ciclo {
+        final AjusteRegulador inicio;
+        AjusteRegulador decisao;
+
+        Ciclo(AjusteRegulador inicio) {
+            this.inicio = inicio;
+        }
+
+        String estado() {
+            if (inicio.getTipo() == TipoAjuste.REBAIXAMENTO_BLOQUEADO) return "BLOQUEADO";
+            if (decisao == null) return "PENDENTE";
+            return decisao.getTipo() == TipoAjuste.CONFIRMAR_REBAIXAMENTO ? "CONFIRMADO" : "REJEITADO";
+        }
+    }
+
+    private List<Ciclo> ciclos() {
+        List<Ciclo> todos = new ArrayList<>();
+        Map<String, Ciclo> aberto = new HashMap<>();
+        for (AjusteRegulador a : ajustes.findAllByOrderByCriadoEmAscIdAsc()) {
+            switch (a.getTipo()) {
+                case SUGERIR_REBAIXAMENTO -> {
+                    Ciclo c = new Ciclo(a);
+                    todos.add(c);
+                    aberto.put(a.getSolicitacaoId(), c);
+                }
+                case REBAIXAMENTO_BLOQUEADO -> todos.add(new Ciclo(a));
+                case CONFIRMAR_REBAIXAMENTO, REJEITAR_REBAIXAMENTO -> {
+                    Ciclo c = aberto.remove(a.getSolicitacaoId());
+                    if (c != null) c.decisao = a;
+                }
+                default -> { }
+            }
+        }
+        return todos;
+    }
+
+    /**
+     * Rebaixamentos para o regulador: todos os pendentes (na ordem da fila) e os últimos decididos ou bloqueados.
+     * Divergência com a prioridade manual não entra aqui (fica em reavaliação): só sugestões concretas de rebaixamento.
+     */
+    public List<Dtos.Rebaixamento> rebaixamentos() {
+        var snap = fila.atual();
+        List<Dtos.Rebaixamento> lista = ciclos().stream().map(c -> dto(c, snap)).toList();
+        List<Dtos.Rebaixamento> pendentes = lista.stream().filter(r -> "PENDENTE".equals(r.estado()))
+                .sorted(Comparator.comparing(r -> r.posicao() == null ? Integer.MAX_VALUE : r.posicao())).toList();
+        List<Dtos.Rebaixamento> outros = lista.stream().filter(r -> !"PENDENTE".equals(r.estado()))
+                .sorted(Comparator.comparing((Dtos.Rebaixamento r) -> r.decididoEm() == null ? r.sugeridoEm() : r.decididoEm())
+                        .reversed()).limit(MAX_ITENS).toList();
+        List<Dtos.Rebaixamento> resultado = new ArrayList<>(pendentes);
+        resultado.addAll(outros);
+        return resultado;
+    }
+
+    /** O último ciclo de rebaixamento do paciente, ou null. */
+    public Dtos.Rebaixamento rebaixamentoDe(String solicitacaoId) {
+        var snap = fila.atual();
+        List<Ciclo> doPaciente = ciclos().stream().filter(c -> c.inicio.getSolicitacaoId().equals(solicitacaoId)).toList();
+        return doPaciente.isEmpty() ? null : dto(doPaciente.getLast(), snap);
+    }
+
+    private static Dtos.Rebaixamento dto(Ciclo c, FilaService.Snapshot snap) {
+        AjusteRegulador s = c.inicio;
+        ResultadoPaciente r = snap.get(s.getSolicitacaoId());
+        boolean bloqueado = s.getTipo() == TipoAjuste.REBAIXAMENTO_BLOQUEADO;
+        AjusteRegulador d = c.decisao;
+        LocalDateTime decididoEm = bloqueado ? s.getCriadoEm() : d == null ? null : d.getCriadoEm();
+        return new Dtos.Rebaixamento(s.getSolicitacaoId(), r == null ? null : r.getCaso().nome(),
+                r != null && r.oncologico(), r == null ? null : r.getPosicao(), c.estado(),
+                nome(s.getClasseAnterior()), nome(s.getClasseNova()), r == null ? null : r.classe().name(),
+                s.getJustificativa(), s.getEvidencias(), s.isAutomatico(), s.getAutor(), s.getCriadoEm(),
+                bloqueado ? "Rebaixamento de oncológico nunca é aplicado" : d == null ? null : d.getJustificativa(),
+                bloqueado ? "FilaVIVA (regra de proteção)" : d == null ? null : d.getAutor(), decididoEm);
+    }
+
+    private static String nome(Enum<?> e) {
+        return e == null ? null : e.name();
     }
 }

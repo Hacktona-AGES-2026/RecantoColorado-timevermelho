@@ -106,6 +106,10 @@ public class MotorPriorizacao {
             if (r.oncologico() && ClasseSwalis.A2.maisUrgenteQue(nova)) nova = ClasseSwalis.A2;
             cl = cl.comAjuste(nova, d.justificativaClasse());
         }
+        // piso da classe vigente (rebaixamento pendente, rejeitado ou bloqueado): a classe nunca cai abaixo dele
+        if (d.classeMinima() != null && d.classeMinima().maisUrgenteQue(cl.classe())) {
+            cl = cl.comAjuste(d.classeMinima(), d.justificativaMinima());
+        }
         r.setClassificacao(cl);
         // quanto da classe vem só do texto livre: a posição é mantida, mas a classe fica provisória (revisão humana)
         ClasseSwalis estruturada = classificador.classificar(sinais.stream().filter(s -> !vemDeTextoLivre(s)).toList()).classe();

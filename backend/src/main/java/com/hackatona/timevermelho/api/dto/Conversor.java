@@ -38,7 +38,7 @@ public final class Conversor {
                 r.getPosicao(), r.getPosicaoManual(), delta, cl.classe().name(), cl.classeCalculada().name(),
                 cl.ajustada(), cl.classe().prazoDias(), c.diasEmFila(), r.percentualPrazo(), r.getScore(),
                 c.prioridadeManual(), r.getStatus().name(), r.isMovidoPelaRegraDeOuro(), r.getReavaliacoes().size(),
-                motivos, r.getJustificativa());
+                motivos, r.getJustificativa(), r.getEstadoRebaixamento());
     }
 
     public static Dtos.SinalDto sinal(Sinal s) {

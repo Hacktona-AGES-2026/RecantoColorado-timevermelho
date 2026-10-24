@@ -10,13 +10,20 @@ public class AnalisadorReavaliacao {
         ClasseSwalis classe = r.classe();
         String manual = c.prioridadeManual() == null ? "sem prioridade" : c.prioridadeManual();
 
+        // Divergência histórica com a prioridade manual do cadastro (atribuída na inclusão, ruidosa e raramente
+        // revisada, segundo o dicionário de dados). Não é rebaixamento: só pede revisão. Não há equivalência oficial
+        // entre alta/média/baixa e A1..D; comparamos só os extremos que a tabela SWALIS do desafio sustenta:
+        // urgente (A1/A2) sem prioridade alta, e prioridade alta em classe sem dor ou disfunção importantes (C/D).
+        // B ("dor, disfunção ou incapacidade importantes") é compatível com prioridade alta e não é sinalizado.
         boolean urgente = classe == ClasseSwalis.A1 || classe == ClasseSwalis.A2;
+        boolean semDisfuncaoImportante = classe == ClasseSwalis.C || classe == ClasseSwalis.D;
         if (urgente && !"alta".equals(c.prioridadeManual())) {
             add(r, TipoReavaliacao.PRIORIDADE_DIVERGENTE,
-                    "Prioridade manual \"" + manual + "\", mas a classe clínica é " + classe);
-        } else if (classe == ClasseSwalis.D && "alta".equals(c.prioridadeManual())) {
-            add(r, TipoReavaliacao.PRIORIDADE_DIVERGENTE,
-                    "Prioridade manual \"alta\" sem urgência clínica (classe D): confirmar o motivo");
+                    "Prioridade manual \"" + manual + "\", mas a classe clínica é " + classe + " (urgente)");
+        } else if (semDisfuncaoImportante && "alta".equals(c.prioridadeManual())) {
+            add(r, TipoReavaliacao.PRIORIDADE_DIVERGENTE, "Prioridade manual \"alta\", mas a classe clínica é " + classe
+                    + " (" + (classe == ClasseSwalis.D ? "sem dor ou disfunção relevantes" : "dor ou disfunção moderadas")
+                    + "). Divergência histórica, não é rebaixamento: confirme a classe ou suba com justificativa");
         }
 
         boolean nuncaRevisada = c.dataUltimaRevisao() == null || Objects.equals(c.dataUltimaRevisao(), c.dataEntrada());

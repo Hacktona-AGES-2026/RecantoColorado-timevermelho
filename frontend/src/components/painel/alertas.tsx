@@ -28,6 +28,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { Carregando, ErroApi, formatarHora, formatarPosicao, mensagemErro, Vazio } from "./estados";
+import { Rebaixamentos } from "./rebaixamentos";
 
 const ROTULO_TIPO_ALERTA: Record<Alerta["tipo"], { rotulo: string; cor: string }> = {
   EVENTO_NOVO: { rotulo: "Evento novo", cor: "bg-sky-100 text-sky-800 dark:bg-sky-950 dark:text-sky-200" },
@@ -135,6 +136,7 @@ export function PainelAlertas() {
             <Recentes alertas={dados.recentes} />
             <Reavaliacao grupos={dados.reavaliacao} />
           </div>
+          <Rebaixamentos itens={dados.rebaixamentos} aoDecidir={recarregar} />
           <Saidas saidas={dados.saidas} />
         </>
       )}

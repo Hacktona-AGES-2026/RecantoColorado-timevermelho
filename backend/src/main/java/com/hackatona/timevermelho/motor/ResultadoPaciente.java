@@ -39,6 +39,8 @@ public class ResultadoPaciente {
     private Sinal evidenciaDaPromocao;
     private boolean movidoPelaRegraDeOuro;
     private String justificativa;
+    /** Situação de rebaixamento na fila operacional: PENDENTE, CONFIRMADO, REJEITADO, BLOQUEADO ou null. */
+    private String estadoRebaixamento;
     private final List<Reavaliacao> reavaliacoes = new ArrayList<>();
 
     public ResultadoPaciente(Caso caso, List<Sinal> sinais) {

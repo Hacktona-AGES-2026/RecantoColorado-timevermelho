@@ -3,7 +3,7 @@ package com.hackatona.timevermelho.motor;
 /** Motivos para o regulador olhar um paciente de novo. */
 public enum TipoReavaliacao {
     REVISAO_URGENTE("REVISÃO CLÍNICA URGENTE: possível urgência descrita só em texto"),
-    PRIORIDADE_DIVERGENTE("Prioridade manual diverge da classe clínica"),
+    PRIORIDADE_DIVERGENTE("Divergência de prioridade — revisão necessária"),
     ESQUECIDO("Mais que o dobro do prazo e prioridade nunca revisada"),
     FLAG_DIVERGENTE("Cadastro com flag errada"),
     DADO_INCOMPLETO("Faltam dados clínicos para classificar com segurança"),

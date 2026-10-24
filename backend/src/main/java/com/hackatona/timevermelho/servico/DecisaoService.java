@@ -87,24 +87,34 @@ public class DecisaoService {
         return impacto;
     }
 
+    /**
+     * Decisões sobre um paciente. Regras de rebaixamento (FAQ do desafio: "Pode sugerir, com justificativa, para o
+     * regulador confirmar. Nunca um oncológico."):
+     * - pedir uma classe menos urgente que a vigente não rebaixa: registra um rebaixamento sugerido, e a classe vigente
+     *   continua valendo até o regulador confirmar ou rejeitar;
+     * - oncológico (CID C ou biópsia positiva) nunca tem a classe reduzida, nem de A1 para A2.
+     */
     public synchronized Dtos.Impacto ajustar(Dtos.AjusteRequest req) {
         String id = resolverId(req.solicitacaoId());
         ResultadoPaciente antes = fila.atual().get(id);
+        ClasseSwalis vigente = antes.classe();
+        String justificativa = req.justificativa().trim();
+        String autor = req.autor() == null || req.autor().isBlank() ? "regulador" : req.autor().trim();
         ClasseSwalis nova = null;
 
         switch (req.tipo()) {
-            case ALTERAR_CLASSE -> {
-                if (req.classeNova() == null) throw new Erros.RegraNegocio("Informe a classe nova");
-                try {
-                    nova = ClasseSwalis.valueOf(req.classeNova());
-                } catch (IllegalArgumentException ex) {
-                    throw new Erros.RegraNegocio("Classe inválida: " + req.classeNova());
-                }
-                if (antes.oncologico() && ClasseSwalis.A2.maisUrgenteQue(nova)) {
-                    throw new Erros.RegraNegocio("Regra de ouro: paciente oncológico não pode ficar abaixo da classe A2. "
-                            + "Se o diagnóstico mudou, registre o evento clínico (ex.: nova biópsia) antes.");
+            case ALTERAR_CLASSE, SUGERIR_REBAIXAMENTO -> {
+                nova = classe(req.classeNova());
+                if (vigente.maisUrgenteQue(nova)) return sugerirRebaixamento(antes, nova, justificativa, autor);
+                if (req.tipo() == TipoAjuste.SUGERIR_REBAIXAMENTO) {
+                    throw new Erros.RegraNegocio("Rebaixamento precisa de uma classe menos urgente que a vigente ("
+                            + vigente + "). Para subir a classe, use \"Mudar classe\".");
                 }
             }
+            case CONFIRMAR_REBAIXAMENTO, REJEITAR_REBAIXAMENTO -> {
+                return decidirRebaixamento(antes, req.tipo(), justificativa, autor);
+            }
+            case REBAIXAMENTO_BLOQUEADO -> throw new Erros.RegraNegocio("Esse registro é feito só pelo sistema");
             case CONFIRMAR_SAIDA, RECUSAR_SAIDA -> {
                 if (antes.getSinalSaida() == null && req.tipo() == TipoAjuste.RECUSAR_SAIDA) {
                     throw new Erros.RegraNegocio("Não há sugestão de saída para recusar");
@@ -113,14 +123,8 @@ public class DecisaoService {
             case CONFIRMAR_CLASSE -> { }
         }
 
-        AjusteRegulador a = new AjusteRegulador();
-        a.setSolicitacaoId(id);
-        a.setTipo(req.tipo());
-        a.setClasseAnterior(antes.classe());
-        a.setClasseNova(req.tipo() == TipoAjuste.ALTERAR_CLASSE ? nova : antes.classe());
-        a.setJustificativa(req.justificativa().trim());
-        a.setAutor(req.autor() == null || req.autor().isBlank() ? "regulador" : req.autor().trim());
-        a.setCriadoEm(LocalDateTime.now());
+        AjusteRegulador a = novoAjuste(id, req.tipo(), vigente,
+                req.tipo() == TipoAjuste.ALTERAR_CLASSE ? nova : vigente, justificativa, autor);
         ajustes.save(a);
 
         ResultadoPaciente depois = fila.recalcular().get(id);
@@ -129,10 +133,91 @@ public class DecisaoService {
             case ALTERAR_CLASSE -> "regulador definiu a classe " + depois.classe();
             case CONFIRMAR_SAIDA -> "regulador confirmou a saída da fila";
             case RECUSAR_SAIDA -> "regulador recusou a saída; paciente continua na fila";
+            default -> req.tipo().name();
         };
         Dtos.Impacto impacto = ImpactoCalculadora.impacto(antes, depois, acao + " (\"" + a.getJustificativa() + "\")");
         alertar(antes, depois, Alerta.Tipo.AJUSTE_REGULADOR, impacto.mensagem());
         return impacto;
+    }
+
+    /** Mensagem mostrada ao regulador quando o rebaixamento de um oncológico é recusado. */
+    static String bloqueioOncologico(ClasseSwalis vigente, ClasseSwalis pedida) {
+        return "Regra de ouro e FAQ do desafio: paciente oncológico (CID C ou biópsia positiva) não pode ter a "
+                + "prioridade clínica reduzida, nem de A1 para A2. Pedido de " + vigente + " para " + pedida
+                + " recusado; a classe " + vigente + " continua valendo. Se o diagnóstico mudou, registre o evento "
+                + "clínico (ex.: nova biópsia).";
+    }
+
+    private Dtos.Impacto sugerirRebaixamento(ResultadoPaciente antes, ClasseSwalis proposta, String fatores, String autor) {
+        ClasseSwalis vigente = antes.classe();
+        if (antes.oncologico()) throw new Erros.RegraNegocio(bloqueioOncologico(vigente, proposta));
+        String id = antes.getCaso().solicitacaoId();
+        ClasseSwalis calculada = antes.getClassificacao().classeCalculada();
+        AjusteRegulador a = novoAjuste(id, TipoAjuste.SUGERIR_REBAIXAMENTO, vigente, proposta, fatores, autor);
+        a.setSeguirCalculada(proposta == calculada);
+        a.setEvidencias(FilaService.evidencias(antes) + (proposta == calculada ? ""
+                : ". A classe proposta (" + proposta + ") é diferente da calculada (" + calculada + ")"));
+        ajustes.save(a);
+
+        ResultadoPaciente depois = fila.recalcular().get(id);
+        Dtos.Impacto impacto = ImpactoCalculadora.impacto(antes, depois, "rebaixamento de " + vigente + " para " + proposta
+                + " sugerido por " + autor + " (\"" + fatores + "\"). Aguarda o regulador confirmar ou rejeitar em Alertas; "
+                + "até lá a classe " + depois.classe() + " continua valendo");
+        alertar(antes, depois, Alerta.Tipo.AJUSTE_REGULADOR, impacto.mensagem());
+        return impacto;
+    }
+
+    private Dtos.Impacto decidirRebaixamento(ResultadoPaciente antes, TipoAjuste tipo, String justificativa, String autor) {
+        String id = antes.getCaso().solicitacaoId();
+        AjusteRegulador pendente = ajustes.findBySolicitacaoIdOrderByCriadoEmDescIdDesc(id).stream()
+                .filter(x -> x.getTipo().ehRebaixamento()).findFirst()
+                .filter(x -> x.getTipo() == TipoAjuste.SUGERIR_REBAIXAMENTO)
+                .orElseThrow(() -> new Erros.RegraNegocio("Não há rebaixamento pendente para este paciente"));
+        ClasseSwalis vigente = antes.classe();
+        AjusteRegulador a;
+        ResultadoPaciente depois;
+        String acao;
+        if (tipo == TipoAjuste.CONFIRMAR_REBAIXAMENTO) {
+            // o paciente pode ter virado oncológico depois da sugestão: aí o rebaixamento não pode mais acontecer
+            if (antes.oncologico()) throw new Erros.RegraNegocio(bloqueioOncologico(vigente, pendente.getClasseNova())
+                    + " Rejeite a sugestão para encerrá-la.");
+            a = novoAjuste(id, tipo, vigente, pendente.getClasseNova(), justificativa, autor);
+            a.setSeguirCalculada(pendente.isSeguirCalculada());
+            ajustes.save(a);
+            depois = fila.recalcular(Set.of(id)).get(id);
+            acao = "regulador confirmou o rebaixamento de " + vigente + " para " + depois.classe();
+        } else {
+            a = novoAjuste(id, tipo, vigente, vigente, justificativa, autor);
+            ajustes.save(a);
+            depois = fila.recalcular().get(id);
+            acao = "regulador rejeitou o rebaixamento para " + pendente.getClasseNova() + "; classe " + depois.classe()
+                    + " mantida";
+        }
+        Dtos.Impacto impacto = ImpactoCalculadora.impacto(antes, depois, acao + " (\"" + justificativa + "\")");
+        alertar(antes, depois, Alerta.Tipo.AJUSTE_REGULADOR, impacto.mensagem());
+        return impacto;
+    }
+
+    private static ClasseSwalis classe(String valor) {
+        if (valor == null) throw new Erros.RegraNegocio("Informe a classe nova");
+        try {
+            return ClasseSwalis.valueOf(valor);
+        } catch (IllegalArgumentException ex) {
+            throw new Erros.RegraNegocio("Classe inválida: " + valor);
+        }
+    }
+
+    private static AjusteRegulador novoAjuste(String id, TipoAjuste tipo, ClasseSwalis anterior, ClasseSwalis nova,
+                                              String justificativa, String autor) {
+        AjusteRegulador a = new AjusteRegulador();
+        a.setSolicitacaoId(id);
+        a.setTipo(tipo);
+        a.setClasseAnterior(anterior);
+        a.setClasseNova(nova);
+        a.setJustificativa(justificativa);
+        a.setAutor(autor);
+        a.setCriadoEm(LocalDateTime.now());
+        return a;
     }
 
     private void alertar(ResultadoPaciente antes, ResultadoPaciente depois, Alerta.Tipo tipo, String mensagem) {
@@ -163,6 +248,6 @@ public class DecisaoService {
         eventos.deleteBySinteticoTrue();
         ajustes.deleteAll();
         alertas.deleteAll();
-        fila.recalcular();
+        fila.recalcularComoBase();
     }
 }

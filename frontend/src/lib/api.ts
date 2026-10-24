@@ -5,7 +5,18 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080
 
 export type ClasseSwalis = "A1" | "A2" | "B" | "C" | "D";
 export type StatusFila = "ATIVA" | "SAIDA_SUGERIDA" | "SAIDA_CONFIRMADA";
-export type TipoAjuste = "CONFIRMAR_CLASSE" | "ALTERAR_CLASSE" | "CONFIRMAR_SAIDA" | "RECUSAR_SAIDA";
+export type TipoAjuste =
+  | "CONFIRMAR_CLASSE"
+  | "ALTERAR_CLASSE"
+  | "CONFIRMAR_SAIDA"
+  | "RECUSAR_SAIDA"
+  | "SUGERIR_REBAIXAMENTO"
+  | "CONFIRMAR_REBAIXAMENTO"
+  | "REJEITAR_REBAIXAMENTO"
+  | "REBAIXAMENTO_BLOQUEADO"; // este último só o sistema registra
+
+/** Situação de rebaixamento de um paciente na fila operacional. */
+export type EstadoRebaixamento = "PENDENTE" | "CONFIRMADO" | "REJEITADO" | "BLOQUEADO";
 
 export const CLASSES: ClasseSwalis[] = ["A1", "A2", "B", "C", "D"];
 
@@ -43,6 +54,7 @@ export interface ItemFila {
   reavaliacoes: number; // quantos motivos de reavaliação
   motivos: Motivo[]; // até 3 sinais que decidiram a classe
   justificativa: string; // frase completa (a mesma do fila_priorizada.csv)
+  rebaixamento: EstadoRebaixamento | null; // null = nenhum rebaixamento registrado
 }
 
 export interface Pagina<T> {
@@ -164,6 +176,7 @@ export interface PacienteDetalhe {
   reavaliacoes: ReavaliacaoDto[];
   duplicatas: string[]; // solicitações mescladas nesta
   sinalSaida: SinalDto | null;
+  rebaixamento: Rebaixamento | null; // último rebaixamento sugerido/decidido/bloqueado
 }
 
 export interface NovoEvento {
@@ -287,10 +300,31 @@ export interface Saida {
   fonte: string | null;
 }
 
+/** Rebaixamento sugerido (manual ou pelo recálculo), com a decisão do regulador quando houver. */
+export interface Rebaixamento {
+  solicitacaoId: string;
+  nome: string | null;
+  oncologico: boolean;
+  posicao: number | null;
+  estado: EstadoRebaixamento;
+  classeVigente: ClasseSwalis; // a que valia quando o rebaixamento foi sugerido
+  classeProposta: ClasseSwalis;
+  classeAtual: ClasseSwalis | null; // a que vale agora
+  fatores: string; // por que rebaixar (justificativa de quem sugeriu ou do recálculo)
+  evidencias: string | null; // regra e sinais da classe calculada
+  automatico: boolean;
+  sugeridoPor: string;
+  sugeridoEm: string;
+  decisao: string | null;
+  decididoPor: string | null;
+  decididoEm: string | null;
+}
+
 export interface Alertas {
   recentes: Alerta[]; // mais recente primeiro
   reavaliacao: GrupoReavaliacao[];
   saidas: Saida[];
+  rebaixamentos: Rebaixamento[]; // pendentes primeiro (ordem da fila), depois os últimos decididos/bloqueados
 }
 
 export interface Comparacao {

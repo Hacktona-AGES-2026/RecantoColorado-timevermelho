@@ -1,5 +1,5 @@
 // Peças visuais comuns a todas as telas (selo de classe, barra de prazo, mudança de posição).
-import { INFO_CLASSE, type ClasseSwalis } from "@/lib/api";
+import { INFO_CLASSE, type ClasseSwalis, type EstadoRebaixamento } from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export function SeloClasse({ classe, className }: { classe: ClasseSwalis; className?: string }) {
@@ -49,4 +49,30 @@ export function formatarData(iso: string | null | undefined): string {
   if (!iso) return "—";
   const [a, m, d] = iso.slice(0, 10).split("-");
   return `${d}/${m}/${a}`;
+}
+
+const TITULO_REBAIXAMENTO: Record<EstadoRebaixamento, string> = {
+  PENDENTE: "Rebaixamento sugerido aguardando o regulador: a classe vigente continua valendo",
+  CONFIRMADO: "Rebaixamento confirmado pelo regulador",
+  REJEITADO: "Rebaixamento rejeitado pelo regulador: classe vigente mantida",
+  BLOQUEADO: "Rebaixamento bloqueado: paciente oncológico não tem a classe reduzida",
+};
+
+/** Indicador discreto de rebaixamento. Só aparece para pendente e bloqueado; o resto fica no histórico do paciente. */
+export function IndicadorRebaixamento({ estado }: { estado: EstadoRebaixamento | null }) {
+  if (estado !== "PENDENTE" && estado !== "BLOQUEADO") return null;
+  return (
+    <span
+      className={cn(
+        "rounded px-1 text-[10px] font-semibold",
+        estado === "PENDENTE"
+          ? "bg-violet-500/15 text-violet-700 dark:text-violet-300"
+          : "bg-red-500/10 text-red-700 dark:text-red-400",
+      )}
+      title={TITULO_REBAIXAMENTO[estado]}
+      aria-label={TITULO_REBAIXAMENTO[estado]}
+    >
+      {estado === "PENDENTE" ? "↓?" : "↓✕"}
+    </span>
+  );
 }

@@ -30,9 +30,12 @@ public class ConsultaService {
     private final SolicitacaoRepository solicitacoes;
     private final ProcedimentoRepository procedimentos;
     private final AjusteReguladorRepository ajustes;
+    private final AlertaService alertas;
 
     public ConsultaService(FilaService fila, DecisaoService decisoes, SolicitacaoRepository solicitacoes,
-                           ProcedimentoRepository procedimentos, AjusteReguladorRepository ajustes) {
+                           ProcedimentoRepository procedimentos, AjusteReguladorRepository ajustes,
+                           AlertaService alertas) {
+        this.alertas = alertas;
         this.fila = fila;
         this.decisoes = decisoes;
         this.solicitacoes = solicitacoes;
@@ -107,6 +110,6 @@ public class ConsultaService {
                 r.getComponentes().stream().map(Conversor::componente).toList(),
                 r.getSinais().stream().map(Conversor::sinal).toList(), eventos, hist,
                 r.getReavaliacoes().stream().map(x -> new Dtos.ReavaliacaoDto(x.tipo().name(), x.tipo().titulo(), x.mensagem())).toList(),
-                duplicatas, Conversor.sinal(r.getSinalSaida()));
+                duplicatas, Conversor.sinal(r.getSinalSaida()), alertas.rebaixamentoDe(id));
     }
 }

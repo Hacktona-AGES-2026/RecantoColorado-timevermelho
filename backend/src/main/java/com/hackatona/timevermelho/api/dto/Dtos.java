@@ -33,7 +33,7 @@ public final class Dtos {
                            Integer delta, String classe, String classeCalculada, boolean ajustada, int prazoDias,
                            int diasEmFila, double percentualPrazo, double score, String prioridadeManual,
                            String status, boolean movidoPelaRegraDeOuro, int reavaliacoes, List<Motivo> motivos,
-                           String justificativa) {}
+                           String justificativa, String rebaixamento) {}
 
     /** Qual fila uma resposta representa. */
     public record SnapshotDto(String tipo, String versao, java.time.Instant calculadoEm, int eventosRegistrados,
@@ -72,7 +72,7 @@ public final class Dtos {
     public record PacienteDetalhe(ItemFila item, DadosClinicos dados, ClassificacaoDto classificacao,
                                   List<Componente> componentes, List<SinalDto> sinais, List<EventoDto> eventos,
                                   List<AjusteDto> ajustes, List<ReavaliacaoDto> reavaliacoes, List<String> duplicatas,
-                                  SinalDto sinalSaida) {}
+                                  SinalDto sinalSaida, Rebaixamento rebaixamento) {}
 
     // ---------- eventos e ajustes ----------
 
@@ -122,7 +122,17 @@ public final class Dtos {
     public record Saida(String solicitacaoId, String nome, String cid, boolean oncologico, String status,
                         String motivo, String evidencia, String fonte) {}
 
-    public record Alertas(List<AlertaDto> recentes, List<GrupoReavaliacao> reavaliacao, List<Saida> saidas) {}
+    /**
+     * Um rebaixamento (sugerido, confirmado, rejeitado ou bloqueado), com o que o regulador precisa para decidir.
+     * estado: PENDENTE, CONFIRMADO, REJEITADO ou BLOQUEADO.
+     */
+    public record Rebaixamento(String solicitacaoId, String nome, boolean oncologico, Integer posicao, String estado,
+                               String classeVigente, String classeProposta, String classeAtual, String fatores,
+                               String evidencias, boolean automatico, String sugeridoPor, LocalDateTime sugeridoEm,
+                               String decisao, String decididoPor, LocalDateTime decididoEm) {}
+
+    public record Alertas(List<AlertaDto> recentes, List<GrupoReavaliacao> reavaliacao, List<Saida> saidas,
+                          List<Rebaixamento> rebaixamentos) {}
 
     // ---------- indicadores ----------
 

@@ -431,6 +431,10 @@ const ROTULO_AJUSTE: Record<string, string> = {
   ALTERAR_CLASSE: "Mudou a classe",
   CONFIRMAR_SAIDA: "Confirmou a saída",
   RECUSAR_SAIDA: "Recusou a saída",
+  SUGERIR_REBAIXAMENTO: "Sugeriu rebaixamento (pendente)",
+  CONFIRMAR_REBAIXAMENTO: "Confirmou o rebaixamento",
+  REJEITAR_REBAIXAMENTO: "Rejeitou o rebaixamento",
+  REBAIXAMENTO_BLOQUEADO: "Rebaixamento bloqueado (oncológico)",
 };
 
 function formatarDataHora(iso: string): string {

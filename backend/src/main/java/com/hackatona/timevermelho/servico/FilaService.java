@@ -15,6 +15,7 @@ import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -33,6 +34,7 @@ import com.hackatona.timevermelho.dominio.Procedimento;
 import com.hackatona.timevermelho.dominio.ProcedimentoRepository;
 import com.hackatona.timevermelho.dominio.Solicitacao;
 import com.hackatona.timevermelho.dominio.SolicitacaoRepository;
+import com.hackatona.timevermelho.dominio.TipoAjuste;
 import com.hackatona.timevermelho.importacao.Normalizacao;
 import com.hackatona.timevermelho.motor.Caso;
 import com.hackatona.timevermelho.motor.DecisaoRegulador;
@@ -42,6 +44,7 @@ import com.hackatona.timevermelho.motor.MotorPriorizacao;
 import com.hackatona.timevermelho.motor.Pesos;
 import com.hackatona.timevermelho.motor.Referencia;
 import com.hackatona.timevermelho.motor.ResultadoPaciente;
+import com.hackatona.timevermelho.motor.Sinal;
 
 /**
  * Mantém duas filas em memória (941 pacientes cabem com folga):
@@ -119,24 +122,117 @@ public class FilaService {
         return referencia;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public synchronized Snapshot recalcular() {
+        return recalcular(Set.of());
+    }
+
+    /**
+     * Recalcula a fila operacional.
+     * Rede de segurança dos rebaixamentos: se o recálculo baixaria a classe de alguém (por qualquer caminho: evento,
+     * correção de dado, regra), a queda não é aplicada. Vira um rebaixamento sugerido, que mantém a classe vigente
+     * até o regulador decidir; para um oncológico, vira rebaixamento bloqueado. Só passam as quedas confirmadas pelo
+     * regulador nesta ação.
+     *
+     * @param autorizados pacientes cujo rebaixamento o regulador acabou de confirmar
+     */
+    @Transactional
+    public synchronized Snapshot recalcular(Set<String> autorizados) {
         long inicio = System.currentTimeMillis();
         List<Caso> casos = carregarCasos();
-        Map<String, DecisaoRegulador> decisoes = carregarDecisoes();
         int eventosNovos = (int) casos.stream().flatMap(c -> c.eventos().stream()).filter(Evento::sintetico).count();
-        Info info = new Info(OPERACIONAL, "op-" + versaoOperacional.incrementAndGet(), Instant.now(), eventosNovos,
-                decisoes.size());
-        Snapshot novo = calcular(casos, decisoes, Pesos.PADRAO, Referencia.ATUAL, info);
+        String versao = "op-" + versaoOperacional.incrementAndGet();
+        Snapshot novo = calcularOperacional(casos, versao, eventosNovos);
+        if (atual != null) {
+            List<AjusteRegulador> travas = travarQuedasDeClasse(atual, novo, autorizados);
+            if (!travas.isEmpty()) {
+                ajustes.saveAll(travas);
+                log.info("{} queda(s) de classe sem confirmação do regulador viraram sugestão ou bloqueio", travas.size());
+                novo = calcularOperacional(casos, versao, eventosNovos);
+            }
+        }
+        Map<String, DecisaoRegulador> decisoes = novo.decisoes();
         exigirRegraDeOuro(novo);
         atual = novo;
         // a referência oficial não muda enquanto o sistema roda: calcula uma vez, e só com o dataset já importado
         // (um pedido durante a subida não pode fixar uma referência vazia nem gerar um CSV só com cabeçalho)
         if (oficial == null && !casos.isEmpty()) oficial = calcularOficial(casos);
         log.info("Fila operacional {} recalculada: {} na fila de {} em {} ms ({} eventos novos, {} decisões)",
-                info.versao(), atual.ativos().size(), casos.size(), System.currentTimeMillis() - inicio,
+                versao, atual.ativos().size(), casos.size(), System.currentTimeMillis() - inicio,
                 eventosNovos, decisoes.size());
         return atual;
+    }
+
+    /**
+     * Volta à base (reinício da demo): a fila recalculada vira a nova referência, sem comparar com a anterior.
+     * Não é um rebaixamento clínico: eventos e decisões registrados foram apagados de propósito.
+     */
+    @Transactional
+    public synchronized Snapshot recalcularComoBase() {
+        atual = null;
+        return recalcular(Set.of());
+    }
+
+    private Snapshot calcularOperacional(List<Caso> casos, String versao, int eventosNovos) {
+        Map<String, DecisaoRegulador> decisoes = carregarDecisoes();
+        Info info = new Info(OPERACIONAL, versao, Instant.now(), eventosNovos, decisoes.size());
+        Snapshot s = calcular(casos, decisoes, Pesos.PADRAO, Referencia.ATUAL, info);
+        Map<String, String> estados = estadosDeRebaixamento();
+        for (ResultadoPaciente r : s.todos()) r.setEstadoRebaixamento(estados.get(r.getCaso().solicitacaoId()));
+        return s;
+    }
+
+    /** Para cada paciente, a situação do último registro de rebaixamento. */
+    private Map<String, String> estadosDeRebaixamento() {
+        Map<String, String> m = new HashMap<>();
+        for (AjusteRegulador a : ajustes.findAllByOrderByCriadoEmAscIdAsc()) {
+            String estado = switch (a.getTipo()) {
+                case SUGERIR_REBAIXAMENTO -> "PENDENTE";
+                case CONFIRMAR_REBAIXAMENTO -> "CONFIRMADO";
+                case REJEITAR_REBAIXAMENTO -> "REJEITADO";
+                case REBAIXAMENTO_BLOQUEADO -> "BLOQUEADO";
+                default -> null;
+            };
+            if (estado != null) m.put(a.getSolicitacaoId(), estado);
+        }
+        return m;
+    }
+
+    /** Quedas de classe que ninguém confirmou: viram sugestão (ou bloqueio, se oncológico) com a classe vigente mantida. */
+    private static List<AjusteRegulador> travarQuedasDeClasse(Snapshot antes, Snapshot depois, Set<String> autorizados) {
+        List<AjusteRegulador> travas = new ArrayList<>();
+        for (ResultadoPaciente r : depois.todos()) {
+            String id = r.getCaso().solicitacaoId();
+            ResultadoPaciente a = antes.get(id);
+            if (a == null || autorizados.contains(id) || !a.classe().maisUrgenteQue(r.classe())) continue;
+            boolean oncologico = a.oncologico() || r.oncologico();
+            List<String> perdidos = ImpactoCalculadora.sinaisNovos(r, a).stream().map(Sinal::descricao).toList();
+            String fatores = "O recálculo automático baixaria a classe de " + a.classe() + " para " + r.classe() + ". "
+                    + (perdidos.isEmpty() ? "Nenhum sinal novo; mudou a regra aplicada."
+                    : "Sinais que deixaram de valer: " + String.join("; ", perdidos) + ".");
+            AjusteRegulador t = new AjusteRegulador();
+            t.setSolicitacaoId(id);
+            t.setTipo(oncologico ? TipoAjuste.REBAIXAMENTO_BLOQUEADO : TipoAjuste.SUGERIR_REBAIXAMENTO);
+            t.setClasseAnterior(a.classe());
+            t.setClasseNova(r.classe());
+            t.setJustificativa(oncologico
+                    ? "Paciente oncológico: rebaixamento bloqueado, classe " + a.classe() + " mantida. " + fatores
+                    : fatores);
+            t.setEvidencias(evidencias(r));
+            t.setAutor("FilaVIVA (recálculo automático)");
+            t.setAutomatico(true);
+            t.setSeguirCalculada(true);
+            t.setCriadoEm(java.time.LocalDateTime.now());
+            travas.add(t);
+        }
+        return travas;
+    }
+
+    /** Regra e sinais que sustentam a classe calculada (a proposta de um rebaixamento). */
+    static String evidencias(ResultadoPaciente r) {
+        var cl = r.getClassificacao();
+        String sinais = cl.determinantes().stream().map(Sinal::descricao).collect(Collectors.joining("; "));
+        return "Classe calculada " + cl.classeCalculada() + ": " + cl.regra() + (sinais.isEmpty() ? "" : " (" + sinais + ")");
     }
 
     /** Roda o motor sem salvar nada (simulações). Nunca substitui a fila operacional nem a oficial. */
@@ -208,11 +304,19 @@ public class FilaService {
         for (AjusteRegulador a : ajustes.findAllByOrderByCriadoEmAscIdAsc()) {
             DecisaoRegulador d = m.getOrDefault(a.getSolicitacaoId(), DecisaoRegulador.NENHUMA);
             d = switch (a.getTipo()) {
-                case CONFIRMAR_CLASSE -> new DecisaoRegulador(null, null, d.saidaConfirmada(), d.justificativaSaida());
-                case ALTERAR_CLASSE -> new DecisaoRegulador(a.getClasseNova(), a.getJustificativa(), d.saidaConfirmada(),
-                        d.justificativaSaida());
-                case CONFIRMAR_SAIDA -> new DecisaoRegulador(d.classe(), d.justificativaClasse(), true, a.getJustificativa());
-                case RECUSAR_SAIDA -> new DecisaoRegulador(d.classe(), d.justificativaClasse(), false, a.getJustificativa());
+                // concorda com a classe vigente: não mexe nela (antes voltava para a calculada, o que podia rebaixar)
+                case CONFIRMAR_CLASSE -> d;
+                case ALTERAR_CLASSE -> d.comClasse(a.getClasseNova(), a.getJustificativa());
+                case CONFIRMAR_SAIDA -> d.comSaida(true, a.getJustificativa());
+                case RECUSAR_SAIDA -> d.comSaida(false, a.getJustificativa());
+                case SUGERIR_REBAIXAMENTO -> d.comPiso(a.getClasseAnterior(), "classe " + a.getClasseAnterior()
+                        + " mantida: rebaixamento para " + a.getClasseNova() + " sugerido, aguarda confirmação do regulador");
+                case CONFIRMAR_REBAIXAMENTO -> d.comClasse(a.isSeguirCalculada() ? null : a.getClasseNova(),
+                        a.getJustificativa()).comPiso(null, null);
+                case REJEITAR_REBAIXAMENTO -> d.comPiso(a.getClasseAnterior(), "rebaixamento rejeitado pelo regulador, classe "
+                        + a.getClasseAnterior() + " mantida: " + a.getJustificativa());
+                case REBAIXAMENTO_BLOQUEADO -> d.comPiso(a.getClasseAnterior(), "paciente oncológico: rebaixamento bloqueado, classe "
+                        + a.getClasseAnterior() + " mantida");
             };
             m.put(a.getSolicitacaoId(), d);
         }
