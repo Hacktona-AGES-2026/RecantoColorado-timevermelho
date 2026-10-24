@@ -33,7 +33,7 @@ public final class Dtos {
                            Integer delta, String classe, String classeCalculada, boolean ajustada, int prazoDias,
                            int diasEmFila, double percentualPrazo, double score, String prioridadeManual,
                            String status, boolean movidoPelaRegraDeOuro, int reavaliacoes, List<Motivo> motivos,
-                           String justificativa, String rebaixamento) {}
+                           String justificativa, String rebaixamento, String desejoCirurgia, Integer posicaoFixada) {}
 
     /** Qual fila uma resposta representa. */
     public record SnapshotDto(String tipo, String versao, java.time.Instant calculadoEm, int eventosRegistrados,
@@ -62,7 +62,7 @@ public final class Dtos {
      */
     public record AjusteDto(Long id, String solicitacaoId, String tipo, String classeAnterior, String classeNova,
                             String justificativa, String autor, LocalDateTime criadoEm, Long medicoId,
-                            boolean informacaoForaDoSistema) {}
+                            boolean informacaoForaDoSistema, Integer posicaoFixada) {}
 
     public record ReavaliacaoDto(String tipo, String titulo, String mensagem) {}
 
@@ -77,7 +77,18 @@ public final class Dtos {
     public record PacienteDetalhe(ItemFila item, DadosClinicos dados, ClassificacaoDto classificacao,
                                   List<Componente> componentes, List<SinalDto> sinais, List<EventoDto> eventos,
                                   List<AjusteDto> ajustes, List<ReavaliacaoDto> reavaliacoes, List<String> duplicatas,
-                                  SinalDto sinalSaida, Rebaixamento rebaixamento) {}
+                                  SinalDto sinalSaida, Rebaixamento rebaixamento, DesejoCirurgiaDto desejoCirurgia,
+                                  List<DesejoCirurgiaDto> historicoDesejo) {}
+
+    /** O paciente quer ser operado? Uma resposta registrada (a mais recente vale). */
+    public record DesejoCirurgiaDto(Long id, String resposta, String rotulo, String observacao, String autor,
+                                    Long medicoId, LocalDateTime criadoEm) {}
+
+    public record DesejoCirurgiaRequest(
+            @NotNull(message = "informe a resposta do paciente") com.hackatona.timevermelho.dominio.RespostaCirurgia resposta,
+            @Size(max = 1000) String observacao,
+            @Size(max = 120) String autor,
+            Long medicoId) {}
 
     // ---------- eventos e ajustes ----------
 
@@ -91,7 +102,13 @@ public final class Dtos {
     public record AjusteRequest(@NotBlank String solicitacaoId, @NotNull TipoAjuste tipo, String classeNova,
                                 @NotBlank @Size(min = 10, max = 2000,
                                         message = "a justificativa precisa ter pelo menos 10 caracteres") String justificativa,
-                                String autor) {}
+                                String autor, Integer posicao) {
+
+        /** Sem posição (todas as decisões menos FIXAR_POSICAO). */
+        public AjusteRequest(String solicitacaoId, TipoAjuste tipo, String classeNova, String justificativa, String autor) {
+            this(solicitacaoId, tipo, classeNova, justificativa, autor, null);
+        }
+    }
 
     // ---------- simulação ----------
 

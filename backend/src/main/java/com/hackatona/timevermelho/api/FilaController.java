@@ -41,6 +41,12 @@ public class FilaController {
     private final ExportService export;
     private final DemoService demo;
     private final FilaService fila;
+    private com.hackatona.timevermelho.servico.DesejoCirurgiaService desejoCirurgia;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void setDesejoCirurgia(com.hackatona.timevermelho.servico.DesejoCirurgiaService desejoCirurgia) {
+        this.desejoCirurgia = desejoCirurgia;
+    }
 
     public FilaController(ConsultaService consulta, DecisaoService decisao, SimulacaoService simulacao,
                           AlertaService alertas, IndicadoresService indicadores, ExportService export, DemoService demo,
@@ -94,6 +100,18 @@ public class FilaController {
     @GetMapping("/pacientes/{solicitacaoId}")
     public Dtos.PacienteDetalhe paciente(@PathVariable String solicitacaoId) {
         return consulta.paciente(solicitacaoId);
+    }
+
+    /** O paciente quer ser operado? Registra a resposta (histórico guardado). Não muda a posição na fila. */
+    @PostMapping("/pacientes/{solicitacaoId}/desejo-cirurgia")
+    public Dtos.DesejoCirurgiaDto registrarDesejo(@PathVariable String solicitacaoId,
+                                                 @Valid @RequestBody Dtos.DesejoCirurgiaRequest req) {
+        return desejoCirurgia.registrar(solicitacaoId, req);
+    }
+
+    @GetMapping("/pacientes/{solicitacaoId}/desejo-cirurgia")
+    public java.util.List<Dtos.DesejoCirurgiaDto> historicoDesejo(@PathVariable String solicitacaoId) {
+        return desejoCirurgia.historico(decisao.resolverId(solicitacaoId));
     }
 
     @PostMapping("/eventos")

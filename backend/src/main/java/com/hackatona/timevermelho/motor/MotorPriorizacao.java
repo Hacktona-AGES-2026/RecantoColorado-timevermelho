@@ -73,6 +73,7 @@ public class MotorPriorizacao {
 
         List<ResultadoPaciente> ativos = new ArrayList<>(todos.stream()
                 .filter(r -> r.getStatus().naFila()).sorted(ORDEM_CLINICA).toList());
+        ativos = aplicarPosicoesFixadas(ativos);
         ativos = guard.aplicar(ativos);
         for (int i = 0; i < ativos.size(); i++) ativos.get(i).setPosicao(i + 1);
 
@@ -89,6 +90,39 @@ public class MotorPriorizacao {
             reavaliacao.analisar(r);
         }
         return resultado;
+    }
+
+    /**
+     * Posição escolhida por um médico ou pelo regulador: o paciente sobe até ela; os outros só abrem espaço e mantêm a
+     * ordem entre si. Se a posição calculada já for melhor, ela fica. Depois disso a trava da regra de ouro ainda roda:
+     * sem urgência registrada, o paciente não passa à frente de quem tem câncer.
+     */
+    static List<ResultadoPaciente> aplicarPosicoesFixadas(List<ResultadoPaciente> fila) {
+        List<ResultadoPaciente> fixados = new ArrayList<>();
+        java.util.Map<ResultadoPaciente, Integer> natural = new java.util.IdentityHashMap<>();
+        for (int i = 0; i < fila.size(); i++) {
+            ResultadoPaciente r = fila.get(i);
+            if (r.getPosicaoFixada() != null) {
+                fixados.add(r);
+                natural.put(r, i);
+            }
+        }
+        if (fixados.isEmpty()) return fila;
+        fixados.sort(Comparator.comparing(ResultadoPaciente::getPosicaoFixada).thenComparing(r -> r.getCaso().solicitacaoId()));
+        List<ResultadoPaciente> nova = new ArrayList<>(fila);
+        nova.removeAll(fixados);
+        for (ResultadoPaciente r : fixados) {
+            int alvo = Math.min(Math.max(r.getPosicaoFixada(), 1) - 1, natural.get(r));
+            if (alvo < natural.get(r) && !r.isProtegido() && !r.isPromocaoSemEvidencia()) {
+                // subiu por decisão manual: sem evidência registrada, a trava não deixa passar quem tem câncer
+                Sinal evidencia = r.getSinais().stream().filter(s -> EVIDENCIA_DE_AGRAVAMENTO.contains(s.tipo()))
+                        .findFirst().orElse(null);
+                if (r.getEvidenciaDaPromocao() == null) r.setEvidenciaDaPromocao(evidencia);
+                r.setPromocaoSemEvidencia(evidencia == null);
+            }
+            nova.add(Math.min(alvo, nova.size()), r);
+        }
+        return nova;
     }
 
     /** Avalia um paciente sozinho (sem posição), na fila operacional. */
@@ -130,8 +164,12 @@ public class MotorPriorizacao {
             boolean urgenteParaOFilaViva = cl.classeCalculada() == ClasseSwalis.A1 || cl.classeCalculada() == ClasseSwalis.A2;
             r.setDivergenteDoVerificador(urgenteParaOFilaViva && !r.isProtegido()
                     && GuardRegraDeOuro.verificadorNaoVeUrgencia(c));
+            r.setPosicaoFixada(d.posicaoFixada());
+            r.setJustificativaPosicao(d.justificativaPosicao());
             // promoção manual acima da classe calculada: só passa protegidos com evidência de agravamento registrada
-            if (cl.ajustada() && cl.classe().maisUrgenteQue(cl.classeCalculada()) && !r.isProtegido()) {
+            // (a posição fixada recebe a mesma checagem em aplicarPosicoesFixadas, só quando de fato faz o paciente subir)
+            boolean promovido = cl.ajustada() && cl.classe().maisUrgenteQue(cl.classeCalculada());
+            if (promovido && !r.isProtegido()) {
                 Sinal evidencia = sinais.stream().filter(s -> EVIDENCIA_DE_AGRAVAMENTO.contains(s.tipo())).findFirst().orElse(null);
                 r.setEvidenciaDaPromocao(evidencia);
                 r.setPromocaoSemEvidencia(evidencia == null);

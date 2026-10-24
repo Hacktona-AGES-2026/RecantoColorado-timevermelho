@@ -19,6 +19,8 @@ const ROTULO_ACAO: Record<TipoAjuste, string> = {
   CONFIRMAR_REBAIXAMENTO: "Confirmar rebaixamento",
   REJEITAR_REBAIXAMENTO: "Rejeitar rebaixamento",
   REBAIXAMENTO_BLOQUEADO: "Rebaixamento bloqueado",
+  FIXAR_POSICAO: "Escolher posição",
+  LIBERAR_POSICAO: "Liberar posição",
 };
 
 const ROTULO_ESTADO: Record<string, string> = {

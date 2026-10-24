@@ -17,6 +17,9 @@ public class GeradorJustificativa {
             partes.add("classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: "
                     + r.getClasseEstruturada() + ")");
         }
+        if (r.getPosicaoFixada() != null) {
+            partes.add("posição " + r.getPosicaoFixada() + " escolhida manualmente: " + r.getJustificativaPosicao());
+        }
         if (r.getEvidenciaDaPromocao() != null) {
             // rastreabilidade: qual achado registrado sustenta a promoção
             partes.add("evidência da promoção: " + r.getEvidenciaDaPromocao().descricao()

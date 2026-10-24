@@ -14,7 +14,9 @@ export type TipoAjuste =
   | "SUGERIR_REBAIXAMENTO"
   | "CONFIRMAR_REBAIXAMENTO"
   | "REJEITAR_REBAIXAMENTO"
-  | "REBAIXAMENTO_BLOQUEADO"; // este último só o sistema registra
+  | "REBAIXAMENTO_BLOQUEADO" // só o sistema registra
+  | "FIXAR_POSICAO" // coloca o paciente numa posição escolhida (só para cima; a regra de ouro continua valendo)
+  | "LIBERAR_POSICAO"; // volta para a posição calculada
 
 /** Situação de rebaixamento de um paciente na fila operacional. */
 export type EstadoRebaixamento = "PENDENTE" | "CONFIRMADO" | "REJEITADO" | "BLOQUEADO";
@@ -56,6 +58,28 @@ export interface ItemFila {
   motivos: Motivo[]; // até 3 sinais que decidiram a classe
   justificativa: string; // frase completa (a mesma do fila_priorizada.csv)
   rebaixamento: EstadoRebaixamento | null; // null = nenhum rebaixamento registrado
+  desejoCirurgia: RespostaCirurgia | null; // null = não informado (não muda a fila)
+  posicaoFixada: number | null; // posição escolhida por um médico ou pelo regulador (null = calculada)
+}
+
+/** O paciente quer ser operado? Só informa: não muda classe nem posição. */
+export type RespostaCirurgia = "QUER_OPERAR" | "NAO_QUER_OPERAR" | "EM_DUVIDA";
+
+export interface DesejoCirurgia {
+  id: number;
+  resposta: RespostaCirurgia;
+  rotulo: string;
+  observacao: string | null;
+  autor: string;
+  medicoId: number | null;
+  criadoEm: string;
+}
+
+export interface DesejoCirurgiaRequest {
+  resposta: RespostaCirurgia;
+  observacao?: string;
+  autor?: string;
+  medicoId?: number;
 }
 
 export interface Pagina<T> {
@@ -127,6 +151,7 @@ export interface AjusteDto {
   solicitacaoId: string;
   medicoId: number | null; // médico cadastrado que fez a alteração (null = regulador ou sistema)
   informacaoForaDoSistema: boolean; // o médico sabe de algo que ainda não está registrado
+  posicaoFixada: number | null; // FIXAR_POSICAO: posição escolhida
   tipo: TipoAjuste;
   classeAnterior: ClasseSwalis | null;
   classeNova: ClasseSwalis | null;
@@ -181,6 +206,8 @@ export interface PacienteDetalhe {
   duplicatas: string[]; // solicitações mescladas nesta
   sinalSaida: SinalDto | null;
   rebaixamento: Rebaixamento | null; // último rebaixamento sugerido/decidido/bloqueado
+  desejoCirurgia: DesejoCirurgia | null; // resposta mais recente (null = não informado)
+  historicoDesejo: DesejoCirurgia[]; // mais recente primeiro
 }
 
 export interface NovoEvento {
@@ -473,10 +500,11 @@ export interface FilaMedico {
 /** O médico muda a prioridade de um paciente das listas dele. Descer a classe vira sugestão para o regulador. */
 export interface AjusteMedico {
   solicitacaoId: string;
-  tipo: "ALTERAR_CLASSE" | "CONFIRMAR_CLASSE" | "SUGERIR_REBAIXAMENTO";
+  tipo: "ALTERAR_CLASSE" | "CONFIRMAR_CLASSE" | "SUGERIR_REBAIXAMENTO" | "FIXAR_POSICAO" | "LIBERAR_POSICAO";
   classeNova?: ClasseSwalis;
   justificativa: string; // mínimo 10 caracteres
   informacaoForaDoSistema: boolean;
+  posicao?: number; // FIXAR_POSICAO: posição na fila geral (1 = primeiro), acima da atual
 }
 
 export interface FiltrosFilaMedico {
@@ -540,6 +568,8 @@ export const api = {
   medico: (id: number | string) => get<Medico>(`/api/medicos/${id}`),
   cadastrarMedico: (novo: NovoMedico) => post<Medico>("/api/medicos", novo),
   removerMedico: (id: number) => del(`/api/medicos/${id}`),
+  registrarDesejo: (solicitacaoId: string, req: DesejoCirurgiaRequest) =>
+    post<DesejoCirurgia>(`/api/pacientes/${solicitacaoId}/desejo-cirurgia`, req),
   ajustarComoMedico: (id: number | string, ajuste: AjusteMedico) => post<Impacto>(`/api/medicos/${id}/ajustes`, ajuste),
   ajustesMedico: (id: number | string) => get<AjusteDto[]>(`/api/medicos/${id}/ajustes`),
   filaMedico: (id: number | string, filtros: FiltrosFilaMedico = {}) =>

@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carregando, ErroApi, mensagemErro, rotuloStatus, Vazio } from "./comum";
 import { PainelDecisao } from "./painel-decisao";
+import { CartaoDesejo } from "./desejo-cirurgia";
 import { FormEvento, rotuloResultado, rotuloTipoEvento } from "./form-evento";
 import { cn } from "@/lib/utils";
 
@@ -101,6 +102,13 @@ export function TelaPaciente() {
           <Auditoria d={detalhe} />
         </div>
         <div className="flex flex-col gap-4 lg:sticky lg:top-[calc(var(--altura-cabecalho,0px)+1rem)] lg:self-start">
+          <CartaoDesejo
+            key={`desejo-${detalhe.item.solicitacaoId}`}
+            solicitacaoId={detalhe.item.solicitacaoId}
+            atual={detalhe.desejoCirurgia}
+            historico={detalhe.historicoDesejo}
+            aoRegistrar={recarregar}
+          />
           <PainelDecisao key={detalhe.item.solicitacaoId} detalhe={detalhe} aoDecidir={recarregar} />
           <FormEvento key={`ev-${detalhe.item.solicitacaoId}`} solicitacaoId={detalhe.item.solicitacaoId} aoRegistrar={recarregar} />
         </div>
@@ -467,6 +475,8 @@ const ROTULO_AJUSTE: Record<string, string> = {
   CONFIRMAR_REBAIXAMENTO: "Confirmou o rebaixamento",
   REJEITAR_REBAIXAMENTO: "Rejeitou o rebaixamento",
   REBAIXAMENTO_BLOQUEADO: "Rebaixamento bloqueado (oncológico)",
+  FIXAR_POSICAO: "Escolheu a posição na fila",
+  LIBERAR_POSICAO: "Liberou a posição escolhida",
 };
 
 function formatarDataHora(iso: string): string {
@@ -497,6 +507,7 @@ function Auditoria({ d }: { d: PacienteDetalhe }) {
                 ) : (
                   a.classeNova && <SeloClasse classe={a.classeNova} />
                 )}
+                {a.posicaoFixada !== null && <Badge variant="outline">posição {a.posicaoFixada}</Badge>}
                 {a.medicoId !== null && <Badge variant="outline">médico</Badge>}
                 {a.informacaoForaDoSistema && <Badge variant="secondary">informação fora do sistema</Badge>}
                 <span className="text-muted-foreground ml-auto text-xs">

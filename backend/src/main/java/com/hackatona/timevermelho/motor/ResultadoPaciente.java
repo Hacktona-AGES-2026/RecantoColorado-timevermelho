@@ -41,6 +41,11 @@ public class ResultadoPaciente {
     private String justificativa;
     /** Situação de rebaixamento na fila operacional: PENDENTE, CONFIRMADO, REJEITADO, BLOQUEADO ou null. */
     private String estadoRebaixamento;
+    /** O paciente quer ser operado? QUER_OPERAR, NAO_QUER_OPERAR, EM_DUVIDA ou null (não informado). Não muda a fila. */
+    private String desejoCirurgia;
+    /** Posição escolhida por um médico ou pelo regulador (null = calculada). */
+    private Integer posicaoFixada;
+    private String justificativaPosicao;
     private final List<Reavaliacao> reavaliacoes = new ArrayList<>();
 
     public ResultadoPaciente(Caso caso, List<Sinal> sinais) {

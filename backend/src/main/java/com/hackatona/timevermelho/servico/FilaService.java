@@ -91,6 +91,13 @@ public class FilaService {
     private final AtomicLong versaoOperacional = new AtomicLong();
     private volatile Snapshot atual;
     private volatile Snapshot oficial;
+    /** Opcional: marca na fila se o paciente quer ser operado (não entra no cálculo). */
+    private com.hackatona.timevermelho.dominio.DesejoCirurgiaRepository desejos;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setDesejos(com.hackatona.timevermelho.dominio.DesejoCirurgiaRepository desejos) {
+        this.desejos = desejos;
+    }
 
     public FilaService(SolicitacaoRepository solicitacoes, EventoClinicoRepository eventos,
                        ProcedimentoRepository procedimentos, AjusteReguladorRepository ajustes,
@@ -178,7 +185,14 @@ public class FilaService {
         Info info = new Info(OPERACIONAL, versao, Instant.now(), eventosNovos, decisoes.size());
         Snapshot s = calcular(casos, decisoes, Pesos.PADRAO, Referencia.ATUAL, info);
         Map<String, String> estados = estadosDeRebaixamento();
-        for (ResultadoPaciente r : s.todos()) r.setEstadoRebaixamento(estados.get(r.getCaso().solicitacaoId()));
+        Map<String, String> desejo = new HashMap<>();
+        if (desejos != null) {
+            for (var d : desejos.findAllByOrderByCriadoEmAscIdAsc()) desejo.put(d.getSolicitacaoId(), d.getResposta().name());
+        }
+        for (ResultadoPaciente r : s.todos()) {
+            r.setEstadoRebaixamento(estados.get(r.getCaso().solicitacaoId()));
+            r.setDesejoCirurgia(desejo.get(r.getCaso().solicitacaoId()));
+        }
         return s;
     }
 
@@ -315,6 +329,8 @@ public class FilaService {
                         a.getJustificativa()).comPiso(null, null);
                 case REJEITAR_REBAIXAMENTO -> d.comPiso(a.getClasseAnterior(), "rebaixamento rejeitado pelo regulador, classe "
                         + a.getClasseAnterior() + " mantida: " + a.getJustificativa());
+                case FIXAR_POSICAO -> d.comPosicao(a.getPosicaoFixada(), a.getAutor() + ": " + a.getJustificativa());
+                case LIBERAR_POSICAO -> d.comPosicao(null, null);
                 case REBAIXAMENTO_BLOQUEADO -> d.comPiso(a.getClasseAnterior(), "paciente oncológico: rebaixamento bloqueado, classe "
                         + a.getClasseAnterior() + " mantida");
             };

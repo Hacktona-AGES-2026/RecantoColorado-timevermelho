@@ -31,6 +31,12 @@ public class ConsultaService {
     private final ProcedimentoRepository procedimentos;
     private final AjusteReguladorRepository ajustes;
     private final AlertaService alertas;
+    private DesejoCirurgiaService desejos;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void setDesejos(@org.springframework.context.annotation.Lazy DesejoCirurgiaService desejos) {
+        this.desejos = desejos;
+    }
 
     public ConsultaService(FilaService fila, DecisaoService decisoes, SolicitacaoRepository solicitacoes,
                            ProcedimentoRepository procedimentos, AjusteReguladorRepository ajustes,
@@ -107,6 +113,7 @@ public class ConsultaService {
                 r.getComponentes().stream().map(Conversor::componente).toList(),
                 r.getSinais().stream().map(Conversor::sinal).toList(), eventos, hist,
                 r.getReavaliacoes().stream().map(x -> new Dtos.ReavaliacaoDto(x.tipo().name(), x.tipo().titulo(), x.mensagem())).toList(),
-                duplicatas, Conversor.sinal(r.getSinalSaida()), alertas.rebaixamentoDe(id));
+                duplicatas, Conversor.sinal(r.getSinalSaida()), alertas.rebaixamentoDe(id), desejos.atual(id),
+                desejos.historico(id));
     }
 }

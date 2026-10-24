@@ -16,6 +16,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CampoSelect, Carregando, ErroApi, mensagemErro, Vazio } from "@/components/fila/comum";
 import { TelaFila } from "@/components/fila/tela-fila";
 import { BotaoPrioridade, MinhasAlteracoes } from "./prioridade-medico";
+import { SeloDesejo } from "@/components/fila/desejo-cirurgia";
+import { SeloPosicaoEscolhida } from "./prioridade-medico";
 
 const TAMANHO = 50;
 
@@ -295,7 +297,10 @@ function TabelaMedico({
           return (
             <TableRow key={it.solicitacaoId} className="cursor-pointer" onClick={() => router.push(href)}>
               <TableCell className="text-right font-semibold tabular-nums">{posicaoNaLista}</TableCell>
-              <TableCell className="text-muted-foreground text-right tabular-nums">{it.posicao ?? "—"}</TableCell>
+              <TableCell className="text-muted-foreground text-right tabular-nums">
+                {it.posicao ?? "—"}
+                <SeloPosicaoEscolhida posicao={it.posicaoFixada} />
+              </TableCell>
               <TableCell>
                 <div className="flex items-center gap-1">
                   <SeloClasse classe={it.classe} />
@@ -311,6 +316,7 @@ function TabelaMedico({
                   {it.idade !== null && ` · ${it.idade} a`}
                   {it.sexo && ` · ${it.sexo}`}
                 </span>
+                <SeloDesejo desejo={it.desejoCirurgia} />
               </TableCell>
               <TableCell className="max-w-56">
                 <span className="block truncate" title={it.procedimento}>
@@ -345,7 +351,12 @@ function TabelaMedico({
                 )}
               </TableCell>
               <TableCell>
-                <BotaoPrioridade medico={medico} item={it} aoAlterar={aoAlterar} />
+                <BotaoPrioridade
+                  medico={medico}
+                  item={it}
+                  aoAlterar={aoAlterar}
+                  primeiroDaLista={dados.pagina === 0 ? (dados.itens[0]?.item.posicao ?? null) : null}
+                />
               </TableCell>
             </TableRow>
           );

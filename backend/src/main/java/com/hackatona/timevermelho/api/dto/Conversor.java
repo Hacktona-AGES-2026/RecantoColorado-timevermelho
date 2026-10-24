@@ -38,14 +38,14 @@ public final class Conversor {
                 r.getPosicao(), r.getPosicaoManual(), delta, cl.classe().name(), cl.classeCalculada().name(),
                 cl.ajustada(), cl.classe().prazoDias(), c.diasEmFila(), r.percentualPrazo(), r.getScore(),
                 c.prioridadeManual(), r.getStatus().name(), r.isMovidoPelaRegraDeOuro(), r.getReavaliacoes().size(),
-                motivos, r.getJustificativa(), r.getEstadoRebaixamento());
+                motivos, r.getJustificativa(), r.getEstadoRebaixamento(), r.getDesejoCirurgia(), r.getPosicaoFixada());
     }
 
     public static Dtos.AjusteDto ajuste(com.hackatona.timevermelho.dominio.AjusteRegulador a) {
         return new Dtos.AjusteDto(a.getId(), a.getSolicitacaoId(), a.getTipo().name(),
                 a.getClasseAnterior() == null ? null : a.getClasseAnterior().name(),
                 a.getClasseNova() == null ? null : a.getClasseNova().name(), a.getJustificativa(), a.getAutor(),
-                a.getCriadoEm(), a.getMedicoId(), a.isInformacaoForaDoSistema());
+                a.getCriadoEm(), a.getMedicoId(), a.isInformacaoForaDoSistema(), a.getPosicaoFixada());
     }
 
     public static Dtos.SinalDto sinal(Sinal s) {

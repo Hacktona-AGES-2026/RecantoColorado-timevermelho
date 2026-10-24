@@ -119,7 +119,9 @@ public class MedicoService {
     private static final java.util.Set<com.hackatona.timevermelho.dominio.TipoAjuste> PERMITIDOS_AO_MEDICO = java.util.EnumSet.of(
             com.hackatona.timevermelho.dominio.TipoAjuste.ALTERAR_CLASSE,
             com.hackatona.timevermelho.dominio.TipoAjuste.CONFIRMAR_CLASSE,
-            com.hackatona.timevermelho.dominio.TipoAjuste.SUGERIR_REBAIXAMENTO);
+            com.hackatona.timevermelho.dominio.TipoAjuste.SUGERIR_REBAIXAMENTO,
+            com.hackatona.timevermelho.dominio.TipoAjuste.FIXAR_POSICAO,
+            com.hackatona.timevermelho.dominio.TipoAjuste.LIBERAR_POSICAO);
 
     /**
      * O médico muda a prioridade de um paciente das listas dele (cirúrgicos ou possível avaliação), por exemplo
@@ -131,7 +133,8 @@ public class MedicoService {
     public com.hackatona.timevermelho.api.dto.Dtos.Impacto ajustar(Long medicoId, MedicoDtos.AjusteMedico req) {
         Medico m = medico(medicoId);
         if (!PERMITIDOS_AO_MEDICO.contains(req.tipo())) {
-            throw new Erros.RegraNegocio("O médico pode mudar a classe, confirmá-la ou sugerir rebaixamento. Confirmar "
+            throw new Erros.RegraNegocio("O médico pode mudar a classe, confirmá-la, sugerir rebaixamento ou escolher a "
+                    + "posição na fila. Confirmar "
                     + "rebaixamento e decidir saída da fila continuam com o regulador.");
         }
         Especialidade e = especialidade(m);
@@ -144,7 +147,7 @@ public class MedicoService {
         }
         String autor = m.getNome() + " (" + m.getCrm() + ", " + e.nome() + ")";
         return decisoes.ajustar(new com.hackatona.timevermelho.api.dto.Dtos.AjusteRequest(id, req.tipo(), req.classeNova(),
-                        req.justificativa(), autor),
+                        req.justificativa(), autor, req.posicao()),
                 new com.hackatona.timevermelho.servico.DecisaoService.Origem(m.getId(), req.informacaoForaDoSistema()));
     }
 

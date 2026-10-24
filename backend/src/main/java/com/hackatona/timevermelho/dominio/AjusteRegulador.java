@@ -46,4 +46,6 @@ public class AjusteRegulador {
     private Long medicoId;
     /** O médico informou algo que ainda não está registrado no sistema (ex.: soube por contato direto). */
     private boolean informacaoForaDoSistema;
+    /** FIXAR_POSICAO: posição escolhida (1 = primeiro). */
+    private Integer posicaoFixada;
 }

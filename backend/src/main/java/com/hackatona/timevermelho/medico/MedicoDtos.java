@@ -45,7 +45,8 @@ public final class MedicoDtos {
 
     /**
      * O médico muda a prioridade de um paciente da lista dele. tipo: ALTERAR_CLASSE (subir aplica; descer vira
-     * rebaixamento sugerido para o regulador), CONFIRMAR_CLASSE ou SUGERIR_REBAIXAMENTO.
+     * rebaixamento sugerido para o regulador), CONFIRMAR_CLASSE, SUGERIR_REBAIXAMENTO, FIXAR_POSICAO (com posicao,
+     * só para cima) ou LIBERAR_POSICAO.
      * informacaoForaDoSistema: o médico sabe de algo que ainda não está registrado (contato direto, exame externo...).
      */
     public record AjusteMedico(
@@ -53,7 +54,15 @@ public final class MedicoDtos {
             @jakarta.validation.constraints.NotNull(message = "informe o tipo") com.hackatona.timevermelho.dominio.TipoAjuste tipo,
             String classeNova,
             @NotBlank @Size(min = 10, max = 2000, message = "a justificativa precisa ter pelo menos 10 caracteres") String justificativa,
-            boolean informacaoForaDoSistema) {}
+            boolean informacaoForaDoSistema,
+            Integer posicao) {
+
+        /** Sem posição (mudar ou confirmar a classe). */
+        public AjusteMedico(String solicitacaoId, com.hackatona.timevermelho.dominio.TipoAjuste tipo, String classeNova,
+                            String justificativa, boolean informacaoForaDoSistema) {
+            this(solicitacaoId, tipo, classeNova, justificativa, informacaoForaDoSistema, null);
+        }
+    }
 
     /** porClasse conta o grupo pedido inteiro (antes da busca e do filtro de classe). */
     public record FilaMedico(MedicoDto medico, EspecialidadeDto especialidade, Grupo grupo, List<ItemMedico> itens,

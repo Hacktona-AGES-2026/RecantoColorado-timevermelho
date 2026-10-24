@@ -21,6 +21,8 @@ const ROTULO_TIPO: Record<string, string> = {
   CONFIRMAR_CLASSE: "Confirmou a classe",
   ALTERAR_CLASSE: "Mudou a classe",
   SUGERIR_REBAIXAMENTO: "Sugeriu rebaixamento (aguarda o regulador)",
+  FIXAR_POSICAO: "Escolheu a posição na fila",
+  LIBERAR_POSICAO: "Liberou a posição escolhida",
   CONFIRMAR_REBAIXAMENTO: "Confirmou o rebaixamento",
   REJEITAR_REBAIXAMENTO: "Rejeitou o rebaixamento",
 };
@@ -30,10 +32,13 @@ export function BotaoPrioridade({
   medico,
   item,
   aoAlterar,
+  primeiroDaLista,
 }: {
   medico: Medico;
   item: ItemFila;
   aoAlterar: () => void;
+  /** posição na fila geral do primeiro paciente desta lista (atalho "1º desta lista") */
+  primeiroDaLista?: number | null;
 }) {
   const [aberto, setAberto] = useState(false);
   return (
@@ -51,16 +56,30 @@ export function BotaoPrioridade({
       </Button>
       <Dialog open={aberto} onOpenChange={setAberto}>
         <DialogContent className="sm:max-w-md" onClick={(e) => e.stopPropagation()}>
-          {aberto && <FormPrioridade medico={medico} item={item} aoAlterar={aoAlterar} />}
+          {aberto && (
+            <FormPrioridade medico={medico} item={item} aoAlterar={aoAlterar} primeiroDaLista={primeiroDaLista ?? null} />
+          )}
         </DialogContent>
       </Dialog>
     </>
   );
 }
 
-function FormPrioridade({ medico, item: atual, aoAlterar }: { medico: Medico; item: ItemFila; aoAlterar: () => void }) {
+function FormPrioridade({
+  medico,
+  item: atual,
+  aoAlterar,
+  primeiroDaLista,
+}: {
+  medico: Medico;
+  item: ItemFila;
+  aoAlterar: () => void;
+  primeiroDaLista: number | null;
+}) {
   // guarda o paciente como estava ao abrir: a lista recarrega depois da mudança e não deve mudar o formulário
   const [item] = useState(atual);
+  const [modo, setModo] = useState<"classe" | "posicao">("classe");
+  const [posicao, setPosicao] = useState("");
   const [classe, setClasse] = useState<ClasseSwalis>(atual.classe);
   const [justificativa, setJustificativa] = useState("");
   const [foraDoSistema, setForaDoSistema] = useState(false);
@@ -70,20 +89,28 @@ function FormPrioridade({ medico, item: atual, aoAlterar }: { medico: Medico; it
 
   const descer = CLASSES.indexOf(classe) > CLASSES.indexOf(item.classe);
   const justOk = justificativa.trim().length >= MIN_JUSTIFICATIVA;
+  const alvo = Number(posicao);
+  const posicaoOk =
+    modo === "classe" || (posicao !== "" && Number.isInteger(alvo) && alvo >= 1 && item.posicao !== null && alvo < item.posicao);
 
-  async function enviar(e: React.FormEvent) {
-    e.preventDefault();
-    if (!justOk) return;
+  async function enviar(liberar = false) {
+    if (!justOk || (!liberar && !posicaoOk)) return;
     setEnviando(true);
     setErro(null);
+    const base = { solicitacaoId: item.solicitacaoId, justificativa: justificativa.trim(), informacaoForaDoSistema: foraDoSistema };
     try {
-      const r = await api.ajustarComoMedico(medico.id, {
-        solicitacaoId: item.solicitacaoId,
-        tipo: classe === item.classe ? "CONFIRMAR_CLASSE" : "ALTERAR_CLASSE",
-        classeNova: classe === item.classe ? undefined : classe,
-        justificativa: justificativa.trim(),
-        informacaoForaDoSistema: foraDoSistema,
-      });
+      const r = await api.ajustarComoMedico(
+        medico.id,
+        liberar
+          ? { ...base, tipo: "LIBERAR_POSICAO" }
+          : modo === "posicao"
+            ? { ...base, tipo: "FIXAR_POSICAO", posicao: alvo }
+            : {
+                ...base,
+                tipo: classe === item.classe ? "CONFIRMAR_CLASSE" : "ALTERAR_CLASSE",
+                classeNova: classe === item.classe ? undefined : classe,
+              },
+      );
       setImpacto(r);
       aoAlterar();
     } catch (err) {
@@ -110,7 +137,70 @@ function FormPrioridade({ medico, item: atual, aoAlterar }: { medico: Medico; it
           </Button>
         </div>
       ) : (
-        <form onSubmit={enviar} className="flex flex-col gap-3">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            void enviar();
+          }}
+          className="flex flex-col gap-3"
+        >
+          <div className="grid grid-cols-2 gap-1.5" role="group" aria-label="O que mudar">
+            <Button type="button" size="sm" variant={modo === "classe" ? "default" : "outline"} onClick={() => setModo("classe")}>
+              Mudar classe
+            </Button>
+            <Button type="button" size="sm" variant={modo === "posicao" ? "default" : "outline"} onClick={() => setModo("posicao")}>
+              Mudar posição
+            </Button>
+          </div>
+
+          {modo === "posicao" ? (
+            <div className="flex flex-col gap-1.5">
+              <label className="flex flex-col gap-1">
+                <span className="text-xs font-medium">Nova posição na fila geral (hoje: {item.posicao ?? "—"}º)</span>
+                <input
+                  type="number"
+                  min={1}
+                  max={item.posicao ? item.posicao - 1 : undefined}
+                  value={posicao}
+                  onChange={(e) => setPosicao(e.target.value)}
+                  placeholder="Ex.: 1"
+                  className="border-input bg-background h-8 rounded-lg border px-2.5 text-sm"
+                  aria-label="Nova posição na fila geral"
+                />
+              </label>
+              <div className="flex flex-wrap gap-1.5">
+                <Button type="button" size="xs" variant="outline" onClick={() => setPosicao("1")}>
+                  1º da fila
+                </Button>
+                {primeiroDaLista !== null && item.posicao !== null && primeiroDaLista < item.posicao && (
+                  <Button type="button" size="xs" variant="outline" onClick={() => setPosicao(String(primeiroDaLista))}>
+                    1º desta lista ({primeiroDaLista}º da fila)
+                  </Button>
+                )}
+              </div>
+              <p className="text-muted-foreground text-xs">
+                O paciente sobe até a posição escolhida e os outros só abrem espaço, na mesma ordem. Só dá para subir: para
+                baixar, sugira um rebaixamento de classe. Sem atendimento ou exame de piora registrado, ele não passa à frente
+                de quem tem câncer (regra de ouro) e fica logo depois do último paciente oncológico.
+              </p>
+              {item.posicaoFixada !== null && (
+                <div className="rounded-md border border-sky-400/50 bg-sky-500/10 p-2 text-xs">
+                  <p>Este paciente já tem posição escolhida ({item.posicaoFixada}º).</p>
+                  <Button
+                    type="button"
+                    size="xs"
+                    variant="outline"
+                    className="mt-1"
+                    disabled={!justOk || enviando}
+                    onClick={() => void enviar(true)}
+                  >
+                    Liberar e voltar para a posição calculada
+                  </Button>
+                  {!justOk && <span className="ml-1">(escreva a justificativa antes)</span>}
+                </div>
+              )}
+            </div>
+          ) : (
           <div className="flex flex-col gap-1.5">
             <span className="text-xs font-medium">Classe</span>
             <div className="flex flex-wrap gap-1.5">
@@ -143,6 +233,7 @@ function FormPrioridade({ medico, item: atual, aoAlterar }: { medico: Medico; it
               {item.oncologico && " Paciente oncológico: a classe pode subir, mas nunca ser reduzida."}
             </p>
           </div>
+          )}
           <label className="flex flex-col gap-1">
             <span className="text-xs font-medium">Justificativa (obrigatória)</span>
             <Textarea
@@ -169,8 +260,18 @@ function FormPrioridade({ medico, item: atual, aoAlterar }: { medico: Medico; it
               {erro}
             </div>
           )}
-          <Button type="submit" disabled={!justOk || enviando}>
-            {enviando ? "Registrando…" : descer ? "Sugerir rebaixamento" : classe === item.classe ? "Confirmar classe" : "Mudar classe"}
+          <Button type="submit" disabled={!justOk || !posicaoOk || enviando}>
+            {enviando
+              ? "Registrando…"
+              : modo === "posicao"
+                ? posicaoOk
+                  ? `Colocar na posição ${alvo}`
+                  : "Escolha uma posição acima da atual"
+                : descer
+                  ? "Sugerir rebaixamento"
+                  : classe === item.classe
+                    ? "Confirmar classe"
+                    : "Mudar classe"}
           </Button>
         </form>
       )}
@@ -226,6 +327,7 @@ export function MinhasAlteracoes({ medico, versao }: { medico: Medico; versao: n
                   ) : (
                     a.classeNova && <SeloClasse classe={a.classeNova} />
                   )}
+                  {a.posicaoFixada !== null && <Badge variant="outline">posição {a.posicaoFixada}</Badge>}
                   {a.informacaoForaDoSistema && <Badge variant="secondary">informação fora do sistema</Badge>}
                   <span className="text-muted-foreground ml-auto text-xs">
                     {new Date(a.criadoEm).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}
@@ -238,5 +340,18 @@ export function MinhasAlteracoes({ medico, versao }: { medico: Medico; versao: n
         )}
       </CardContent>
     </Card>
+  );
+}
+
+/** Selo discreto ao lado da posição: o paciente está numa posição escolhida por um médico ou pelo regulador. */
+export function SeloPosicaoEscolhida({ posicao }: { posicao: number | null }) {
+  if (posicao === null) return null;
+  return (
+    <span
+      className="block text-[10px] font-medium text-sky-700 dark:text-sky-300"
+      title={`Posição escolhida manualmente (${posicao}º). Veja o histórico do paciente.`}
+    >
+      escolhida
+    </span>
   );
 }

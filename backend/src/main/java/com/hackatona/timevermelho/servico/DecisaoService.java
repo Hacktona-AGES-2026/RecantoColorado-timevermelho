@@ -37,9 +37,12 @@ public class DecisaoService {
     private final EventoClinicoRepository eventos;
     private final AjusteReguladorRepository ajustes;
     private final AlertaRepository alertas;
+    private final com.hackatona.timevermelho.dominio.DesejoCirurgiaRepository desejos;
 
     public DecisaoService(FilaService fila, SolicitacaoRepository solicitacoes, EventoClinicoRepository eventos,
-                          AjusteReguladorRepository ajustes, AlertaRepository alertas) {
+                          AjusteReguladorRepository ajustes, AlertaRepository alertas,
+                          com.hackatona.timevermelho.dominio.DesejoCirurgiaRepository desejos) {
+        this.desejos = desejos;
         this.fila = fila;
         this.solicitacoes = solicitacoes;
         this.eventos = eventos;
@@ -134,11 +137,16 @@ public class DecisaoService {
                     throw new Erros.RegraNegocio("Não há sugestão de saída para recusar");
                 }
             }
+            case FIXAR_POSICAO -> validarPosicao(antes, req.posicao());
+            case LIBERAR_POSICAO -> {
+                if (antes.getPosicaoFixada() == null) throw new Erros.RegraNegocio("Este paciente não tem posição fixada");
+            }
             case CONFIRMAR_CLASSE -> { }
         }
 
         AjusteRegulador a = novoAjuste(id, req.tipo(), vigente,
                 req.tipo() == TipoAjuste.ALTERAR_CLASSE ? nova : vigente, justificativa, autor);
+        if (req.tipo() == TipoAjuste.FIXAR_POSICAO) a.setPosicaoFixada(req.posicao());
         marcarOrigem(a, origem);
         ajustes.save(a);
 
@@ -148,11 +156,42 @@ public class DecisaoService {
             case ALTERAR_CLASSE -> (origem.medicoId() == null ? "regulador" : autor) + " definiu a classe " + depois.classe();
             case CONFIRMAR_SAIDA -> "regulador confirmou a saída da fila";
             case RECUSAR_SAIDA -> "regulador recusou a saída; paciente continua na fila";
+            case FIXAR_POSICAO -> (origem.medicoId() == null ? "regulador" : autor) + " colocou o paciente na posição "
+                    + req.posicao() + (depois.getPosicao() != null && depois.getPosicao() > req.posicao()
+                    ? " (ficou na " + depois.getPosicao() + ": " + motivoLimite(depois) + ")" : "");
+            case LIBERAR_POSICAO -> (origem.medicoId() == null ? "regulador" : autor)
+                    + " liberou a posição escolhida; o paciente volta para a posição calculada";
             default -> req.tipo().name();
         };
         Dtos.Impacto impacto = ImpactoCalculadora.impacto(antes, depois, acao + " (\"" + a.getJustificativa() + "\")");
         alertar(antes, depois, Alerta.Tipo.AJUSTE_REGULADOR, impacto.mensagem());
         return impacto;
+    }
+
+    /**
+     * Posição escolhida: só para cima. Descer um paciente é rebaixar a prioridade dele, e isso segue o fluxo de
+     * rebaixamento (sugestão que o regulador confirma).
+     */
+    private void validarPosicao(ResultadoPaciente antes, Integer posicao) {
+        if (posicao == null) throw new Erros.RegraNegocio("Informe a posição desejada (1 = primeiro da fila)");
+        if (antes.getPosicao() == null || !antes.getStatus().naFila()) {
+            throw new Erros.RegraNegocio("O paciente não está na fila ativa");
+        }
+        int total = fila.atual().ativos().size();
+        if (posicao < 1 || posicao > total) {
+            throw new Erros.RegraNegocio("A posição precisa estar entre 1 e " + total);
+        }
+        if (posicao >= antes.getPosicao()) {
+            throw new Erros.RegraNegocio("O paciente está na posição " + antes.getPosicao() + ". Só dá para escolher uma "
+                    + "posição acima dela. Para baixar a prioridade, sugira um rebaixamento de classe: o regulador confirma.");
+        }
+    }
+
+    /** Por que o paciente não chegou à posição escolhida. */
+    private static String motivoLimite(ResultadoPaciente r) {
+        return r.isMovidoPelaRegraDeOuro()
+                ? "regra de ouro, sem atendimento ou exame de piora registrado ele não passa à frente de quem tem câncer"
+                : "outro paciente com posição escolhida antes dele";
     }
 
     /** Mensagem mostrada ao regulador quando o rebaixamento de um oncológico é recusado. */
@@ -270,6 +309,7 @@ public class DecisaoService {
         eventos.deleteBySinteticoTrue();
         ajustes.deleteAll();
         alertas.deleteAll();
+        desejos.deleteAll();
         fila.recalcularComoBase();
     }
 }

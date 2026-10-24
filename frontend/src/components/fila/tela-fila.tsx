@@ -21,6 +21,8 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { SeloDesejo } from "./desejo-cirurgia";
+import { SeloPosicaoEscolhida } from "@/components/medicos/prioridade-medico";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CampoSelect, Carregando, ErroApi, mensagemErro, rotuloStatus, Vazio } from "./comum";
 import { cn } from "@/lib/utils";
@@ -424,6 +426,7 @@ function TabelaFila({ itens }: { itens: ItemFila[] }) {
             <TableRow key={it.solicitacaoId} className="cursor-pointer" onClick={() => router.push(href)}>
               <TableCell className="text-right font-medium tabular-nums">
                 {it.posicao ?? <span className="text-muted-foreground text-xs">{rotuloStatus(it.status)}</span>}
+                <SeloPosicaoEscolhida posicao={it.posicaoFixada} />
               </TableCell>
               <TableCell>
                 <Delta delta={it.delta} />
@@ -454,6 +457,7 @@ function TabelaFila({ itens }: { itens: ItemFila[] }) {
                   {it.idade !== null && ` · ${it.idade} a`}
                   {it.sexo && ` · ${it.sexo}`}
                 </span>
+                <SeloDesejo desejo={it.desejoCirurgia} />
                 {it.status === "SAIDA_SUGERIDA" && (
                   <span
                     className="mt-0.5 block w-fit rounded bg-amber-100 px-1.5 text-[10px] font-medium text-amber-900"

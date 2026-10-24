@@ -62,6 +62,23 @@ public class AlertaService {
                     itens.subList(0, Math.min(MAX_ITENS, itens.size()))));
         }
 
+        // o paciente disse que não quer ser operado, ou está em dúvida: o regulador conversa e decide (nada muda sozinho)
+        List<Dtos.ItemReavaliacao> naoQuer = new ArrayList<>(), duvida = new ArrayList<>();
+        for (ResultadoPaciente r : snap.ativos()) {
+            String d = r.getDesejoCirurgia();
+            if ("NAO_QUER_OPERAR".equals(d)) naoQuer.add(new Dtos.ItemReavaliacao(r.getCaso().solicitacaoId(), r.getCaso().nome(),
+                    r.classe().name(), r.getPosicao(), r.getStatus().name(),
+                    "Paciente disse que não quer ser operado. Converse sobre benefícios, riscos, alternativas e não fazer nada; "
+                            + "se ele mantiver, confirme a saída na página do paciente."));
+            if ("EM_DUVIDA".equals(d)) duvida.add(new Dtos.ItemReavaliacao(r.getCaso().solicitacaoId(), r.getCaso().nome(),
+                    r.classe().name(), r.getPosicao(), r.getStatus().name(),
+                    "Paciente em dúvida sobre a cirurgia. Converse sobre benefícios, riscos, alternativas e não fazer nada."));
+        }
+        if (!naoQuer.isEmpty()) reavaliacao.add(0, new Dtos.GrupoReavaliacao("PACIENTE_NAO_QUER_OPERAR",
+                "Paciente não quer ser operado", naoQuer.size(), naoQuer.subList(0, Math.min(MAX_ITENS, naoQuer.size()))));
+        if (!duvida.isEmpty()) reavaliacao.add(naoQuer.isEmpty() ? 0 : 1, new Dtos.GrupoReavaliacao("PACIENTE_EM_DUVIDA",
+                "Paciente em dúvida sobre a cirurgia", duvida.size(), duvida.subList(0, Math.min(MAX_ITENS, duvida.size()))));
+
         List<Dtos.Saida> saidas = snap.todos().stream()
                 .filter(r -> r.getStatus() == StatusFila.SAIDA_SUGERIDA)
                 .map(r -> new Dtos.Saida(r.getCaso().solicitacaoId(), r.getCaso().nome(), r.getCaso().cidFormatado(),

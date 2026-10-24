@@ -31,6 +31,8 @@ export function itemFila(sobrescrever: Partial<ItemFila> = {}): ItemFila {
     motivos: [{ texto: "Dor intensa (EVA 8)", evidencia: null, fonte: "intensidade_dor_eva" }],
     justificativa: "Classe B: dor intensa.",
     rebaixamento: null,
+    desejoCirurgia: null,
+    posicaoFixada: null,
     ...sobrescrever,
   };
 }
@@ -95,6 +97,8 @@ export function detalhe(item: ItemFila = itemFila(), sobrescrever: Partial<Pacie
     duplicatas: [],
     sinalSaida: null,
     rebaixamento: null,
+    desejoCirurgia: null,
+    historicoDesejo: [],
     ...sobrescrever,
   };
 }

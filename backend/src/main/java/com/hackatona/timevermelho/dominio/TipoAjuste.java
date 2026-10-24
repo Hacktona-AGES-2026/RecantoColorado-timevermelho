@@ -17,7 +17,11 @@ public enum TipoAjuste {
     /** Regulador rejeita o rebaixamento sugerido: a classe vigente fica como piso. */
     REJEITAR_REBAIXAMENTO,
     /** Registrado pelo sistema: o recálculo baixaria a classe de um oncológico, e isso nunca é permitido. */
-    REBAIXAMENTO_BLOQUEADO;
+    REBAIXAMENTO_BLOQUEADO,
+    /** Coloca o paciente numa posição escolhida (só para cima). A regra de ouro continua valendo. */
+    FIXAR_POSICAO,
+    /** Desfaz a posição escolhida: o paciente volta para a posição calculada. */
+    LIBERAR_POSICAO;
 
     public boolean ehRebaixamento() {
         return this == SUGERIR_REBAIXAMENTO || this == CONFIRMAR_REBAIXAMENTO || this == REJEITAR_REBAIXAMENTO
