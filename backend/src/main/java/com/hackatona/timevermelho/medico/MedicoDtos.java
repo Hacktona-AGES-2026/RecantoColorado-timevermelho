@@ -43,6 +43,18 @@ public final class MedicoDtos {
      */
     public record ItemMedico(int posicaoNaLista, Grupo grupo, List<String> motivosEspecialidade, Dtos.ItemFila item) {}
 
+    /**
+     * O médico muda a prioridade de um paciente da lista dele. tipo: ALTERAR_CLASSE (subir aplica; descer vira
+     * rebaixamento sugerido para o regulador), CONFIRMAR_CLASSE ou SUGERIR_REBAIXAMENTO.
+     * informacaoForaDoSistema: o médico sabe de algo que ainda não está registrado (contato direto, exame externo...).
+     */
+    public record AjusteMedico(
+            @NotBlank(message = "informe a solicitação") String solicitacaoId,
+            @jakarta.validation.constraints.NotNull(message = "informe o tipo") com.hackatona.timevermelho.dominio.TipoAjuste tipo,
+            String classeNova,
+            @NotBlank @Size(min = 10, max = 2000, message = "a justificativa precisa ter pelo menos 10 caracteres") String justificativa,
+            boolean informacaoForaDoSistema) {}
+
     /** porClasse conta o grupo pedido inteiro (antes da busca e do filtro de classe). */
     public record FilaMedico(MedicoDto medico, EspecialidadeDto especialidade, Grupo grupo, List<ItemMedico> itens,
                              long total, int pagina, int tamanho, long totalFilaGeral, Map<String, Long> porClasse,

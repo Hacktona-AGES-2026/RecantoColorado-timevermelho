@@ -42,4 +42,8 @@ public class AjusteRegulador {
     /** Evidências da classe proposta, para o regulador decidir (rebaixamentos). */
     @Column(length = 4000)
     private String evidencias;
+    /** Médico cadastrado que fez a alteração (null = regulador ou sistema). Fica mesmo se o médico for removido. */
+    private Long medicoId;
+    /** O médico informou algo que ainda não está registrado no sistema (ex.: soube por contato direto). */
+    private boolean informacaoForaDoSistema;
 }

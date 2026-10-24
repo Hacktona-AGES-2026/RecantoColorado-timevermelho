@@ -100,10 +100,7 @@ public class ConsultaService {
                 .map(e -> new Dtos.EventoDto(e.id(), e.data(), e.tipo(), e.resultado(), e.valor(), e.descricao(),
                         e.origem(), e.sintetico(), e.solicitacaoOriginal())).toList();
         List<Dtos.AjusteDto> hist = ajustes.findBySolicitacaoIdOrderByCriadoEmDescIdDesc(id).stream()
-                .map(a -> new Dtos.AjusteDto(a.getId(), a.getTipo().name(),
-                        a.getClasseAnterior() == null ? null : a.getClasseAnterior().name(),
-                        a.getClasseNova() == null ? null : a.getClasseNova().name(), a.getJustificativa(), a.getAutor(),
-                        a.getCriadoEm())).toList();
+                .map(Conversor::ajuste).toList();
         List<String> duplicatas = solicitacoes.findByDuplicadaDe(id).stream().map(Solicitacao::getId).toList();
 
         return new Dtos.PacienteDetalhe(Conversor.item(r), dados, Conversor.classificacao(r),

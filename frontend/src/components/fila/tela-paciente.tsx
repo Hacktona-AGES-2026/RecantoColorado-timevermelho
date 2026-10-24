@@ -479,7 +479,7 @@ function Auditoria({ d }: { d: PacienteDetalhe }) {
   return (
     <CardRecolhivel
       titulo="Histórico de decisões"
-      descricao="Auditoria de tudo que o regulador decidiu neste paciente."
+      descricao="Auditoria de tudo que o regulador e os médicos decidiram neste paciente: quem, quando e por quê."
       className="flex flex-col gap-4"
     >
       {d.ajustes.length === 0 ? (
@@ -497,6 +497,8 @@ function Auditoria({ d }: { d: PacienteDetalhe }) {
                 ) : (
                   a.classeNova && <SeloClasse classe={a.classeNova} />
                 )}
+                {a.medicoId !== null && <Badge variant="outline">médico</Badge>}
+                {a.informacaoForaDoSistema && <Badge variant="secondary">informação fora do sistema</Badge>}
                 <span className="text-muted-foreground ml-auto text-xs">
                   {a.autor} · {formatarDataHora(a.criadoEm)}
                 </span>

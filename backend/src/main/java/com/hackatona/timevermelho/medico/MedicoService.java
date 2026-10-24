@@ -28,11 +28,17 @@ public class MedicoService {
     private final MedicoRepository medicos;
     private final CatalogoEspecialidades catalogo;
     private final FilaService fila;
+    private final com.hackatona.timevermelho.servico.DecisaoService decisoes;
+    private final com.hackatona.timevermelho.dominio.AjusteReguladorRepository ajustes;
 
-    public MedicoService(MedicoRepository medicos, CatalogoEspecialidades catalogo, FilaService fila) {
+    public MedicoService(MedicoRepository medicos, CatalogoEspecialidades catalogo, FilaService fila,
+                         com.hackatona.timevermelho.servico.DecisaoService decisoes,
+                         com.hackatona.timevermelho.dominio.AjusteReguladorRepository ajustes) {
         this.medicos = medicos;
         this.catalogo = catalogo;
         this.fila = fila;
+        this.decisoes = decisoes;
+        this.ajustes = ajustes;
     }
 
     public List<MedicoDtos.EspecialidadeDto> especialidades() {
@@ -107,6 +113,46 @@ public class MedicoService {
         return new MedicoDtos.FilaMedico(dto(m), dto(e, snap.ativos()), pedido,
                 filtrados.stream().skip((long) pag * tam).limit(tam).toList(), filtrados.size(), pag, tam, totalGeral,
                 porClasse, Conversor.snapshot(snap.info()));
+    }
+
+    /** O que um médico pode fazer na prioridade. Confirmar rebaixamento e decidir saída continuam com o regulador. */
+    private static final java.util.Set<com.hackatona.timevermelho.dominio.TipoAjuste> PERMITIDOS_AO_MEDICO = java.util.EnumSet.of(
+            com.hackatona.timevermelho.dominio.TipoAjuste.ALTERAR_CLASSE,
+            com.hackatona.timevermelho.dominio.TipoAjuste.CONFIRMAR_CLASSE,
+            com.hackatona.timevermelho.dominio.TipoAjuste.SUGERIR_REBAIXAMENTO);
+
+    /**
+     * O médico muda a prioridade de um paciente das listas dele (cirúrgicos ou possível avaliação), por exemplo
+     * quando sabe de algo que ainda não está no sistema. Passa pelo mesmo caminho das decisões do regulador: a fila é
+     * recalculada pelo motor (sem atalho na ordenação), subir a classe vale na hora, descer vira rebaixamento sugerido
+     * para o regulador confirmar, oncológico nunca perde classe e a regra de ouro continua valendo. Fica na auditoria
+     * com o nome, o CRM e o id do médico.
+     */
+    public com.hackatona.timevermelho.api.dto.Dtos.Impacto ajustar(Long medicoId, MedicoDtos.AjusteMedico req) {
+        Medico m = medico(medicoId);
+        if (!PERMITIDOS_AO_MEDICO.contains(req.tipo())) {
+            throw new Erros.RegraNegocio("O médico pode mudar a classe, confirmá-la ou sugerir rebaixamento. Confirmar "
+                    + "rebaixamento e decidir saída da fila continuam com o regulador.");
+        }
+        Especialidade e = especialidade(m);
+        String id = decisoes.resolverId(req.solicitacaoId());
+        ResultadoPaciente r = fila.atual().get(id);
+        if (r == null || !r.getStatus().naFila()) throw new Erros.NaoEncontrado("Solicitação " + req.solicitacaoId() + " não está na fila");
+        if (!e.avaliar(r.getCaso(), r.oncologico()).existe()) {
+            throw new Erros.RegraNegocio("Este paciente não está nas listas de " + e.nome() + " (procedimento de "
+                    + r.getCaso().especialidade() + "). Peça ao regulador ou a um médico da especialidade.");
+        }
+        String autor = m.getNome() + " (" + m.getCrm() + ", " + e.nome() + ")";
+        return decisoes.ajustar(new com.hackatona.timevermelho.api.dto.Dtos.AjusteRequest(id, req.tipo(), req.classeNova(),
+                        req.justificativa(), autor),
+                new com.hackatona.timevermelho.servico.DecisaoService.Origem(m.getId(), req.informacaoForaDoSistema()));
+    }
+
+    /** Auditoria: tudo o que o médico alterou, do mais recente para o mais antigo. */
+    public List<com.hackatona.timevermelho.api.dto.Dtos.AjusteDto> ajustesDoMedico(Long medicoId) {
+        medico(medicoId);
+        return ajustes.findByMedicoIdOrderByCriadoEmDescIdDesc(medicoId).stream()
+                .map(Conversor::ajuste).toList();
     }
 
     /** Cria os médicos de exemplo da demo. Pula o CRM que já existir (a API já aceita cadastros durante a subida). */

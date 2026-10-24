@@ -124,6 +124,9 @@ export interface EventoDto {
 
 export interface AjusteDto {
   id: number;
+  solicitacaoId: string;
+  medicoId: number | null; // médico cadastrado que fez a alteração (null = regulador ou sistema)
+  informacaoForaDoSistema: boolean; // o médico sabe de algo que ainda não está registrado
   tipo: TipoAjuste;
   classeAnterior: ClasseSwalis | null;
   classeNova: ClasseSwalis | null;
@@ -467,6 +470,15 @@ export interface FilaMedico {
   snapshot: SnapshotInfo;
 }
 
+/** O médico muda a prioridade de um paciente das listas dele. Descer a classe vira sugestão para o regulador. */
+export interface AjusteMedico {
+  solicitacaoId: string;
+  tipo: "ALTERAR_CLASSE" | "CONFIRMAR_CLASSE" | "SUGERIR_REBAIXAMENTO";
+  classeNova?: ClasseSwalis;
+  justificativa: string; // mínimo 10 caracteres
+  informacaoForaDoSistema: boolean;
+}
+
 export interface FiltrosFilaMedico {
   grupo?: GrupoMedico;
   busca?: string;
@@ -528,6 +540,8 @@ export const api = {
   medico: (id: number | string) => get<Medico>(`/api/medicos/${id}`),
   cadastrarMedico: (novo: NovoMedico) => post<Medico>("/api/medicos", novo),
   removerMedico: (id: number) => del(`/api/medicos/${id}`),
+  ajustarComoMedico: (id: number | string, ajuste: AjusteMedico) => post<Impacto>(`/api/medicos/${id}/ajustes`, ajuste),
+  ajustesMedico: (id: number | string) => get<AjusteDto[]>(`/api/medicos/${id}/ajustes`),
   filaMedico: (id: number | string, filtros: FiltrosFilaMedico = {}) =>
     get<FilaMedico>(`/api/medicos/${id}/fila?${query(filtros)}`),
   /** Fila de referência — entrega oficial (fila_priorizada.csv). Sempre explícito: nunca a operacional. */

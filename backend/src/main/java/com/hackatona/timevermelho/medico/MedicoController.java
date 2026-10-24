@@ -55,6 +55,19 @@ public class MedicoController {
         servico.remover(id);
     }
 
+    /** O médico muda a prioridade de um paciente das listas dele (mesmas regras e auditoria do regulador). */
+    @PostMapping("/medicos/{id}/ajustes")
+    public com.hackatona.timevermelho.api.dto.Dtos.Impacto ajustar(@PathVariable Long id,
+                                                                  @Valid @RequestBody MedicoDtos.AjusteMedico req) {
+        return servico.ajustar(id, req);
+    }
+
+    /** Auditoria: o que este médico alterou. */
+    @GetMapping("/medicos/{id}/ajustes")
+    public List<com.hackatona.timevermelho.api.dto.Dtos.AjusteDto> ajustes(@PathVariable Long id) {
+        return servico.ajustesDoMedico(id);
+    }
+
     /**
      * Uma lista do médico, do mais grave para o menos grave.
      * grupo=CIRURGICO (padrão): procedimento da especialidade. grupo=POSSIVEL_AVALIACAO: só CID/comorbidade relacionados.

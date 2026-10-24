@@ -15,6 +15,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { CampoSelect, Carregando, ErroApi, mensagemErro, Vazio } from "@/components/fila/comum";
 import { TelaFila } from "@/components/fila/tela-fila";
+import { BotaoPrioridade, MinhasAlteracoes } from "./prioridade-medico";
 
 const TAMANHO = 50;
 
@@ -23,6 +24,9 @@ export function TelaMedico() {
   // cabeçalho e contadores das abas vêm da primeira resposta da lista cirúrgica
   const [cabecalho, setCabecalho] = useState<{ medico: Medico; especialidade: Especialidade; totalFilaGeral: number } | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  // conta as alterações de prioridade feitas nesta tela, para recarregar "Minhas alterações"
+  const [alteracoes, setAlteracoes] = useState(0);
+  const aoAlterar = useCallback(() => setAlteracoes((n) => n + 1), []);
 
   useEffect(() => {
     let ativo = true;
@@ -67,23 +71,40 @@ export function TelaMedico() {
           <TabsTrigger value="geral" className="px-3">
             Fila completa ({cabecalho.totalFilaGeral})
           </TabsTrigger>
+          <TabsTrigger value="alteracoes" className="px-3">
+            Minhas alterações
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="CIRURGICO">
-          <ListaGrupo medicoId={id} grupo="CIRURGICO" especialidade={especialidade} />
+          <ListaGrupo medico={medico} grupo="CIRURGICO" especialidade={especialidade} aoAlterar={aoAlterar} />
         </TabsContent>
         <TabsContent value="POSSIVEL_AVALIACAO">
-          <ListaGrupo medicoId={id} grupo="POSSIVEL_AVALIACAO" especialidade={especialidade} />
+          <ListaGrupo medico={medico} grupo="POSSIVEL_AVALIACAO" especialidade={especialidade} aoAlterar={aoAlterar} />
         </TabsContent>
         <TabsContent value="geral">
           <TelaFila />
+        </TabsContent>
+        <TabsContent value="alteracoes">
+          <MinhasAlteracoes medico={medico} versao={alteracoes} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function ListaGrupo({ medicoId, grupo, especialidade }: { medicoId: string; grupo: GrupoMedico; especialidade: Especialidade }) {
+function ListaGrupo({
+  medico,
+  grupo,
+  especialidade,
+  aoAlterar,
+}: {
+  medico: Medico;
+  grupo: GrupoMedico;
+  especialidade: Especialidade;
+  aoAlterar: () => void;
+}) {
+  const medicoId = String(medico.id);
   const [dados, setDados] = useState<FilaMedico | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [carregando, setCarregando] = useState(true);
@@ -209,7 +230,15 @@ function ListaGrupo({ medicoId, grupo, especialidade }: { medicoId: string; grup
             }
           />
         ) : (
-          <TabelaMedico dados={dados} avaliacao={avaliacao} />
+          <TabelaMedico
+            dados={dados}
+            avaliacao={avaliacao}
+            medico={medico}
+            aoAlterar={() => {
+              carregar();
+              aoAlterar();
+            }}
+          />
         )}
       </Card>
 
@@ -230,7 +259,17 @@ function ListaGrupo({ medicoId, grupo, especialidade }: { medicoId: string; grup
   );
 }
 
-function TabelaMedico({ dados, avaliacao }: { dados: FilaMedico; avaliacao: boolean }) {
+function TabelaMedico({
+  dados,
+  avaliacao,
+  medico,
+  aoAlterar,
+}: {
+  dados: FilaMedico;
+  avaliacao: boolean;
+  medico: Medico;
+  aoAlterar: () => void;
+}) {
   const router = useRouter();
   return (
     <Table className="text-[13px]">
@@ -247,6 +286,7 @@ function TabelaMedico({ dados, avaliacao }: { dados: FilaMedico; avaliacao: bool
           <TableHead>Espera / prazo</TableHead>
           <TableHead className="text-right">Score</TableHead>
           <TableHead>{avaliacao ? "Por que pode precisar da especialidade" : "Por que está nesta lista"}</TableHead>
+          <TableHead className="w-24" title="Mudar a prioridade (fica registrado com o seu nome)">Ação</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -303,6 +343,9 @@ function TabelaMedico({ dados, avaliacao }: { dados: FilaMedico; avaliacao: bool
                     Gravidade: {it.motivos[0].texto}
                   </span>
                 )}
+              </TableCell>
+              <TableCell>
+                <BotaoPrioridade medico={medico} item={it} aoAlterar={aoAlterar} />
               </TableCell>
             </TableRow>
           );

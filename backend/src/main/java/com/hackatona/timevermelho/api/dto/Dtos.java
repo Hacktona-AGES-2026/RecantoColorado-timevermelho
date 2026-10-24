@@ -56,8 +56,13 @@ public final class Dtos {
     public record EventoDto(String id, LocalDate data, String tipo, String resultado, Double valor,
                             String descricao, String origem, boolean sintetico, String solicitacaoOriginal) {}
 
-    public record AjusteDto(Long id, String tipo, String classeAnterior, String classeNova, String justificativa,
-                            String autor, LocalDateTime criadoEm) {}
+    /**
+     * Uma decisão na trilha de auditoria. medicoId: médico cadastrado que fez a alteração (null = regulador ou sistema).
+     * informacaoForaDoSistema: o médico informou algo que ainda não está registrado no sistema.
+     */
+    public record AjusteDto(Long id, String solicitacaoId, String tipo, String classeAnterior, String classeNova,
+                            String justificativa, String autor, LocalDateTime criadoEm, Long medicoId,
+                            boolean informacaoForaDoSistema) {}
 
     public record ReavaliacaoDto(String tipo, String titulo, String mensagem) {}
 

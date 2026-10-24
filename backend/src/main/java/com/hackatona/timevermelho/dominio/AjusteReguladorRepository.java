@@ -9,4 +9,7 @@ public interface AjusteReguladorRepository extends JpaRepository<AjusteRegulador
     List<AjusteRegulador> findAllByOrderByCriadoEmAscIdAsc();
 
     List<AjusteRegulador> findBySolicitacaoIdOrderByCriadoEmDescIdDesc(String solicitacaoId);
+
+    /** Tudo o que um médico cadastrado alterou, do mais recente para o mais antigo (auditoria). */
+    List<AjusteRegulador> findByMedicoIdOrderByCriadoEmDescIdDesc(Long medicoId);
 }

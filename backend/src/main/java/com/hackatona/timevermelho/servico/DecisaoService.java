@@ -95,6 +95,20 @@ public class DecisaoService {
      * - oncológico (CID C ou biópsia positiva) nunca tem a classe reduzida, nem de A1 para A2.
      */
     public synchronized Dtos.Impacto ajustar(Dtos.AjusteRequest req) {
+        return ajustar(req, Origem.REGULADOR);
+    }
+
+    /**
+     * Quem fez a alteração, para a auditoria.
+     * @param medicoId médico cadastrado (null = regulador)
+     * @param informacaoForaDoSistema o médico sabe de algo que ainda não está registrado no sistema
+     */
+    public record Origem(Long medicoId, boolean informacaoForaDoSistema) {
+        public static final Origem REGULADOR = new Origem(null, false);
+    }
+
+    /** Mesmas regras para regulador e médico: a fila é recalculada pelo motor, sem atalho na ordenação. */
+    public synchronized Dtos.Impacto ajustar(Dtos.AjusteRequest req, Origem origem) {
         String id = resolverId(req.solicitacaoId());
         ResultadoPaciente antes = fila.atual().get(id);
         ClasseSwalis vigente = antes.classe();
@@ -105,7 +119,7 @@ public class DecisaoService {
         switch (req.tipo()) {
             case ALTERAR_CLASSE, SUGERIR_REBAIXAMENTO -> {
                 nova = classe(req.classeNova());
-                if (vigente.maisUrgenteQue(nova)) return sugerirRebaixamento(antes, nova, justificativa, autor);
+                if (vigente.maisUrgenteQue(nova)) return sugerirRebaixamento(antes, nova, justificativa, autor, origem);
                 if (req.tipo() == TipoAjuste.SUGERIR_REBAIXAMENTO) {
                     throw new Erros.RegraNegocio("Rebaixamento precisa de uma classe menos urgente que a vigente ("
                             + vigente + "). Para subir a classe, use \"Mudar classe\".");
@@ -125,12 +139,13 @@ public class DecisaoService {
 
         AjusteRegulador a = novoAjuste(id, req.tipo(), vigente,
                 req.tipo() == TipoAjuste.ALTERAR_CLASSE ? nova : vigente, justificativa, autor);
+        marcarOrigem(a, origem);
         ajustes.save(a);
 
         ResultadoPaciente depois = fila.recalcular().get(id);
         String acao = switch (req.tipo()) {
-            case CONFIRMAR_CLASSE -> "regulador confirmou a classe " + depois.classe();
-            case ALTERAR_CLASSE -> "regulador definiu a classe " + depois.classe();
+            case CONFIRMAR_CLASSE -> (origem.medicoId() == null ? "regulador" : autor) + " confirmou a classe " + depois.classe();
+            case ALTERAR_CLASSE -> (origem.medicoId() == null ? "regulador" : autor) + " definiu a classe " + depois.classe();
             case CONFIRMAR_SAIDA -> "regulador confirmou a saída da fila";
             case RECUSAR_SAIDA -> "regulador recusou a saída; paciente continua na fila";
             default -> req.tipo().name();
@@ -148,12 +163,14 @@ public class DecisaoService {
                 + "clínico (ex.: nova biópsia).";
     }
 
-    private Dtos.Impacto sugerirRebaixamento(ResultadoPaciente antes, ClasseSwalis proposta, String fatores, String autor) {
+    private Dtos.Impacto sugerirRebaixamento(ResultadoPaciente antes, ClasseSwalis proposta, String fatores, String autor,
+                                             Origem origem) {
         ClasseSwalis vigente = antes.classe();
         if (antes.oncologico()) throw new Erros.RegraNegocio(bloqueioOncologico(vigente, proposta));
         String id = antes.getCaso().solicitacaoId();
         ClasseSwalis calculada = antes.getClassificacao().classeCalculada();
         AjusteRegulador a = novoAjuste(id, TipoAjuste.SUGERIR_REBAIXAMENTO, vigente, proposta, fatores, autor);
+        marcarOrigem(a, origem);
         a.setSeguirCalculada(proposta == calculada);
         a.setEvidencias(FilaService.evidencias(antes) + (proposta == calculada ? ""
                 : ". A classe proposta (" + proposta + ") é diferente da calculada (" + calculada + ")"));
@@ -205,6 +222,11 @@ public class DecisaoService {
         } catch (IllegalArgumentException ex) {
             throw new Erros.RegraNegocio("Classe inválida: " + valor);
         }
+    }
+
+    private static void marcarOrigem(AjusteRegulador a, Origem origem) {
+        a.setMedicoId(origem.medicoId());
+        a.setInformacaoForaDoSistema(origem.informacaoForaDoSistema());
     }
 
     private static AjusteRegulador novoAjuste(String id, TipoAjuste tipo, ClasseSwalis anterior, ClasseSwalis nova,
