@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.hackatona.timevermelho.agente.AgenteProperties;
 import com.hackatona.timevermelho.agente.PromptsAgente;
+import com.hackatona.timevermelho.agente.contexto.ContextoDados;
 import com.hackatona.timevermelho.agente.chat.Excecoes.AgenteDesligadoException;
 import com.hackatona.timevermelho.agente.chat.Excecoes.ClienteDesconectouException;
 import com.hackatona.timevermelho.agente.chat.Excecoes.LimiteExcedidoException;
@@ -43,7 +44,7 @@ public class ChatService {
     public record Evento(String nome, Object dados) {
     }
 
-    public record Turno(SessoesChat.Sessao sessao, String mensagem) {
+    public record Turno(SessoesChat.Sessao sessao, String mensagem, String ip) {
     }
 
     private final AgenteProperties props;
@@ -53,10 +54,23 @@ public class ChatService {
     private final FiltroEscopo filtro;
     private final SessoesChat sessoes;
     private final LimitadorUso limitador;
+    private final ContextoDados contexto;
+    private final BloqueioTemporario bloqueio;
+    private final MonitorUso monitor;
     private final VazamentoDePrompt vazamento;
 
+    /** Versão enxuta: sem dados da aplicação, com bloqueio e monitor padrão (usada nos testes simples). */
     public ChatService(AgenteProperties props, PromptsAgente prompts, ProvedoresIA provedores,
                        ProtecaoEntrada protecao, FiltroEscopo filtro, SessoesChat sessoes, LimitadorUso limitador) {
+        this(props, prompts, provedores, protecao, filtro, sessoes, limitador, ContextoDados.vazio(),
+                new BloqueioTemporario(5, java.time.Duration.ofMinutes(10), java.time.Duration.ofMinutes(5),
+                        java.time.Clock.systemUTC()),
+                new MonitorUso(30, 200_000, java.time.Clock.systemUTC()));
+    }
+
+    public ChatService(AgenteProperties props, PromptsAgente prompts, ProvedoresIA provedores,
+                       ProtecaoEntrada protecao, FiltroEscopo filtro, SessoesChat sessoes, LimitadorUso limitador,
+                       ContextoDados contexto, BloqueioTemporario bloqueio, MonitorUso monitor) {
         this.props = props;
         this.prompts = prompts;
         this.provedores = provedores;
@@ -64,7 +78,14 @@ public class ChatService {
         this.filtro = filtro;
         this.sessoes = sessoes;
         this.limitador = limitador;
+        this.contexto = contexto;
+        this.bloqueio = bloqueio;
+        this.monitor = monitor;
         this.vazamento = new VazamentoDePrompt(prompts.textoSistema());
+    }
+
+    public MonitorUso monitor() {
+        return monitor;
     }
 
     /** Por que o agente está desligado, ou {@code null} se está pronto para conversar. */
@@ -88,10 +109,21 @@ public class ChatService {
             throw new MensagemInvalidaException("A mensagem pode ter no máximo " + props.limites().maxMensagem()
                     + " caracteres.");
         }
+        // Bloqueio por abuso: nunca vale para pedido de ajuda em emergência de saúde.
+        boolean emergencia = protecao.avaliar(texto)
+                .filter(r -> r.tipo() == ProtecaoEntrada.Tipo.RISCO_A_SAUDE).isPresent();
+        if (!emergencia) {
+            var restante = bloqueio.bloqueadoPor("ip:" + ip);
+            if (restante.isPresent()) {
+                long minutos = Math.max(1, restante.get().toMinutes() + 1);
+                throw new LimiteExcedidoException("Muitas perguntas recusadas em pouco tempo. Tente de novo em "
+                        + minutos + " minuto(s).");
+            }
+        }
         if (!limitador.permitir("ip:" + ip)) throw new LimiteExcedidoException();
         SessoesChat.Sessao sessao = sessoes.obter(sessaoId);
         if (!limitador.permitir("sessao:" + sessao.id())) throw new LimiteExcedidoException();
-        return new Turno(sessao, texto);
+        return new Turno(sessao, texto, ip);
     }
 
     /** Roda a volta inteira e vai entregando eventos. Nunca lança: erros viram evento "erro". */
@@ -117,10 +149,12 @@ public class ChatService {
         emitir.accept(new Evento("sessao", Map.of("sessaoId", turno.sessao().id())));
 
         // 1. Barreiras sem IA
-        var bloqueio = protecao.avaliar(msg);
-        if (bloqueio.isPresent()) {
-            recusar(emitir, bloqueio.get().tipo().name(), bloqueio.get().texto());
-            registrar(id, bloqueio.get().tipo().name(), "recusada", 0, 0);
+        var barreira = protecao.avaliar(msg);
+        if (barreira.isPresent()) {
+            recusar(emitir, barreira.get().tipo().name(), barreira.get().texto());
+            registrar(id, barreira.get().tipo().name(), "recusada", 0, 0);
+            // emergência não conta como abuso: a pessoa precisa de ajuda, não de bloqueio
+            if (barreira.get().tipo() != ProtecaoEntrada.Tipo.RISCO_A_SAUDE) contarRecusa(turno);
             return;
         }
 
@@ -137,6 +171,7 @@ public class ChatService {
             if (sinalizada) {
                 recusar(emitir, "MODERACAO", TextosAgente.MODERACAO_ENTRADA);
                 registrar(id, "MODERACAO", "recusada", 0, 0);
+                contarRecusa(turno);
                 return;
             }
         }
@@ -158,6 +193,7 @@ public class ChatService {
             };
             recusar(emitir, classe.categoria().name(), texto);
             registrar(id, classe.categoria().name(), "recusada", 0, 0);
+            contarRecusa(turno);
             return;
         }
 
@@ -165,7 +201,9 @@ public class ChatService {
         List<Mensagem> msgs = new ArrayList<>();
         msgs.add(Mensagem.sistema(prompts.textoSistema()));
         msgs.addAll(turno.sessao().ultimas(props.limites().maxHistorico()));
-        msgs.add(Mensagem.usuario(msg));
+        // Dados agregados da aplicação, lidos agora (só quando a pergunta pede), marcados como conteúdo externo.
+        String dados = contexto.montar(msg);
+        msgs.add(Mensagem.usuario(dados.isEmpty() ? msg : dados + "\n\nPergunta do usuário:\n" + msg));
 
         StringBuilder acumulado = new StringBuilder();
         int[] liberado = {0};
@@ -218,6 +256,12 @@ public class ChatService {
         sessoes.registrar(turno.sessao(), msg, finalComAviso);
         emitir.accept(new Evento("fim", Map.of("versaoPrompt", prompts.versao())));
         registrar(id, classe.categoria().name(), "respondida", resposta.tokensEntrada(), resposta.tokensSaida());
+    }
+
+    /** Recusa "de verdade" (a pessoa pediu algo que não pode): conta para o bloqueio por abuso e para o monitor. */
+    private void contarRecusa(Turno turno) {
+        bloqueio.registrarRecusa("ip:" + turno.ip());
+        monitor.registrarRecusa();
     }
 
     private void enviarTrecho(Consumer<Evento> emitir, String texto) {

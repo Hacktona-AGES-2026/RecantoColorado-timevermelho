@@ -35,7 +35,14 @@ public class ProtecaoEntrada {
             "\\brepita (o )?(texto|tudo) (acima|anterior)", "\\bvoce (agora )?(e|sera|vai ser) (um |uma |o |a )?(outro|outra|dan|assistente sem)",
             "\\b(modo|mode) (desenvolvedor|developer|dan|deus)\\b", "\\bjailbreak\\b",
             "\\bdeveloper message\\b", "\\bmensagem do desenvolvedor\\b",
-            "\\ba partir de agora (a |as |sua |suas )?(regra|regras|voce)");
+            "\\ba partir de agora (a |as |sua |suas )?(regra|regras|voce)",
+            // inglês
+            "\\b(ignore|disregard|forget) (all |any |the |your |previous |prior |above |earlier )*(instructions|rules|prompts?)",
+            "\\b(show|reveal|print|repeat|display|tell) (me )?(your |the )*(system prompt|instructions|prompt|rules)",
+            "\\byou are now\\b", "\\b(developer|dan|jailbreak|god) mode\\b", "\\bact as if you (have|had) no (rules|restrictions)",
+            // espanhol
+            "\\b(ignora|olvida|olvide) (todas |todos |las |los |tus |sus )*(instrucciones|reglas)",
+            "\\b(muestra|revela|repite) (me )?(tus |las |el )*(instrucciones|prompt)", "\\bahora eres\\b");
 
     private static List<Pattern> compilar(String... padroes) {
         return java.util.Arrays.stream(padroes).map(p -> Pattern.compile(p)).toList();

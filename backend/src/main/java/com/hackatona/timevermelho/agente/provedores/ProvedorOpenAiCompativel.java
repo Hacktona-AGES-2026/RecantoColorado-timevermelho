@@ -37,6 +37,7 @@ public class ProvedorOpenAiCompativel implements ProvedorIA {
     private final String modeloModeracao;
     private final String campoLimiteTokens;
     private final boolean moderacao;
+    private final boolean naoArmazenar;
     private final Duration timeout;
     private final HttpClient http;
 
@@ -49,6 +50,7 @@ public class ProvedorOpenAiCompativel implements ProvedorIA {
         this.modeloModeracao = config.modeloModeracao();
         this.campoLimiteTokens = config.campoLimiteTokens();
         this.moderacao = config.moderacao();
+        this.naoArmazenar = config.naoArmazenar();
         this.timeout = Duration.ofSeconds(Math.max(1, timeoutSegundos));
         this.http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     }
@@ -131,6 +133,7 @@ public class ProvedorOpenAiCompativel implements ProvedorIA {
         for (Mensagem m : mensagens) msgs.add(Map.of("role", m.papel(), "content", m.conteudo()));
         corpo.put("messages", msgs);
         corpo.put(campoLimiteTokens, opcoes.maxTokens());
+        if (naoArmazenar) corpo.put("store", false); // pede ao provedor para não guardar a conversa
         if (opcoes.json()) corpo.put("response_format", Map.of("type", "json_object"));
         if (streaming) {
             corpo.put("stream", true);

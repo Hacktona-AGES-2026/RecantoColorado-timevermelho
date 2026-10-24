@@ -17,6 +17,10 @@ public final class Excecoes {
         public LimiteExcedidoException() {
             super("Muitas mensagens em pouco tempo. Aguarde um minuto e tente de novo.");
         }
+
+        public LimiteExcedidoException(String mensagem) {
+            super(mensagem);
+        }
     }
 
     /** Mensagem vazia ou grande demais. HTTP 400. */

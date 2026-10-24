@@ -8,6 +8,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.LongConsumer;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -65,6 +66,13 @@ public class ProvedoresIA {
         this.clock = clock;
     }
 
+    private volatile LongConsumer aoGastarTokens = t -> { };
+
+    /** Avisa quem quiser acompanhar o gasto (tokens de entrada + saída de cada chamada que deu certo). */
+    public void aoGastarTokens(LongConsumer ouvinte) {
+        this.aoGastarTokens = ouvinte;
+    }
+
     public boolean temProvedores() {
         return !estados.isEmpty();
     }
@@ -109,6 +117,7 @@ public class ProvedoresIA {
                     if (contaTokens && resultado instanceof ProvedorIA.Resposta r) {
                         e.tokensEntrada.addAndGet(r.tokensEntrada());
                         e.tokensSaida.addAndGet(r.tokensSaida());
+                        aoGastarTokens.accept(r.tokensEntrada() + r.tokensSaida());
                     }
                     return resultado;
                 } catch (ErroProvedor erro) {

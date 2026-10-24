@@ -155,6 +155,32 @@ class AgenteControllerTest {
         assertThat(msg).isEqualTo(TextosAgente.INDISPONIVEL).doesNotContain("chave").doesNotContain("provedor");
     }
 
+    /**
+     * O navegador pede o chat com Accept: text/event-stream. Se o erro em JSON não fosse tratado à parte, o servidor
+     * não acharia como escrevê-lo e devolveria 500 em vez do status certo (isto só apareceu rodando no navegador).
+     */
+    @Test
+    void errosVoltamEmJsonMesmoQuandoONavegadorPedeFluxoDeEventos() throws Exception {
+        record Caso(String descricao, MockMvc mvc, String corpo, int status) {
+        }
+        var limite = mvc(provedor);
+        for (int i = 0; i < 3; i++) chat(limite, corpo("p" + i));
+        List<Caso> casos = List.of(
+                new Caso("mensagem vazia", mvc(provedor), corpo(""), 400),
+                new Caso("sem o campo mensagem", mvc(provedor), "{}", 400),
+                new Caso("mensagem grande demais", mvc(provedor), corpo("x".repeat(101)), 400),
+                new Caso("json quebrado", mvc(provedor), "{isso nao e json", 400),
+                new Caso("agente desligado", mvc(), corpo("oi"), 503),
+                new Caso("limite por minuto", limite, corpo("mais uma"), 429));
+        for (Caso c : casos) {
+            var r = c.mvc().perform(post("/api/agente/chat").contentType(MediaType.APPLICATION_JSON)
+                    .accept(MediaType.TEXT_EVENT_STREAM).content(c.corpo())).andReturn().getResponse();
+            assertThat(r.getStatus()).as(c.descricao()).isEqualTo(c.status());
+            assertThat(r.getContentType()).as(c.descricao()).startsWith("application/json");
+            assertThat((String) JsonPath.read(r.getContentAsString(), "$.mensagem")).as(c.descricao()).isNotBlank();
+        }
+    }
+
     @Test
     void passandoDoLimiteDevolve429() throws Exception {
         var mvc = mvc(provedor);

@@ -42,7 +42,8 @@ public class AgenteController {
     }
 
     public record StatusAgente(boolean pronto, String motivoDesligado, String versaoPrompt, boolean moderacaoAtiva,
-                               int sessoesAtivas, List<ProvedoresIA.StatusProvedor> provedores) {
+                               int sessoesAtivas, int recusasUltimos10Min, long tokensUltimaHora,
+                               List<ProvedoresIA.StatusProvedor> provedores) {
     }
 
     private final ChatService chat;
@@ -90,6 +91,6 @@ public class AgenteController {
     public StatusAgente status() {
         String motivo = chat.motivoDesligado();
         return new StatusAgente(motivo == null, motivo, prompts.versao(), props.moderacaoAtiva(), sessoes.total(),
-                provedores.status());
+                chat.monitor().recusasUltimos10Min(), chat.monitor().tokensUltimaHora(), provedores.status());
     }
 }

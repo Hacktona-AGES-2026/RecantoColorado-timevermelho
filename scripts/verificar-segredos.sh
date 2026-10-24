@@ -10,8 +10,8 @@ set -u
 cd "$(git rev-parse --show-toplevel)"
 
 PADROES=(
-  'sk-(proj-|svcacct-|admin-)?[A-Za-z0-9_-]{20,}'          # OpenAI e compatíveis
-  'sk-ant-[A-Za-z0-9_-]{20,}'                               # Anthropic
+  '(^|[^A-Za-z0-9_-])sk-(proj-|svcacct-|admin-)?[A-Za-z0-9_-]{20,}'  # OpenAI e compatíveis
+  '(^|[^A-Za-z0-9_-])sk-ant-[A-Za-z0-9_-]{20,}'                # Anthropic
   'AKIA[0-9A-Z]{16}'                                        # AWS
   'AIza[0-9A-Za-z_-]{35}'                                   # Google
   'gh[pousr]_[A-Za-z0-9]{36,}'                              # GitHub
@@ -34,6 +34,15 @@ if [ -n "$(git rev-list --all | head -1)" ]; then
   if [ -n "$hist" ]; then echo "$hist" | sed 's/^/commit:arquivo  /' | head -20; achou=1; else echo "nada encontrado"; fi
 else
   echo "(sem commits)"
+fi
+
+echo "== Build do frontend (o que o navegador recebe) =="
+if [ -d frontend/.next ]; then
+  # chaves, nomes das variáveis de chave e endereços dos provedores de IA não podem estar no JavaScript do build
+  build=$(grep -rIlE '(^|[^A-Za-z0-9_-])sk-(proj-|svcacct-|admin-)?[A-Za-z0-9_-]{20,}|(^|[^A-Za-z0-9_-])sk-ant-[A-Za-z0-9_-]{20,}|IA_PROVEDOR_[0-9]|OPENAI_API_KEY|ANTHROPIC_API_KEY|api\.openai\.com|api\.anthropic\.com' frontend/.next/static frontend/.next/server 2>/dev/null | head -10)
+  if [ -n "$build" ]; then echo "ENCONTRADO no build do frontend:"; echo "$build"; achou=1; else echo "nada encontrado em frontend/.next"; fi
+else
+  echo "(sem frontend/.next: rode 'npm run build' no frontend para conferir o build)"
 fi
 
 echo "== .gitignore protege arquivos de chave? =="

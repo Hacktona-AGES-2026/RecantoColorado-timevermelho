@@ -71,8 +71,34 @@ class ProvedorOpenAiCompativelTest {
     }
 
     private ProvedorOpenAiCompativel provedor(String baseUrl) {
+        return provedor(baseUrl, true);
+    }
+
+    private ProvedorOpenAiCompativel provedor(String baseUrl, boolean naoArmazenar) {
         return new ProvedorOpenAiCompativel(new AgenteProperties.Provedor("openai-teste", baseUrl, CHAVE, "modelo-teste",
-                "moderacao-teste", "max_completion_tokens", true), 5);
+                "moderacao-teste", "max_completion_tokens", true, naoArmazenar), 5);
+    }
+
+    @Test
+    void pedeAoProvedorParaNaoGuardarAConversa() {
+        corpoDaResposta = "{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}";
+        provedor().gerar(PEDIDO, ProvedorIA.Opcoes.texto(10));
+        assertThat(corpos.getFirst()).contains("\"store\":false");
+    }
+
+    @Test
+    void storeFalsePodeSerDesligadoParaApisQueRecusamOCampo() {
+        corpoDaResposta = "{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}";
+        provedor("http://127.0.0.1:" + servidor.getAddress().getPort() + "/v1", false).gerar(PEDIDO, ProvedorIA.Opcoes.texto(10));
+        assertThat(corpos.getFirst()).doesNotContain("\"store\"");
+    }
+
+    @Test
+    void streamingTambemPedeParaNaoGuardar() {
+        tipoDaResposta = "text/event-stream";
+        corpoDaResposta = "data: [DONE]\n\n";
+        provedor().gerarStreaming(PEDIDO, ProvedorIA.Opcoes.texto(10), t -> { });
+        assertThat(corpos.getFirst()).contains("\"store\":false");
     }
 
     private ProvedorOpenAiCompativel provedor() {

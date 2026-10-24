@@ -13,9 +13,18 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.hackatona.timevermelho.agente.chat.AbusoProperties;
+import com.hackatona.timevermelho.agente.chat.BloqueioTemporario;
 import com.hackatona.timevermelho.agente.chat.ChatService;
 import com.hackatona.timevermelho.agente.chat.LimitadorUso;
+import com.hackatona.timevermelho.agente.chat.MonitorUso;
 import com.hackatona.timevermelho.agente.chat.SessoesChat;
+import com.hackatona.timevermelho.agente.categorizacao.CategorizacaoRepository;
+import com.hackatona.timevermelho.agente.categorizacao.CategorizacaoService;
+import com.hackatona.timevermelho.agente.relatorios.RelatorioRepository;
+import com.hackatona.timevermelho.agente.relatorios.RelatorioService;
+import com.hackatona.timevermelho.agente.contexto.ContextoDados;
+import com.hackatona.timevermelho.agente.contexto.LeituraAplicacao;
 import com.hackatona.timevermelho.agente.protecao.FiltroEscopo;
 import com.hackatona.timevermelho.agente.protecao.ProtecaoEntrada;
 import com.hackatona.timevermelho.agente.provedores.ProvedorIA;
@@ -23,7 +32,7 @@ import com.hackatona.timevermelho.agente.provedores.ProvedorOpenAiCompativel;
 import com.hackatona.timevermelho.agente.provedores.ProvedoresIA;
 
 @Configuration
-@EnableConfigurationProperties(AgenteProperties.class)
+@EnableConfigurationProperties({AgenteProperties.class, AbusoProperties.class})
 public class AgenteConfig {
 
     private static final Logger log = LoggerFactory.getLogger(AgenteConfig.class);
@@ -48,7 +57,7 @@ public class AgenteConfig {
             String nome = cfg.nome() == null || cfg.nome().isBlank() ? "provedor-" + n : cfg.nome();
             lista.add(new ProvedorOpenAiCompativel(
                     new AgenteProperties.Provedor(nome, cfg.baseUrl(), cfg.chave(), cfg.modelo(),
-                            cfg.modeloModeracao(), cfg.campoLimiteTokens(), cfg.moderacao()),
+                            cfg.modeloModeracao(), cfg.campoLimiteTokens(), cfg.moderacao(), cfg.naoArmazenar()),
                     p.timeoutSegundos()));
         }
         log.info("agente: {} provedor(es) de IA configurado(s): {}", lista.size(),
@@ -90,9 +99,48 @@ public class AgenteConfig {
     }
 
     @Bean
+    ContextoDados contextoDados(LeituraAplicacao leitura) {
+        return ContextoDados.padrao(leitura);
+    }
+
+    @Bean
+    BloqueioTemporario bloqueioTemporario(AbusoProperties a, Clock agenteRelogio) {
+        return new BloqueioTemporario(a.recusasParaBloquear(), Duration.ofMinutes(a.janelaMinutos()),
+                Duration.ofMinutes(a.bloqueioMinutos()), agenteRelogio);
+    }
+
+    @Bean
+    MonitorUso monitorUso(AbusoProperties a, Clock agenteRelogio) {
+        return new MonitorUso(a.alertaRecusas10Min(), a.alertaTokensHora(), agenteRelogio);
+    }
+
+    @Bean
     ChatService chatService(AgenteProperties p, PromptsAgente prompts, ProvedoresIA provedores,
-                            ProtecaoEntrada protecao, FiltroEscopo filtro, SessoesChat sessoes, LimitadorUso limitador) {
-        return new ChatService(p, prompts, provedores, protecao, filtro, sessoes, limitador);
+                            ProtecaoEntrada protecao, FiltroEscopo filtro, SessoesChat sessoes, LimitadorUso limitador,
+                            ContextoDados contexto, BloqueioTemporario bloqueio, MonitorUso monitor) {
+        provedores.aoGastarTokens(monitor::registrarTokens); // todo gasto de tokens (chat, filtro, relatórios) entra no monitor
+        return new ChatService(p, prompts, provedores, protecao, filtro, sessoes, limitador, contexto, bloqueio, monitor);
+    }
+
+    @Bean
+    PromptsTarefas promptsTarefas() {
+        return PromptsTarefas.carregar();
+    }
+
+    @Bean
+    CategorizacaoService categorizacaoService(ProvedoresIA provedores, PromptsAgente prompts, PromptsTarefas tarefas,
+                                              ProtecaoEntrada protecao, CategorizacaoRepository repositorio,
+                                              AbusoProperties a, ChatService chat, Clock agenteRelogio) {
+        return new CategorizacaoService(provedores, prompts, tarefas, protecao, repositorio,
+                new LimitadorUso(a.categorizacoesPorMinuto(), agenteRelogio), chat::motivoDesligado, agenteRelogio);
+    }
+
+    @Bean
+    RelatorioService relatorioService(ProvedoresIA provedores, PromptsAgente prompts, PromptsTarefas tarefas,
+                                      LeituraAplicacao leitura, RelatorioRepository repositorio, AbusoProperties a,
+                                      ChatService chat, Clock agenteRelogio) {
+        return new RelatorioService(provedores, prompts, tarefas, leitura, repositorio,
+                new LimitadorUso(a.relatoriosPorMinuto(), agenteRelogio), chat::motivoDesligado, agenteRelogio);
     }
 
     /** Uma thread virtual por conversa em andamento. */
