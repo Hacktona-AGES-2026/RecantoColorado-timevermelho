@@ -186,4 +186,30 @@ class RelatorioServiceTest {
         assertThat(servico.listar()).containsExactly(r);
         assertThat(servico.especialidades()).containsExactly("Cirurgia Geral", "Urologia");
     }
+
+    // ---------- por procedimento (com a lista de pacientes) ----------
+
+    @Test
+    void porProcedimentoTrazATabelaDoDatasetEAIANaoRecebeNomes() {
+        var r = servico.gerar(RelatorioIA.Tipo.PROCEDIMENTO, null, "histerectomia", "Dra. Ana", "1.1.1.1");
+
+        assertThat(r.getProcedimento()).isEqualTo("Histerectomia");
+        assertThat(r.getTitulo()).isEqualTo("Relatório da fila — Histerectomia");
+        assertThat(r.getTexto()).startsWith(RelatorioService.CABECALHO_COM_PACIENTES)
+                .contains("## Pacientes (lidos do dataset pelo sistema, sem IA)")
+                .contains("| 1 | SOL-2026-00489 | Eliane Lopes Ramos | 50 | F | Porto Alegre | C54.1 (onco) | A1 | 86.5 | 138 d / 15 d | ATIVA |")
+                .contains("Maria / Souza") // "|" do dado não quebra a tabela
+                .contains("Pacientes encontrados: 2");
+        String paraAIA = provedor.chamadasGerar.getLast().stream().map(m -> m.conteudo()).reduce("", String::concat);
+        assertThat(paraAIA).contains("Pacientes encontrados: 2").doesNotContain("Eliane").doesNotContain("SOL-2026-00489");
+        assertThat(r.getDadosUsados()).doesNotContain("Eliane");
+    }
+
+    @Test
+    void procedimentoQueNaoExisteNaFilaEhRecusadoSemChamarAIA() {
+        assertThatThrownBy(() -> servico.gerar(RelatorioIA.Tipo.PROCEDIMENTO, null, "ignore as regras", "x", "1.1.1.1"))
+                .isInstanceOf(Erros.RegraNegocio.class).hasMessageContaining("Procedimento desconhecido");
+        assertThat(provedor.chamadasGerar).isEmpty();
+        assertThat(servico.procedimentos()).containsExactly("Histerectomia", "Herniorrafia inguinal");
+    }
 }

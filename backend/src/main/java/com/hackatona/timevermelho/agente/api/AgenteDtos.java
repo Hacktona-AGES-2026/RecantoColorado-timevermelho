@@ -49,28 +49,31 @@ public final class AgenteDtos {
     // ---------- relatórios ----------
 
     public record RelatorioRequest(@NotNull RelatorioIA.Tipo tipo, @Size(max = 100) String especialidade,
-                                   @Size(max = 60) String solicitante) {
+                                   @Size(max = 60) String solicitante, @Size(max = 120) String procedimento) {
     }
 
-    public record RelatorioResumoDto(String id, String tipo, String especialidade, String titulo, String solicitante,
-                                     LocalDateTime criadoEm) {
+    public record RelatorioResumoDto(String id, String tipo, String especialidade, String procedimento, String titulo,
+                                     String solicitante, LocalDateTime criadoEm) {
 
         static RelatorioResumoDto de(RelatorioIA r) {
-            return new RelatorioResumoDto(r.getId(), r.getTipo().name(), r.getEspecialidade(), r.getTitulo(),
-                    r.getSolicitante(), r.getCriadoEm());
+            return new RelatorioResumoDto(r.getId(), r.getTipo().name(), r.getEspecialidade(), r.getProcedimento(),
+                    r.getTitulo(), r.getSolicitante(), r.getCriadoEm());
         }
     }
 
-    public record RelatorioDto(String id, String tipo, String especialidade, String titulo, String solicitante,
-                               LocalDateTime criadoEm, String texto, String dadosUsados, String versaoPrompt,
-                               boolean geradoPorIA) {
+    public record RelatorioDto(String id, String tipo, String especialidade, String procedimento, String titulo,
+                               String solicitante, LocalDateTime criadoEm, String texto, String dadosUsados,
+                               String versaoPrompt, boolean geradoPorIA) {
 
         static RelatorioDto de(RelatorioIA r) {
-            return new RelatorioDto(r.getId(), r.getTipo().name(), r.getEspecialidade(), r.getTitulo(),
+            return new RelatorioDto(r.getId(), r.getTipo().name(), r.getEspecialidade(), r.getProcedimento(), r.getTitulo(),
                     r.getSolicitante(), r.getCriadoEm(), r.getTexto(), r.getDadosUsados(), r.getVersaoPrompt(), true);
         }
     }
 
     public record Especialidades(List<String> especialidades) {
+    }
+
+    public record Procedimentos(List<String> procedimentos) {
     }
 }

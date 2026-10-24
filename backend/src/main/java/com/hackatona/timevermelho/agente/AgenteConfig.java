@@ -25,6 +25,7 @@ import com.hackatona.timevermelho.agente.relatorios.RelatorioRepository;
 import com.hackatona.timevermelho.agente.relatorios.RelatorioService;
 import com.hackatona.timevermelho.agente.contexto.ContextoDados;
 import com.hackatona.timevermelho.agente.contexto.LeituraAplicacao;
+import com.hackatona.timevermelho.agente.contexto.PlanejadorConsulta;
 import com.hackatona.timevermelho.agente.protecao.FiltroEscopo;
 import com.hackatona.timevermelho.agente.protecao.ProtecaoEntrada;
 import com.hackatona.timevermelho.agente.provedores.ProvedorIA;
@@ -105,6 +106,11 @@ public class AgenteConfig {
     }
 
     @Bean
+    PlanejadorConsulta planejadorConsulta(ProvedoresIA provedores, LeituraAplicacao leitura) {
+        return new PlanejadorConsulta(provedores, leitura);
+    }
+
+    @Bean
     BloqueioTemporario bloqueioTemporario(AbusoProperties a, Clock agenteRelogio) {
         return new BloqueioTemporario(a.recusasParaBloquear(), Duration.ofMinutes(a.janelaMinutos()),
                 Duration.ofMinutes(a.bloqueioMinutos()), agenteRelogio);
@@ -118,9 +124,11 @@ public class AgenteConfig {
     @Bean
     ChatService chatService(AgenteProperties p, PromptsAgente prompts, ProvedoresIA provedores,
                             ProtecaoEntrada protecao, FiltroEscopo filtro, SessoesChat sessoes, LimitadorUso limitador,
-                            ContextoDados contexto, BloqueioTemporario bloqueio, MonitorUso monitor) {
+                            ContextoDados contexto, BloqueioTemporario bloqueio, MonitorUso monitor,
+                            PlanejadorConsulta planejador) {
         provedores.aoGastarTokens(monitor::registrarTokens); // todo gasto de tokens (chat, filtro, relatórios) entra no monitor
-        return new ChatService(p, prompts, provedores, protecao, filtro, sessoes, limitador, contexto, bloqueio, monitor);
+        return new ChatService(p, prompts, provedores, protecao, filtro, sessoes, limitador, contexto, bloqueio, monitor,
+                planejador);
     }
 
     @Bean

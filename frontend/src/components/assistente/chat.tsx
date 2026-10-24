@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { BotIcon, SendIcon, SquarePenIcon, TriangleAlertIcon, UserIcon } from "lucide-react";
-import { agenteApi, ErroAgente, type EventoChat, type StatusAgente } from "@/lib/agente";
+import { BotIcon, DownloadIcon, SendIcon, SquarePenIcon, TriangleAlertIcon, UserIcon } from "lucide-react";
+import { agenteApi, ErroAgente, type EventoChat, type StatusAgente, type TabelaPacientes } from "@/lib/agente";
+import { baixarCsvPacientes } from "@/lib/csv-pacientes";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -14,6 +15,7 @@ const SUGESTOES = [
   "Como uso a tela de Alertas?",
   "O que significa a classe A2?",
   "Quantos pacientes há em cada classe?",
+  "Liste os pacientes de Histerectomia",
   "O que é uma consulta de reavaliação?",
 ];
 
@@ -24,11 +26,14 @@ interface Fala {
   autor: "usuario" | "assistente";
   texto: string;
   tipo: Tipo;
+  /** Lista de pacientes lida do dataset pelo backend (não vem da IA). */
+  tabela?: TabelaPacientes;
 }
 
 /**
  * Chat do assistente. O texto das respostas é mostrado SEMPRE como texto puro (nada de HTML nem Markdown):
- * mesmo que a IA devolva marcação, ela aparece escrita na tela e nunca é executada.
+ * mesmo que a IA devolva marcação, ela aparece escrita na tela e nunca é executada. Tabelas de pacientes vêm num
+ * evento próprio, com os dados do dataset, e também são mostradas só como texto.
  */
 export function Chat({ compacto = false, className }: { compacto?: boolean; className?: string }) {
   const [falas, setFalas] = useState<Fala[]>([]);
@@ -78,6 +83,9 @@ export function Chat({ compacto = false, className }: { compacto?: boolean; clas
           break;
         case "erro":
           atualizarUltima((f) => ({ ...f, texto: e.texto, tipo: "erro" }));
+          break;
+        case "tabela":
+          atualizarUltima((f) => ({ ...f, tabela: { titulo: e.titulo, filtros: e.filtros, total: e.total, linhas: e.linhas } }));
           break;
         case "fim":
           break;
@@ -157,8 +165,8 @@ export function Chat({ compacto = false, className }: { compacto?: boolean; clas
         {falas.length === 0 ? (
           <div className="text-muted-foreground flex flex-col gap-3 text-sm">
             <p>
-              Olá! Posso tirar dúvidas sobre consultas, sobre como usar o FilaVIVA e dar informações gerais de saúde e
-              alimentação.
+              Olá! Posso tirar dúvidas sobre consultas, sobre como usar o FilaVIVA, dar informações gerais de saúde e
+              alimentação e consultar números e listas da fila (por procedimento, classe, especialidade…).
             </p>
             <div className="flex flex-wrap gap-2">
               {SUGESTOES.map((s) => (
@@ -243,7 +251,65 @@ function Balao({ fala, aguardando }: { fala: Fala; aguardando: boolean }) {
         role={fala.tipo === "emergencia" || fala.tipo === "erro" ? "alert" : undefined}
       >
         {aguardando ? <span className="text-muted-foreground italic">Digitando…</span> : fala.texto}
+        {fala.tabela && <TabelaChat tabela={fala.tabela} />}
       </div>
+    </div>
+  );
+}
+
+function TabelaChat({ tabela }: { tabela: TabelaPacientes }) {
+  const { linhas, total } = tabela;
+  return (
+    <div className="bg-background mt-3 rounded-lg border text-xs whitespace-normal" aria-label="Tabela de pacientes">
+      <div className="flex flex-wrap items-center justify-between gap-2 border-b px-2 py-1.5">
+        <span className="font-medium">
+          {total} paciente(s){linhas.length < total ? ` · mostrando ${linhas.length}` : ""}
+        </span>
+        <Button type="button" variant="outline" size="sm" onClick={() => baixarCsvPacientes(linhas)}>
+          <DownloadIcon /> Baixar CSV
+        </Button>
+      </div>
+      <p className="text-muted-foreground px-2 pt-1.5">{tabela.filtros}</p>
+      <div className="max-h-72 overflow-auto">
+        <table className="w-full border-collapse">
+          <thead className="bg-background sticky top-0">
+            <tr className="text-muted-foreground text-left">
+              <th className="px-2 py-1 font-medium">#</th>
+              <th className="px-2 py-1 font-medium">Paciente</th>
+              <th className="px-2 py-1 font-medium">Classe</th>
+              <th className="px-2 py-1 font-medium">CID</th>
+              <th className="px-2 py-1 font-medium whitespace-nowrap">Espera / prazo</th>
+            </tr>
+          </thead>
+          <tbody>
+            {linhas.map((l) => (
+              <tr key={l.solicitacaoId} className="border-t align-top">
+                <td className="px-2 py-1 tabular-nums">{l.posicao ?? "—"}</td>
+                <td className="px-2 py-1">
+                  <span className="font-medium">{l.nome}</span>
+                  <span className="text-muted-foreground block">
+                    {l.solicitacaoId}
+                    {l.idade !== null ? ` · ${l.idade} a` : ""}
+                    {l.sexo ? ` · ${l.sexo}` : ""}
+                    {l.procedimento ? ` · ${l.procedimento}` : ""}
+                  </span>
+                </td>
+                <td className="px-2 py-1 font-medium">{l.classe}</td>
+                <td className="px-2 py-1 whitespace-nowrap">
+                  {l.cid ?? "—"}
+                  {l.oncologico ? " · onco" : ""}
+                </td>
+                <td className="px-2 py-1 whitespace-nowrap tabular-nums">
+                  {l.diasEmFila} d / {l.prazoDias} d
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-muted-foreground border-t px-2 py-1.5">
+        Lista lida do dataset pelo sistema, como na tela Fila (não foi escrita pela IA).
+      </p>
     </div>
   );
 }

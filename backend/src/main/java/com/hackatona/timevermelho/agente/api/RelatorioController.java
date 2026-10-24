@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hackatona.timevermelho.agente.api.AgenteDtos.Especialidades;
+import com.hackatona.timevermelho.agente.api.AgenteDtos.Procedimentos;
 import com.hackatona.timevermelho.agente.api.AgenteDtos.RelatorioDto;
 import com.hackatona.timevermelho.agente.api.AgenteDtos.RelatorioRequest;
 import com.hackatona.timevermelho.agente.api.AgenteDtos.RelatorioResumoDto;
@@ -23,7 +24,10 @@ import com.hackatona.timevermelho.agente.relatorios.RelatorioService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 
-/** Relatórios para médicos gerados por IA a partir de dados agregados. Tudo marcado como "revisar antes de usar". */
+/**
+ * Relatórios para médicos gerados por IA a partir de dados agregados (no relatório por procedimento, com a lista de
+ * pacientes montada pelo sistema). Tudo marcado como "revisar antes de usar".
+ */
 @RestController
 @RequestMapping("/api/agente/relatorios")
 public class RelatorioController {
@@ -36,7 +40,8 @@ public class RelatorioController {
 
     @PostMapping
     public RelatorioDto gerar(@Valid @RequestBody RelatorioRequest req, HttpServletRequest http) {
-        return RelatorioDto.de(servico.gerar(req.tipo(), req.especialidade(), req.solicitante(), http.getRemoteAddr()));
+        return RelatorioDto.de(servico.gerar(req.tipo(), req.especialidade(), req.procedimento(), req.solicitante(),
+                http.getRemoteAddr()));
     }
 
     @GetMapping
@@ -48,6 +53,12 @@ public class RelatorioController {
     @GetMapping("/especialidades")
     public Especialidades especialidades() {
         return new Especialidades(servico.especialidades());
+    }
+
+    /** Procedimentos que existem na fila, para o relatório com a lista de pacientes. */
+    @GetMapping("/procedimentos")
+    public Procedimentos procedimentos() {
+        return new Procedimentos(servico.procedimentos());
     }
 
     @GetMapping("/{id}")

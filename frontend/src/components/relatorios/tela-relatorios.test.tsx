@@ -10,6 +10,7 @@ vi.mock("@/lib/agente", async (importOriginal) => {
     agenteApi: {
       ...original.agenteApi,
       especialidades: vi.fn(),
+      procedimentos: vi.fn(),
       relatorios: vi.fn(),
       relatorio: vi.fn(),
       gerarRelatorio: vi.fn(),
@@ -27,6 +28,7 @@ function relatorio(sobrescrever: Partial<Relatorio> = {}): Relatorio {
     id: "11111111-aaaa-bbbb-cccc-222222222222",
     tipo: "VISAO_GERAL",
     especialidade: null,
+    procedimento: null,
     titulo: "Relatório da fila — visão geral",
     solicitante: "Dra. Ana",
     criadoEm: "2026-10-24T10:00:00",
@@ -39,12 +41,13 @@ function relatorio(sobrescrever: Partial<Relatorio> = {}): Relatorio {
 }
 
 function resumo(r: Relatorio): RelatorioResumo {
-  return { id: r.id, tipo: r.tipo, especialidade: r.especialidade, titulo: r.titulo, solicitante: r.solicitante, criadoEm: r.criadoEm };
+  return { id: r.id, tipo: r.tipo, especialidade: r.especialidade, procedimento: r.procedimento, titulo: r.titulo, solicitante: r.solicitante, criadoEm: r.criadoEm };
 }
 
 beforeEach(() => {
   Object.values(api).forEach((f) => typeof f === "function" && "mockReset" in f && (f as ReturnType<typeof vi.fn>).mockReset());
   api.especialidades.mockResolvedValue({ especialidades: ["Cirurgia Geral", "Urologia"] });
+  api.procedimentos.mockResolvedValue({ procedimentos: ["Colectomia", "Histerectomia"] });
   api.relatorios.mockResolvedValue([]);
 });
 
@@ -86,6 +89,24 @@ describe("TelaRelatorios", () => {
     await waitFor(() =>
       expect(api.gerarRelatorio).toHaveBeenCalledWith({ tipo: "ESPECIALIDADE", especialidade: "Urologia", solicitante: undefined }),
     );
+  });
+
+  it("por procedimento, mostra os procedimentos da fila e manda o escolhido", async () => {
+    api.gerarRelatorio.mockResolvedValue(
+      relatorio({ tipo: "PROCEDIMENTO", procedimento: "Histerectomia", titulo: "Relatório da fila — Histerectomia" }),
+    );
+    render(<TelaRelatorios />);
+    await userEvent.selectOptions(screen.getByLabelText("Tipo"), "PROCEDIMENTO");
+
+    const select = await screen.findByLabelText("Procedimento");
+    expect(Array.from((select as HTMLSelectElement).options).map((o) => o.value)).toEqual(["Colectomia", "Histerectomia"]);
+    await userEvent.selectOptions(select, "Histerectomia");
+    await userEvent.click(screen.getByRole("button", { name: /Gerar relatório/ }));
+
+    await waitFor(() =>
+      expect(api.gerarRelatorio).toHaveBeenCalledWith({ tipo: "PROCEDIMENTO", procedimento: "Histerectomia", solicitante: undefined }),
+    );
+    expect(await screen.findByText("Relatório da fila — Histerectomia")).toBeInTheDocument();
   });
 
   it("o link de download aponta para o backend e baixa o arquivo", async () => {

@@ -30,9 +30,37 @@ async function erroDe(resp: Response): Promise<ErroAgente> {
 
 // ---------- chat (fluxo de eventos) ----------
 
+/** Uma linha da tabela de pacientes: vem do dataset, montada pelo backend (a IA não escreve nem vê). */
+export interface LinhaPaciente {
+  posicao: number | null;
+  solicitacaoId: string;
+  nome: string;
+  idade: number | null;
+  sexo: string | null;
+  municipio: string | null;
+  procedimento: string | null;
+  especialidade: string | null;
+  cid: string | null;
+  cidDescricao: string | null;
+  oncologico: boolean;
+  classe: string;
+  score: number;
+  diasEmFila: number;
+  prazoDias: number;
+  status: string;
+}
+
+export interface TabelaPacientes {
+  titulo: string;
+  filtros: string;
+  total: number;
+  linhas: LinhaPaciente[];
+}
+
 export type EventoChat =
   | { nome: "sessao"; sessaoId: string }
   | { nome: "trecho"; texto: string }
+  | ({ nome: "tabela" } & TabelaPacientes)
   | { nome: "recusa"; motivo: string; texto: string }
   | { nome: "substituir"; texto: string }
   | { nome: "erro"; texto: string }
@@ -66,6 +94,20 @@ export function lerEvento(nome: string, dados: string): EventoChat | null {
       return { nome, texto: texto("texto") };
     case "fim":
       return { nome, versaoPrompt: texto("versaoPrompt") };
+    case "tabela": {
+      if (!Array.isArray(corpo.linhas)) return null;
+      const linhas = (corpo.linhas as unknown[]).filter(
+        (l): l is LinhaPaciente =>
+          l !== null && typeof l === "object" && typeof (l as LinhaPaciente).nome === "string" && typeof (l as LinhaPaciente).classe === "string",
+      );
+      return {
+        nome,
+        titulo: texto("titulo"),
+        filtros: texto("filtros"),
+        total: typeof corpo.total === "number" ? corpo.total : linhas.length,
+        linhas,
+      };
+    }
     default:
       return null;
   }
@@ -173,12 +215,13 @@ export interface RevisaoCategorizacao {
 
 // ---------- relatórios ----------
 
-export type TipoRelatorio = "VISAO_GERAL" | "ESPECIALIDADE";
+export type TipoRelatorio = "VISAO_GERAL" | "ESPECIALIDADE" | "PROCEDIMENTO";
 
 export interface RelatorioResumo {
   id: string;
   tipo: TipoRelatorio;
   especialidade: string | null;
+  procedimento: string | null;
   titulo: string;
   solicitante: string;
   criadoEm: string;
@@ -194,6 +237,7 @@ export interface Relatorio extends RelatorioResumo {
 export interface PedidoRelatorio {
   tipo: TipoRelatorio;
   especialidade?: string;
+  procedimento?: string;
   solicitante?: string;
 }
 
@@ -229,5 +273,6 @@ export const agenteApi = {
   relatorios: () => get<RelatorioResumo[]>("/api/agente/relatorios"),
   relatorio: (id: string) => get<Relatorio>(`/api/agente/relatorios/${encodeURIComponent(id)}`),
   especialidades: () => get<{ especialidades: string[] }>("/api/agente/relatorios/especialidades"),
+  procedimentos: () => get<{ procedimentos: string[] }>("/api/agente/relatorios/procedimentos"),
   urlDownloadRelatorio: (id: string) => `${API_URL}/api/agente/relatorios/${encodeURIComponent(id)}/download`,
 };

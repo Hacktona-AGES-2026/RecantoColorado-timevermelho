@@ -120,11 +120,12 @@ class AgenteGuardaTest {
                 .doesNotContain("function_call").doesNotContain("tool_calls");
     }
 
-    // ---------- o agente só enxerga agregados ----------
+    // ---------- a IA só enxerga agregados (linhas de paciente vão só para a tela) ----------
 
     @Test
     void aPortaDeLeituraSoTemMetodosDeConsultaEResultadosSemDadosDePaciente() {
-        Set<String> prefixosDeLeitura = Set.of("resumo", "indicadores", "reavaliacoes", "especialidades");
+        Set<String> prefixosDeLeitura = Set.of("resumo", "indicadores", "reavaliacoes", "especialidades", "catalogo",
+                "consultar");
         for (Method m : LeituraAplicacao.class.getDeclaredMethods()) {
             assertThat(prefixosDeLeitura.stream().anyMatch(m.getName()::startsWith)).as("método " + m.getName()).isTrue();
             assertThat(m.getName()).doesNotStartWith("registrar").doesNotStartWith("salvar").doesNotStartWith("ajustar")
@@ -134,6 +135,9 @@ class AgenteGuardaTest {
                 "cidDescricao", "idade", "sexo", "municipio", "comorbidades", "justificativa", "observacoes", "dataEntrada",
                 "itens", "recentes");
         for (Class<?> tipo : LeituraAplicacao.class.getDeclaredClasses()) {
+            // a linha da tabela é o único lugar com dado de paciente: vai do código para a tela, nunca para a IA
+            // (ChatServiceConsultaTest confere que o nome não aparece em nada enviado ao provedor)
+            if (tipo == LeituraAplicacao.LinhaPaciente.class) continue;
             for (RecordComponent c : tipo.getRecordComponents()) {
                 assertThat(camposDePaciente).as(tipo.getSimpleName() + "." + c.getName()).doesNotContain(c.getName());
             }

@@ -32,6 +32,8 @@ export function TelaRelatorios() {
   const [tipo, setTipo] = useState<TipoRelatorio>("VISAO_GERAL");
   const [especialidades, setEspecialidades] = useState<string[]>([]);
   const [especialidade, setEspecialidade] = useState("");
+  const [procedimentos, setProcedimentos] = useState<string[]>([]);
+  const [procedimento, setProcedimento] = useState("");
   const [solicitante, setSolicitante] = useState("");
   const [gerando, setGerando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
@@ -55,6 +57,14 @@ export function TelaRelatorios() {
         setEspecialidade((atual) => atual || r.especialidades[0] || "");
       })
       .catch(() => undefined);
+    agenteApi
+      .procedimentos()
+      .then((r) => {
+        if (!ativo) return;
+        setProcedimentos(r.procedimentos);
+        setProcedimento((atual) => atual || r.procedimentos[0] || "");
+      })
+      .catch(() => undefined);
     carregarHistorico();
     return () => {
       ativo = false;
@@ -67,6 +77,7 @@ export function TelaRelatorios() {
     const pedido: PedidoRelatorio = {
       tipo,
       especialidade: tipo === "ESPECIALIDADE" ? especialidade : undefined,
+      procedimento: tipo === "PROCEDIMENTO" ? procedimento : undefined,
       solicitante: solicitante.trim() || undefined,
     };
     try {
@@ -88,7 +99,9 @@ export function TelaRelatorios() {
     }
   }
 
-  const podeGerar = !gerando && (tipo === "VISAO_GERAL" || especialidade !== "");
+  const podeGerar =
+    !gerando &&
+    (tipo === "VISAO_GERAL" || (tipo === "ESPECIALIDADE" && especialidade !== "") || (tipo === "PROCEDIMENTO" && procedimento !== ""));
 
   return (
     <div className="grid gap-6 lg:grid-cols-[22rem_1fr]">
@@ -96,7 +109,10 @@ export function TelaRelatorios() {
         <Card>
           <CardHeader>
             <CardTitle>Novo relatório</CardTitle>
-            <CardDescription>Escolha o que resumir. A IA só vê números agregados.</CardDescription>
+            <CardDescription>
+              Escolha o que resumir. A IA só vê números agregados; no relatório por procedimento, a lista de pacientes é
+              montada pelo sistema direto do dataset.
+            </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-col gap-3">
             <label className="flex flex-col gap-1 text-sm">
@@ -104,6 +120,7 @@ export function TelaRelatorios() {
               <select className={CLASSE_SELECT} value={tipo} onChange={(e) => setTipo(e.target.value as TipoRelatorio)}>
                 <option value="VISAO_GERAL">Visão geral da fila</option>
                 <option value="ESPECIALIDADE">Por especialidade</option>
+                <option value="PROCEDIMENTO">Por procedimento (com a lista de pacientes)</option>
               </select>
             </label>
             {tipo === "ESPECIALIDADE" && (
@@ -113,6 +130,18 @@ export function TelaRelatorios() {
                   {especialidades.map((e) => (
                     <option key={e} value={e}>
                       {e}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {tipo === "PROCEDIMENTO" && (
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-medium">Procedimento</span>
+                <select className={CLASSE_SELECT} value={procedimento} onChange={(e) => setProcedimento(e.target.value)}>
+                  {procedimentos.map((p) => (
+                    <option key={p} value={p}>
+                      {p}
                     </option>
                   ))}
                 </select>

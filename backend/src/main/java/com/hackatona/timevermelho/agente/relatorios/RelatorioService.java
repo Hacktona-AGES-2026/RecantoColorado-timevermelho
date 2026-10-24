@@ -15,6 +15,7 @@ import com.hackatona.timevermelho.agente.PromptsTarefas;
 import com.hackatona.timevermelho.agente.chat.Excecoes.AgenteDesligadoException;
 import com.hackatona.timevermelho.agente.chat.Excecoes.LimiteExcedidoException;
 import com.hackatona.timevermelho.agente.chat.LimitadorUso;
+import com.hackatona.timevermelho.agente.contexto.ConsultaFila;
 import com.hackatona.timevermelho.agente.contexto.ContextoDados;
 import com.hackatona.timevermelho.agente.contexto.LeituraAplicacao;
 import com.hackatona.timevermelho.agente.protecao.VazamentoDePrompt;
@@ -27,12 +28,15 @@ import com.hackatona.timevermelho.servico.Erros;
 /**
  * Relatórios para médicos (T17) com histórico (T18). A IA escreve só a partir de números agregados lidos agora;
  * a tabela "Dados usados" é montada pelo código com os mesmos números, para o médico conferir o que a IA disse.
- * Nenhum dado de paciente individual entra (D5) e nada do que é gerado volta para os dados oficiais.
+ * No relatório por procedimento, a lista de pacientes também é montada pelo código, direto do dataset, e nunca vai
+ * para a IA (D5, modelo híbrido). Nada do que é gerado volta para os dados oficiais.
  */
 public class RelatorioService {
 
     public static final String CABECALHO = "> **Gerado por IA — revisar antes de usar.** Relatório baseado em dados "
             + "agregados da aplicação, sem dados de pacientes individuais.";
+    public static final String CABECALHO_COM_PACIENTES = "> **Gerado por IA — revisar antes de usar.** O texto da IA "
+            + "foi escrito só com números agregados; a tabela de pacientes foi montada pelo sistema direto do dataset.";
 
     private static final Logger log = LoggerFactory.getLogger(RelatorioService.class);
     private static final DateTimeFormatter DATA = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
@@ -61,6 +65,11 @@ public class RelatorioService {
     }
 
     public RelatorioIA gerar(RelatorioIA.Tipo tipo, String especialidadePedida, String solicitante, String ip) {
+        return gerar(tipo, especialidadePedida, null, solicitante, ip);
+    }
+
+    public RelatorioIA gerar(RelatorioIA.Tipo tipo, String especialidadePedida, String procedimentoPedido,
+                             String solicitante, String ip) {
         String motivo = motivoDesligado.get();
         if (motivo == null && !tarefas.pronto()) motivo = tarefas.motivoIndisponivel();
         if (motivo != null) throw new AgenteDesligadoException(motivo);
@@ -68,9 +77,20 @@ public class RelatorioService {
         if (!limitador.permitir("rel:" + ip)) throw new LimiteExcedidoException();
 
         String especialidade = null;
+        String procedimento = null;
+        String tabela = null;
         String dados;
         String titulo;
-        if (tipo == RelatorioIA.Tipo.ESPECIALIDADE) {
+        if (tipo == RelatorioIA.Tipo.PROCEDIMENTO) {
+            // mesmo cuidado da especialidade: só vale um procedimento que existe na fila
+            String pedido = procedimentoPedido == null ? "" : procedimentoPedido.strip();
+            procedimento = leitura.catalogo().procedimentos().stream().filter(p -> p.equalsIgnoreCase(pedido)).findFirst()
+                    .orElseThrow(() -> new Erros.RegraNegocio("Procedimento desconhecido. Escolha um dos que aparecem na fila."));
+            var consulta = leitura.consultar(ConsultaFila.doProcedimento(procedimento));
+            dados = consulta.resumo();
+            tabela = tabelaMarkdown(consulta);
+            titulo = "Relatório da fila — " + ContextoDados.rotulo(procedimento);
+        } else if (tipo == RelatorioIA.Tipo.ESPECIALIDADE) {
             // só vale o que existe na fila: a especialidade não é texto livre que vá parar na IA
             String pedida = especialidadePedida == null ? "" : especialidadePedida.strip();
             especialidade = leitura.especialidades().stream().filter(e -> e.equalsIgnoreCase(pedida)).findFirst()
@@ -102,12 +122,15 @@ public class RelatorioService {
         r.setId(UUID.randomUUID().toString());
         r.setTipo(tipo);
         r.setEspecialidade(especialidade);
+        r.setProcedimento(procedimento);
         r.setTitulo(titulo);
         r.setSolicitante(solicitante == null || solicitante.isBlank() ? "anônimo" : ContextoDados.rotulo(solicitante));
         r.setVersaoPrompt(tarefas.versao() + "/" + prompts.versao());
         r.setCriadoEm(LocalDateTime.now(clock));
         r.setDadosUsados(dados);
-        r.setTexto(CABECALHO + "\n\n# " + titulo + "\n\n" + texto + "\n\n## Dados usados (lidos da aplicação)\n\n" + dados
+        r.setTexto((tabela == null ? CABECALHO : CABECALHO_COM_PACIENTES) + "\n\n# " + titulo + "\n\n" + texto
+                + (tabela == null ? "" : "\n\n## Pacientes (lidos do dataset pelo sistema, sem IA)\n\n" + tabela)
+                + "\n\n## Dados usados (lidos da aplicação)\n\n" + dados
                 + "\n\n---\nGerado em " + r.getCriadoEm().format(DATA) + " · versão do prompt " + r.getVersaoPrompt()
                 + " · pedido por " + r.getSolicitante());
         log.info("agente: relatorio id={} tipo={} tokens_entrada={} tokens_saida={}", r.getId().substring(0, 8), tipo,
@@ -125,5 +148,34 @@ public class RelatorioService {
 
     public List<String> especialidades() {
         return leitura.especialidades();
+    }
+
+    public List<String> procedimentos() {
+        return leitura.catalogo().procedimentos();
+    }
+
+    /** A lista de pacientes, montada pelo código com os valores do dataset (a IA não escreve nem vê esta parte). */
+    static String tabelaMarkdown(LeituraAplicacao.ResultadoConsulta consulta) {
+        if (consulta.linhas().isEmpty()) return "Nenhum paciente na fila ativa para este procedimento.";
+        StringBuilder sb = new StringBuilder(
+                "| Pos. | Solicitação | Paciente | Idade | Sexo | Município | CID | Classe | Score | Espera / prazo | Status |\n"
+                        + "|---|---|---|---|---|---|---|---|---|---|---|\n");
+        for (var l : consulta.linhas()) {
+            sb.append("| ").append(l.posicao() == null ? "—" : l.posicao()).append(" | ").append(celula(l.solicitacaoId()))
+                    .append(" | ").append(celula(l.nome())).append(" | ").append(l.idade() == null ? "—" : l.idade())
+                    .append(" | ").append(celula(l.sexo())).append(" | ").append(celula(l.municipio())).append(" | ")
+                    .append(celula(l.cid())).append(l.oncologico() ? " (onco)" : "").append(" | ").append(l.classe())
+                    .append(" | ").append(l.score()).append(" | ").append(l.diasEmFila()).append(" d / ")
+                    .append(l.prazoDias()).append(" d | ").append(celula(l.status())).append(" |\n");
+        }
+        if (consulta.truncado()) {
+            sb.append("\nMostrando ").append(consulta.linhas().size()).append(" de ").append(consulta.total()).append(" pacientes.\n");
+        }
+        return sb.toString().strip();
+    }
+
+    private static String celula(String valor) {
+        if (valor == null || valor.isBlank()) return "—";
+        return valor.replace("|", "/").replaceAll("[\\r\\n]+", " ").strip();
     }
 }

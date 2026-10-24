@@ -302,3 +302,34 @@ describe("Chat: o que vem da IA nunca vira HTML (T38)", () => {
     expect(container.textContent).toContain("<script>alert(1)</script>");
   });
 });
+
+describe("Chat: tabela de pacientes do dataset", () => {
+  it("mostra a tabela que veio do sistema, com o total, os filtros e o aviso de que não é da IA", async () => {
+    responderCom(
+      { nome: "trecho", texto: "A tabela abaixo traz os pacientes de Histerectomia." },
+      {
+        nome: "tabela",
+        titulo: "Pacientes encontrados",
+        filtros: "procedimento: Histerectomia; fila ativa",
+        total: 2,
+        linhas: [
+          { posicao: 1, solicitacaoId: "SOL-2026-00489", nome: "Eliane Lopes Ramos", idade: 50, sexo: "F", municipio: "Porto Alegre",
+            procedimento: "Histerectomia", especialidade: "Ginecologia", cid: "C54.1", cidDescricao: null, oncologico: true,
+            classe: "A1", score: 86.5, diasEmFila: 138, prazoDias: 15, status: "ATIVA" },
+        ],
+      },
+      { nome: "fim", versaoPrompt: "v1" },
+    );
+    render(<Chat />);
+    await escrever("liste os pacientes de histerectomia{Enter}");
+
+    const tabela = await screen.findByLabelText("Tabela de pacientes");
+    expect(tabela).toHaveTextContent("2 paciente(s) · mostrando 1");
+    expect(tabela).toHaveTextContent("procedimento: Histerectomia; fila ativa");
+    expect(tabela).toHaveTextContent("Eliane Lopes Ramos");
+    expect(tabela).toHaveTextContent("C54.1 · onco");
+    expect(tabela).toHaveTextContent("138 d / 15 d");
+    expect(tabela).toHaveTextContent("não foi escrita pela IA");
+    expect(screen.getByRole("button", { name: /Baixar CSV/ })).toBeInTheDocument();
+  });
+});

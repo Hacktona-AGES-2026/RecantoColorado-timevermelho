@@ -108,6 +108,13 @@ describe("conversar: leitura do fluxo de eventos", () => {
     expect(lerEvento("sessao", "{}")).toEqual({ nome: "sessao", sessaoId: "" });
     expect(lerEvento("trecho", "null")).toBeNull();
   });
+
+  it("tabela de pacientes: aceita só linhas com nome e classe e nunca quebra com dado estranho", () => {
+    const linha = { posicao: 1, solicitacaoId: "SOL-2026-00489", nome: "Eliane", classe: "A1", oncologico: true };
+    const e = lerEvento("tabela", JSON.stringify({ titulo: "Pacientes", filtros: "procedimento: Histerectomia", total: 3, linhas: [linha, { nome: 1 }, null] }));
+    expect(e).toEqual({ nome: "tabela", titulo: "Pacientes", filtros: "procedimento: Histerectomia", total: 3, linhas: [linha] });
+    expect(lerEvento("tabela", '{"linhas":"nao é lista"}')).toBeNull();
+  });
 });
 
 describe("conversar: pedido e erros", () => {
