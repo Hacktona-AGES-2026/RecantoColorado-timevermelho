@@ -15,13 +15,15 @@ import tools.jackson.databind.JsonNode;
  * nomes só valem se existirem no catálogo da fila, números têm limites e qualquer campo estranho é ignorado.
  * A IA não escreve consulta nenhuma: ela só preenche estes campos; quem consulta é o código.
  *
+ * @param solicitacoes números de solicitação pedidos (formato SOL-AAAA-NNNNN), para ver um paciente específico
+ * @param nomes trechos de nome de paciente (cada palavra precisa aparecer no nome), para ver um paciente específico
  * @param naoEncontrados termos pedidos que não existem na fila (para a resposta dizer isso, em vez de inventar)
  */
 public record ConsultaFila(List<String> procedimentos, List<String> especialidades, List<String> classes,
                            String cidPrefixo, Boolean oncologico, List<String> municipios, String sexo,
                            Integer idadeMin, Integer idadeMax, Status status, Boolean acimaDoPrazo,
                            Boolean comReavaliacao, boolean listar, Ordem ordem, int limite,
-                           List<String> naoEncontrados) {
+                           List<String> solicitacoes, List<String> nomes, List<String> naoEncontrados) {
 
     public enum Status { ATIVA, SAIDA_SUGERIDA, SAIDA_CONFIRMADA, TODOS }
 
@@ -31,17 +33,20 @@ public record ConsultaFila(List<String> procedimentos, List<String> especialidad
     public static final int LIMITE_MAXIMO = 1000;
     private static final Set<String> CLASSES = Set.of("A1", "A2", "B", "C", "D");
     private static final Pattern CID = Pattern.compile("[A-Z]\\d{0,2}(\\.\\d{0,2})?");
+    /** "SOL-2026-00489", "sol 2026 489", "SOL202600489": o mesmo número. */
+    private static final Pattern SOLICITACAO = Pattern.compile("(?i)^\\s*sol[- ]?(\\d{4})[- ]?(\\d{1,6})\\s*$");
+    private static final int MAX_NOMES = 5;
 
     /** Sem filtro: a fila ativa inteira, só os números. */
     public static ConsultaFila todaFila() {
         return new ConsultaFila(List.of(), List.of(), List.of(), null, null, List.of(), null, null, null, Status.ATIVA,
-                null, null, false, Ordem.POSICAO, LIMITE_PADRAO, List.of());
+                null, null, false, Ordem.POSICAO, LIMITE_PADRAO, List.of(), List.of(), List.of());
     }
 
     /** Todos os pacientes ativos de um procedimento (já validado), com a lista. Usado nos relatórios. */
     public static ConsultaFila doProcedimento(String procedimento) {
         return new ConsultaFila(List.of(procedimento), List.of(), List.of(), null, null, List.of(), null, null, null,
-                Status.ATIVA, null, null, true, Ordem.POSICAO, LIMITE_MAXIMO, List.of());
+                Status.ATIVA, null, null, true, Ordem.POSICAO, LIMITE_MAXIMO, List.of(), List.of(), List.of());
     }
 
     /** Lê os filtros devolvidos pelo planejador, descartando tudo o que não bate com o catálogo. */
@@ -63,15 +68,44 @@ public record ConsultaFila(List<String> procedimentos, List<String> especialidad
         int limite = f.path("limite").isNumber() ? f.path("limite").asInt() : LIMITE_PADRAO;
         limite = Math.max(1, Math.min(LIMITE_MAXIMO, limite));
 
+        List<String> solicitacoes = textos(f.path("solicitacoes")).stream().map(ConsultaFila::solicitacao)
+                .filter(s -> s != null).distinct().toList();
+        List<String> nomes = textos(f.path("nomes")).stream()
+                .map(n -> ExtratorDeTexto.normalizar(n).replaceAll("[^\\p{L} ]", " ").replaceAll("\\s+", " ").strip())
+                .filter(n -> n.length() >= 3 && n.length() <= 80).distinct().limit(MAX_NOMES).toList();
+        // pedido de um paciente específico: procura em todos os status, para achar também quem já saiu da fila
+        if ((!solicitacoes.isEmpty() || !nomes.isEmpty()) && f.path("status").asString("").isBlank()) status = Status.TODOS;
+
         return new ConsultaFila(procedimentos, especialidades, classes, cid, booleano(f.path("oncologico")),
                 municipios, sexo, inteiro(f.path("idadeMin"), 0, 120), inteiro(f.path("idadeMax"), 0, 120), status,
                 booleano(f.path("acimaDoPrazo")), booleano(f.path("comReavaliacao")), listar, ordem, limite,
-                List.copyOf(faltando));
+                solicitacoes, nomes, List.copyOf(faltando));
     }
 
-    /** O que foi filtrado, em português, para o título da tabela e para o bloco de dados. */
+    /** Pedido de um paciente específico (por nome ou número de solicitação)? */
+    public boolean porPaciente() {
+        return !solicitacoes.isEmpty() || !nomes.isEmpty();
+    }
+
+    /** O que foi filtrado, em português, para o título da tabela (mostra o nome e o número pedidos). */
     public String descricao() {
+        return descrever(true);
+    }
+
+    /** O mesmo, para o bloco que vai à IA: o nome e o número pedidos não saem da aplicação por aqui. */
+    public String descricaoParaIA() {
+        return descrever(false);
+    }
+
+    private String descrever(boolean comIdentificacao) {
         List<String> partes = new ArrayList<>();
+        if (!solicitacoes.isEmpty()) {
+            partes.add(comIdentificacao ? "solicitação: " + String.join(", ", solicitacoes)
+                    : solicitacoes.size() + " número(s) de solicitação informado(s)");
+        }
+        if (!nomes.isEmpty()) {
+            partes.add(comIdentificacao ? "nome contendo: " + String.join(", ", nomes) : nomes.size() + " nome(s) informado(s)");
+        }
         if (!procedimentos.isEmpty()) partes.add("procedimento: " + String.join(", ", procedimentos));
         if (!especialidades.isEmpty()) partes.add("especialidade: " + String.join(", ", especialidades));
         if (!classes.isEmpty()) partes.add("classe: " + String.join(", ", classes));
@@ -108,6 +142,13 @@ public record ConsultaFila(List<String> procedimentos, List<String> especialidad
             encontrados.stream().filter(e -> !achados.contains(e)).forEach(achados::add);
         }
         return List.copyOf(achados);
+    }
+
+    /** Normaliza um número de solicitação para SOL-AAAA-NNNNN; {@code null} se não tiver esse formato. */
+    static String solicitacao(String bruto) {
+        var m = SOLICITACAO.matcher(bruto == null ? "" : bruto);
+        if (!m.matches()) return null;
+        return "SOL-" + m.group(1) + "-" + String.format("%05d", Integer.parseInt(m.group(2)));
     }
 
     private static List<String> textos(JsonNode no) {

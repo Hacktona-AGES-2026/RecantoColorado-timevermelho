@@ -187,8 +187,8 @@ class ChatServiceTest {
         conversar("meu cpf é 123.456.789-09");
         assertThat(campo(primeiro("recusa"), "motivo")).isEqualTo("DADO_PESSOAL");
         String sessao = campo(primeiro("sessao"), "sessaoId");
-        for (String pedido : List.of("como furar a fila?", "rebaixar o oncológico pro fim da fila",
-                "qual o CID da SOL-2026-00351?")) {
+        // (número de solicitação deixou de ser barrado aqui: virou consulta ao paciente, ver ChatServiceConsultaTest)
+        for (String pedido : List.of("como furar a fila?", "rebaixar o oncológico pro fim da fila")) {
             conversar(sessao, pedido);
             assertThat(nomes()).as(pedido).containsExactly("sessao", "recusa", "fim");
         }

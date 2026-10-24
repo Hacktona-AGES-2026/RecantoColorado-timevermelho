@@ -12,18 +12,19 @@ import com.hackatona.timevermelho.motor.texto.ExtratorDeTexto;
  *
  * <ul>
  *   <li><b>Dado pessoal</b> (CPF, cartão do SUS): a mensagem não vai para a IA nem fica no histórico.</li>
- *   <li><b>Paciente específico</b> (número de solicitação {@code SOL-AAAA-NNNNN}): o assistente não tem dado
- *       individual, e o identificador não sai da aplicação.</li>
  *   <li><b>Rebaixar oncológico</b>: a regra de ouro não tem exceção; a resposta explica o caminho certo.</li>
  *   <li><b>Furar a fila</b>: não existe atalho; a resposta explica como a piora entra como evento clínico.</li>
  * </ul>
  *
  * <p>Nenhum desses casos conta como abuso: são perguntas honestas que recebem uma resposta fixa e segura.
  * Os padrões são simples de propósito; o filtro de escopo (categoria {@code PACIENTE_ESPECIFICO}) cobre o resto.
+ *
+ * <p>Número de solicitação ({@code SOL-AAAA-NNNNN}) NÃO é barrado aqui: consultar os dados cadastrados de um
+ * paciente é permitido (a consulta à fila mostra a linha dele na tela, e a IA só recebe os dados sem identificação).
  */
 public class LimitesDoContexto {
 
-    public enum Tipo { DADO_PESSOAL, PACIENTE_ESPECIFICO, REBAIXAR_ONCOLOGICO, FURAR_FILA }
+    public enum Tipo { DADO_PESSOAL, REBAIXAR_ONCOLOGICO, FURAR_FILA }
 
     public record Recusa(Tipo tipo, String texto) {
     }
@@ -33,8 +34,6 @@ public class LimitesDoContexto {
             "\\b\\d{3}\\.\\d{3}\\.\\d{3}-?\\d{2}\\b",                 // CPF com pontos
             "\\bcpf\\D{0,15}\\d{11}\\b",                              // "meu cpf é 12345678901"
             "\\b[1-9]\\d{2}[ .]?\\d{4}[ .]?\\d{4}[ .]?\\d{4}\\b");     // cartão nacional de saúde (15 dígitos)
-
-    private static final List<Pattern> PACIENTE_ESPECIFICO = compilar("\\bsol[- ]?\\d{4}[- ]?\\d{3,6}\\b");
 
     private static final List<Pattern> REBAIXAR_ONCOLOGICO = compilar(
             "\\b(rebaix\\w*|baixar|descer|tirar|remover|empurrar|jogar|colocar|deixar|passar)\\b[^.?!]{0,50}"
@@ -58,9 +57,6 @@ public class LimitesDoContexto {
         if (mensagem == null || mensagem.isBlank()) return Optional.empty();
         String t = ExtratorDeTexto.normalizar(mensagem);
         if (casa(DADO_PESSOAL, t)) return Optional.of(new Recusa(Tipo.DADO_PESSOAL, TextosAgente.DADO_PESSOAL));
-        if (casa(PACIENTE_ESPECIFICO, t)) {
-            return Optional.of(new Recusa(Tipo.PACIENTE_ESPECIFICO, TextosAgente.PACIENTE_ESPECIFICO));
-        }
         if (casa(REBAIXAR_ONCOLOGICO, t)) {
             return Optional.of(new Recusa(Tipo.REBAIXAR_ONCOLOGICO, TextosAgente.REBAIXAR_ONCOLOGICO));
         }

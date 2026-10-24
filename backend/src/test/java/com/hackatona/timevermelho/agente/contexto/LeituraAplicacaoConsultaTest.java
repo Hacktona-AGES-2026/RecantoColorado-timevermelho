@@ -60,4 +60,46 @@ class LeituraAplicacaoConsultaTest {
         assertThat(municipios).contains("Porto Alegre").doesNotContain("PORTO ALEGRE", "porto alegre");
         assertThat(leitura.catalogo().procedimentos()).contains("Histerectomia");
     }
+
+    // ---------- paciente específico (o bug: o agente não conseguia buscar um paciente) ----------
+
+    ConsultaFila pedido(String filtros) {
+        return ConsultaFila.deJson(JsonMapper.builder().build().readTree(filtros), true, leitura.catalogo());
+    }
+
+    @Test
+    void acharPacientePeloNomeTrazALinhaDeleEADetalheSemIdentificacaoParaAIA() {
+        var esperado = fila.atual().get("SOL-2026-00489");
+
+        var r = leitura.consultar(pedido("{\"nomes\":[\"Eliane Lopes Ramos\"]}"));
+
+        assertThat(r.total()).isEqualTo(1);
+        var linha = r.linhas().getFirst();
+        assertThat(linha.solicitacaoId()).isEqualTo("SOL-2026-00489");
+        assertThat(linha.nome()).isEqualTo("Eliane Lopes Ramos");
+        assertThat(linha.classe()).isEqualTo(esperado.classe().name());
+        assertThat(linha.posicao()).isEqualTo(esperado.getPosicao());
+        assertThat(r.resumo()).contains("Paciente 1 da tabela: classe " + esperado.classe().name())
+                .contains(esperado.getPosicao() + "ª posição na fila geral").contains("Histerectomia")
+                .doesNotContainIgnoringCase("eliane").doesNotContain("SOL-2026-00489").doesNotContain("C54");
+    }
+
+    @Test
+    void acharPeloNumeroDeSolicitacaoEAvisarQuandoONumeroNaoExiste() {
+        var r = leitura.consultar(pedido("{\"solicitacoes\":[\"sol 2026 489\", \"SOL-2099-99999\"]}"));
+
+        assertThat(r.linhas()).extracting(LeituraAplicacao.LinhaPaciente::solicitacaoId).containsExactly("SOL-2026-00489");
+        assertThat(r.resumo()).contains("Números de solicitação informados que NÃO existem no dataset: 1")
+                .doesNotContain("SOL-2099-99999");
+    }
+
+    @Test
+    void parteDoNomeAchaTodosOsQueCombinamENomeInexistenteNaoAchaNinguem() {
+        var r = leitura.consultar(pedido("{\"nomes\":[\"eliane\"]}"));
+        assertThat(r.linhas()).isNotEmpty().allSatisfy(l -> assertThat(l.nome()).containsIgnoringCase("eliane"));
+
+        var ninguem = leitura.consultar(pedido("{\"nomes\":[\"Fulano Inexistente da Silva\"]}"));
+        assertThat(ninguem.total()).isZero();
+        assertThat(ninguem.resumo()).contains("Pacientes encontrados: 0");
+    }
 }

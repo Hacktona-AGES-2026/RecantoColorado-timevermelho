@@ -83,4 +83,33 @@ class ConsultaFilaTest {
                     assertThat(c.listar()).isTrue();
                 });
     }
+
+    // ---------- paciente específico ----------
+
+    @Test
+    void numeroDeSolicitacaoEmQualquerFormatoViraOFormatoDoDataset() {
+        var c = ler("{\"solicitacoes\":[\"SOL-2026-00489\",\"sol 2026 489\",\"SOL202600351\",\"lixo\",\"123.456.789-09\"]}", true);
+
+        assertThat(c.solicitacoes()).containsExactly("SOL-2026-00489", "SOL-2026-00351");
+        assertThat(c.porPaciente()).isTrue();
+        // sem status pedido, procura em todos (acha também quem já saiu da fila)
+        assertThat(c.status()).isEqualTo(ConsultaFila.Status.TODOS);
+    }
+
+    @Test
+    void nomeEhNormalizadoECurtoDemaisEhIgnorado() {
+        var c = ler("{\"nomes\":[\"Eliane  LOPES Ramos!\",\"ab\",\"<script>\"],\"status\":\"ATIVA\"}", true);
+
+        assertThat(c.nomes()).containsExactly("eliane lopes ramos", "script");
+        assertThat(c.status()).isEqualTo(ConsultaFila.Status.ATIVA);
+    }
+
+    @Test
+    void aDescricaoParaAIANaoTemONomeNemONumeroPedidos() {
+        var c = ler("{\"nomes\":[\"Eliane Lopes Ramos\"],\"solicitacoes\":[\"SOL-2026-00489\"]}", true);
+
+        assertThat(c.descricao()).contains("eliane lopes ramos").contains("SOL-2026-00489");
+        assertThat(c.descricaoParaIA()).doesNotContainIgnoringCase("eliane").doesNotContain("SOL-2026-00489")
+                .contains("1 nome(s) informado(s)").contains("1 número(s) de solicitação informado(s)");
+    }
 }

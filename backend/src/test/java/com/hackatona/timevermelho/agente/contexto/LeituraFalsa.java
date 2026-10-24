@@ -70,7 +70,7 @@ public class LeituraFalsa implements LeituraAplicacao {
                         "Ginecologia", "C54.1", "Neoplasia maligna do endometrio", true, "A1", 86.5, 138, 15, "ATIVA"),
                 new LinhaPaciente(40, "SOL-2025-00010", "Maria | Souza", 44, "F", "Canoas", "Histerectomia", "Ginecologia",
                         "D25", "Leiomioma do utero", false, "C", 40.0, 90, 180, "ATIVA"));
-        return new ResultadoConsulta(2, "Filtros aplicados: " + c.descricao() + ".\nPacientes encontrados: 2.\n"
+        return new ResultadoConsulta(2, "Filtros aplicados: " + c.descricaoParaIA() + ".\nPacientes encontrados: 2.\n"
                 + "Por classe: A1 1; C 1.\nOncológicos: 1.", c.listar() ? linhas : List.of());
     }
 }
