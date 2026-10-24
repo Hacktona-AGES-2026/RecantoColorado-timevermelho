@@ -55,6 +55,7 @@ function simulacao(sobrescrever: Partial<Simulacao> = {}): Simulacao {
     ],
     componentesDepois: COMPONENTES,
     mensagem: "Simulação (nada foi salvo). Subiu da posição 80 para 3, classe D → A1: Hérnia encarcerada",
+    observacoes: [],
     ...sobrescrever,
   };
 }

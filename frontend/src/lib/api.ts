@@ -222,6 +222,7 @@ export interface Simulacao {
   sinaisNovos: SinalDto[];
   componentesDepois: Componente[];
   mensagem: string;
+  observacoes: string[]; // por que nada mudou, ou o que valeria na fila real (ex.: rebaixamento só sugerido)
 }
 
 export interface Pesos {

@@ -3,7 +3,7 @@
 // Aba "E se acontecer com este paciente?" do simulador.
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowRight, FlaskConical, LoaderCircle, Plus, Search, X } from "lucide-react";
+import { ArrowRight, FlaskConical, Info, LoaderCircle, Plus, Search, X } from "lucide-react";
 import {
   api,
   TIPOS_EVENTO,
@@ -249,18 +249,28 @@ function FormularioSimulacao({ paciente, dados }: { paciente: ItemFila; dados: D
   const [dor, setDor] = useState(MANTER);
   const [limitacao, setLimitacao] = useState(MANTER);
   const [eventos, setEventos] = useState<EventoHipotetico[]>([]);
+  // evento montado na linha "novo evento" e ainda não adicionado: entra na simulação mesmo assim
+  const [rascunho, setRascunho] = useState<EventoHipotetico | null>(null);
+  const [chaveNovo, setChaveNovo] = useState(0);
   const [texto, setTexto] = useState("");
   const [resultado, setResultado] = useState<Simulacao | null>(null);
   const [simulando, setSimulando] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
 
-  const nadaMudou = dor === MANTER && limitacao === MANTER && eventos.length === 0 && texto.trim() === "";
+  const nadaMudou =
+    dor === MANTER && limitacao === MANTER && eventos.length === 0 && rascunho === null && texto.trim() === "";
 
   async function simular() {
+    const todos = rascunho ? [...eventos, rascunho] : eventos;
+    if (rascunho) {
+      setEventos(todos);
+      setRascunho(null);
+      setChaveNovo((k) => k + 1);
+    }
     const req: SimulacaoRequest = { solicitacaoId: paciente.solicitacaoId };
     if (dor !== MANTER) req.dor = Number(dor);
     if (limitacao !== MANTER) req.limitacao = limitacao;
-    if (eventos.length) req.eventos = eventos;
+    if (todos.length) req.eventos = todos;
     if (texto.trim()) req.textoAdicional = texto.trim();
     setSimulando(true);
     setErro(null);
@@ -277,6 +287,8 @@ function FormularioSimulacao({ paciente, dados }: { paciente: ItemFila; dados: D
     setDor(MANTER);
     setLimitacao(MANTER);
     setEventos([]);
+    setRascunho(null);
+    setChaveNovo((k) => k + 1);
     setTexto("");
     setResultado(null);
     setErro(null);
@@ -339,7 +351,19 @@ function FormularioSimulacao({ paciente, dados }: { paciente: ItemFila; dados: D
                 ))}
               </ul>
             )}
-            <NovoEventoHipotetico onAdicionar={(ev) => setEventos([...eventos, ev])} />
+            <NovoEventoHipotetico
+              key={chaveNovo}
+              onAdicionar={(ev) => {
+                setEventos([...eventos, ev]);
+                setRascunho(null);
+              }}
+              onRascunho={setRascunho}
+            />
+            {rascunho && (
+              <span className="text-muted-foreground text-xs">
+                O evento montado acima entra na simulação mesmo sem clicar em “Adicionar”.
+              </span>
+            )}
           </div>
 
           <label className="flex flex-col gap-1.5 text-sm">
@@ -374,7 +398,13 @@ function FormularioSimulacao({ paciente, dados }: { paciente: ItemFila; dados: D
   );
 }
 
-function NovoEventoHipotetico({ onAdicionar }: { onAdicionar: (ev: EventoHipotetico) => void }) {
+function NovoEventoHipotetico({
+  onAdicionar,
+  onRascunho,
+}: {
+  onAdicionar: (ev: EventoHipotetico) => void;
+  onRascunho: (ev: EventoHipotetico | null) => void;
+}) {
   const [tipo, setTipo] = useState(TIPOS_EVENTO[0].tipo);
   const [resultado, setResultado] = useState(TIPOS_EVENTO[0].resultados[0]);
   const [valor, setValor] = useState("");
@@ -382,19 +412,40 @@ function NovoEventoHipotetico({ onAdicionar }: { onAdicionar: (ev: EventoHipotet
 
   const def = TIPOS_EVENTO.find((t) => t.tipo === tipo) ?? TIPOS_EVENTO[0];
 
+  function montar(t: string, r: string, v: string, d: string): EventoHipotetico {
+    const ev: EventoHipotetico = { tipo: t };
+    if (r) ev.resultado = r;
+    const n = Number(v.replace(",", "."));
+    if (usaValor(t) && v.trim() !== "" && !Number.isNaN(n)) ev.valorNumerico = n;
+    if (d.trim()) ev.descricao = d.trim();
+    return ev;
+  }
+
   function trocarTipo(t: string) {
+    const r = TIPOS_EVENTO.find((x) => x.tipo === t)?.resultados[0] ?? "";
     setTipo(t);
-    setResultado(TIPOS_EVENTO.find((x) => x.tipo === t)?.resultados[0] ?? "");
+    setResultado(r);
     setValor("");
+    onRascunho(montar(t, r, "", descricao));
+  }
+
+  function trocarResultado(r: string) {
+    setResultado(r);
+    onRascunho(montar(tipo, r, valor, descricao));
+  }
+
+  function trocarValor(v: string) {
+    setValor(v);
+    onRascunho(montar(tipo, resultado, v, descricao));
+  }
+
+  function trocarDescricao(d: string) {
+    setDescricao(d);
+    onRascunho(montar(tipo, resultado, valor, d));
   }
 
   function adicionar() {
-    const ev: EventoHipotetico = { tipo };
-    if (resultado) ev.resultado = resultado;
-    const n = Number(valor.replace(",", "."));
-    if (usaValor(tipo) && valor.trim() !== "" && !Number.isNaN(n)) ev.valorNumerico = n;
-    if (descricao.trim()) ev.descricao = descricao.trim();
-    onAdicionar(ev);
+    onAdicionar(montar(tipo, resultado, valor, descricao));
     setDescricao("");
     setValor("");
   }
@@ -409,7 +460,7 @@ function NovoEventoHipotetico({ onAdicionar }: { onAdicionar: (ev: EventoHipotet
         <span className="text-muted-foreground">Resultado</span>
         <Escolha
           valor={resultado}
-          onChange={setResultado}
+          onChange={trocarResultado}
           opcoes={def.resultados.map((r) => ({ valor: r, rotulo: rotuloResultado(r) }))}
           ariaLabel="Resultado"
         />
@@ -418,7 +469,7 @@ function NovoEventoHipotetico({ onAdicionar }: { onAdicionar: (ev: EventoHipotet
         <span className="text-muted-foreground">{tipo === "internacao" ? "Dias" : tipo === "hba1c" ? "HbA1c %" : "Valor"}</span>
         <Input
           value={valor}
-          onChange={(e) => setValor(e.target.value)}
+          onChange={(e) => trocarValor(e.target.value)}
           disabled={!usaValor(tipo)}
           inputMode="decimal"
           className="w-full sm:w-20"
@@ -426,7 +477,7 @@ function NovoEventoHipotetico({ onAdicionar }: { onAdicionar: (ev: EventoHipotet
       </label>
       <label className="flex flex-col gap-1 text-xs">
         <span className="text-muted-foreground">Descrição (opcional)</span>
-        <Input value={descricao} onChange={(e) => setDescricao(e.target.value)} placeholder="Ex.: dor abdominal aguda" />
+        <Input value={descricao} onChange={(e) => trocarDescricao(e.target.value)} placeholder="Ex.: dor abdominal aguda" />
       </label>
       <Button variant="outline" onClick={adicionar}>
         <Plus /> Adicionar
@@ -451,6 +502,16 @@ function ResultadoSimulacao({ resultado }: { resultado: Simulacao }) {
         {resultado.mensagem && <CardDescription className="text-base">{resultado.mensagem}</CardDescription>}
       </CardHeader>
       <CardContent className="flex flex-col gap-6">
+        {(resultado.observacoes ?? []).length > 0 && (
+          <ul className="flex flex-col gap-1.5 rounded-lg border border-sky-300 bg-sky-50 p-3 text-sm text-sky-950 dark:border-sky-800 dark:bg-sky-950/40 dark:text-sky-100">
+            {(resultado.observacoes ?? []).map((o, i) => (
+              <li key={i} className="flex gap-2">
+                <Info className="mt-0.5 size-4 shrink-0" />
+                <span>{o}</span>
+              </li>
+            ))}
+          </ul>
+        )}
         <div className="grid items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
           <Lado titulo="Hoje" item={antes} />
           <div className="flex flex-col items-center gap-1">

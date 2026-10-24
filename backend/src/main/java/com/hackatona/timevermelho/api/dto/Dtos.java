@@ -95,8 +95,9 @@ public final class Dtos {
     public record SimulacaoRequest(@NotBlank String solicitacaoId, @Min(0) @Max(10) Integer dor, String limitacao,
                                    @Valid List<EventoHipotetico> eventos, @Size(max = 1000) String textoAdicional) {}
 
+    /** observacoes: por que nada mudou (ou o que valeria na fila real), para a simulação não parecer quebrada. */
     public record Simulacao(ItemFila antes, ItemFila depois, List<SinalDto> sinaisNovos,
-                            List<Componente> componentesDepois, String mensagem) {}
+                            List<Componente> componentesDepois, String mensagem, List<String> observacoes) {}
 
     public record PesosDto(@PositiveOrZero double diagnostico, @PositiveOrZero double piora,
                            @PositiveOrZero double dor, @PositiveOrZero double limitacao,

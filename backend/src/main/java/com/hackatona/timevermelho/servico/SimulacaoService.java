@@ -3,6 +3,7 @@ package com.hackatona.timevermelho.servico;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
@@ -61,7 +62,58 @@ public class SimulacaoService {
         return new Dtos.Simulacao(Conversor.item(antes), Conversor.item(depois),
                 novos.stream().map(Conversor::sinal).toList(),
                 depois.getComponentes().stream().map(Conversor::componente).toList(),
-                "Simulação (nada foi salvo). " + ImpactoCalculadora.mensagem(antes, depois, motivo));
+                "Simulação (nada foi salvo). " + ImpactoCalculadora.mensagem(antes, depois, motivo),
+                observacoes(req, original, antes, depois, novos));
+    }
+
+    /** Eventos que o motor registra, mas que não mudam a urgência (o FilaVIVA não baixa classe sozinho). */
+    private static final Set<String> NAO_MUDAM_URGENCIA = Set.of("biopsia:negativo", "biopsia:inconclusivo",
+            "exame_imagem:estavel", "consulta_reavaliacao:estavel", "consulta_reavaliacao:melhora",
+            "contato_telefonico:atendeu", "contato_telefonico:nao_atendeu", "contato_telefonico:relata_melhora");
+
+    /** Explica o resultado, principalmente quando nada muda, para a simulação não parecer quebrada. */
+    static List<String> observacoes(Dtos.SimulacaoRequest req, Caso original, ResultadoPaciente antes,
+                                    ResultadoPaciente depois, List<Sinal> novos) {
+        List<String> obs = new ArrayList<>();
+        if (req.dor() != null && req.dor().equals(original.dor())) {
+            obs.add("A dor escolhida (" + req.dor() + ") é igual à de hoje.");
+        }
+        if (req.limitacao() != null && req.limitacao().equalsIgnoreCase(String.valueOf(original.limitacao()))) {
+            obs.add("A limitação escolhida (" + req.limitacao() + ") é igual à de hoje.");
+        }
+        if (req.eventos() != null) {
+            for (var e : req.eventos()) {
+                String chave = e.tipo() + ":" + e.resultado();
+                if (NAO_MUDAM_URGENCIA.contains(chave) || "falta".equals(e.tipo())) {
+                    obs.add("Evento \"" + e.tipo().replace('_', ' ') + (e.resultado() == null ? "" : ": "
+                            + e.resultado().replace('_', ' ')) + "\" não muda a urgência. Melhora ou exame normal nunca "
+                            + "baixa a classe sozinho: na fila real, um rebaixamento só vale depois que o regulador confirma.");
+                }
+                if (e.descricao() != null && !e.descricao().isBlank()) {
+                    obs.add("O texto do evento hipotético só gera alerta para revisão, nunca muda a classe (mesma regra "
+                            + "dos eventos reais). Para testar um texto, use \"Texto adicional do médico\".");
+                }
+            }
+        }
+        boolean igual = antes.classe() == depois.classe() && java.util.Objects.equals(antes.getPosicao(), depois.getPosicao())
+                && antes.getScore() == depois.getScore();
+        if (igual && !novos.isEmpty()) {
+            boolean pioraNoMaximo = depois.getComponentes().stream()
+                    .anyMatch(c -> "piora".equals(c.chave()) && c.pontos() >= c.maximo());
+            obs.add("Sinal novo detectado (" + novos.getFirst().descricao() + "), mas o paciente já está na classe "
+                    + depois.classe() + (pioraNoMaximo ? " e o componente de piora já está no máximo" : "")
+                    + ": a posição não muda.");
+        } else if (igual && obs.isEmpty()) {
+            obs.add("A situação hipotética não traz nada que o paciente já não tenha (por exemplo, uma biópsia positiva "
+                    + "já registrada): classe, score e posição continuam os mesmos.");
+        }
+        if (antes.classe().maisUrgenteQue(depois.classe())) {
+            obs.add(antes.oncologico()
+                    ? "Paciente oncológico: na fila real a classe nunca seria reduzida."
+                    : "Na fila real isso seria só um rebaixamento sugerido: a classe " + antes.classe()
+                    + " continua valendo até o regulador confirmar.");
+        }
+        return obs;
     }
 
     public Dtos.SimulacaoPesos simularPesos(Dtos.PesosDto p) {
