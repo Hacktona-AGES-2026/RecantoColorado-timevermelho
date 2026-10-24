@@ -75,12 +75,26 @@ cd backend
 
 Os testes usam banco H2 em memória: não precisam do Docker.
 
+Com banco, backend e frontend no ar, o teste de integração percorre os fluxos da demo (35 verificações) e termina reiniciando a demo:
+
+```bash
+python scripts/teste_integracao.py
+```
+
+Antes da demo ao vivo, siga [docs/ROTEIRO-DEMO.md](docs/ROTEIRO-DEMO.md). Para validar a classificação com um mentor clínico, use [docs/VALIDACAO-MENTOR.md](docs/VALIDACAO-MENTOR.md).
+
 ## Verificar a fila priorizada
 
 O backend grava `fila_priorizada.csv` na raiz do repositório toda vez que sobe. Também dá para baixar em <http://localhost:8080/api/fila/export.csv>. Para conferir (precisa de `pip install pandas`):
 
 ```bash
 python data/verificar_fila_priorizada.py fila_priorizada.csv --dataset data
+```
+
+Além do verificador, `scripts/conferir_csv.py` confere a cobertura (cada solicitação fora do arquivo é uma duplicata com a principal dentro), as justificativas e a coerência das classes, e roda o verificador oficial se o pandas estiver instalado:
+
+```bash
+python scripts/conferir_csv.py
 ```
 
 ## Variáveis de ambiente do backend
