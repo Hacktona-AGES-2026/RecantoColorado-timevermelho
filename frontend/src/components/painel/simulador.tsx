@@ -13,11 +13,12 @@ export function Simulador() {
 
   return (
     <Tabs defaultValue={aba} className="gap-4">
-      <TabsList className="h-10! w-full sm:w-fit">
-        <TabsTrigger value="paciente" className="px-3">
+      {/* no celular os rótulos quebram linha em vez de empurrar a página para o lado */}
+      <TabsList className="h-auto! min-h-10 w-full sm:w-fit">
+        <TabsTrigger value="paciente" className="h-auto! min-h-8 px-3 py-1 whitespace-normal sm:whitespace-nowrap">
           E se acontecer com este paciente?
         </TabsTrigger>
-        <TabsTrigger value="pesos" className="px-3">
+        <TabsTrigger value="pesos" className="h-auto! min-h-8 px-3 py-1 whitespace-normal sm:whitespace-nowrap">
           E se mudarmos os pesos?
         </TabsTrigger>
       </TabsList>

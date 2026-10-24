@@ -68,6 +68,17 @@ O navegador chama `/api/...` no próprio Next, que repassa para `http://localhos
 
 **Opcional: PostgreSQL** em vez do H2: `docker compose up -d db` e suba o backend com `DB_URL=jdbc:postgresql://localhost:5432/filaviva DB_USER=filaviva DB_PASSWORD=filaviva`.
 
+### Depois de atualizar (`git pull`)
+
+Pare o backend e o frontend antes de puxar e suba os dois de novo depois. Assim se evitam os dois erros mais comuns:
+
+| Sintoma | Causa | Como resolver |
+|---|---|---|
+| Backend cai com `Failed to load driver class org.h2.Driver` (ou outra classe faltando) | O backend antigo continuou rodando e se recarregou sozinho com a configuração nova, mas com as bibliotecas antigas | Pare o backend (Ctrl+C; confira se a porta 8080 ficou livre) e rode `./mvnw spring-boot:run` de novo |
+| Frontend dá erro de pacote não encontrado | Dependências novas no `package.json` | Pare o frontend e rode `npm ci` em `frontend/` antes de `npm run dev` |
+| `npm ci` falha com `EPERM` no Windows | Algum processo do `next dev` antigo ainda segura arquivos do `node_modules` | Feche todos os terminais do frontend (ou encerre os processos `node` do projeto) e rode de novo |
+| Assistente aparece desligado ("faltam as chaves de API") | Não há `backend/.env` com a chave | Veja o passo do assistente acima; o resto do FilaVIVA funciona sem chave |
+
 ## Testes
 
 ```bash
