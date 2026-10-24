@@ -47,7 +47,7 @@ export function ErroApi({
         <p className="text-destructive font-medium">{mensagem}</p>
         {foraDoAr && (
           <p className="text-muted-foreground mt-1 text-sm">
-            Não foi possível falar com {API_URL || "o backend (localhost:8080)"}. Verifique se o backend está rodando.
+            Não foi possível falar com {API_URL}. Verifique se o backend está rodando.
           </p>
         )}
       </div>

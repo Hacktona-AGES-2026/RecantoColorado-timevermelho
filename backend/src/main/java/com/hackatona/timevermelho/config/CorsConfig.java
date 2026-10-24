@@ -9,11 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.hackatona.timevermelho.api.CabecalhoSnapshot;
 
-/**
- * Libera o front Next.js e identifica o snapshot em toda resposta da API. Aceita padrões
- * ({@code http://localhost:[*]} = qualquer porta), porque o Next usa a 3001 quando a 3000 está ocupada. No uso normal
- * o navegador nem precisa disso: o Next repassa /api para o backend (next.config.ts).
- */
+/** Libera o front Next.js (localhost:3000) e identifica o snapshot em toda resposta da API. */
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
 
@@ -29,7 +25,7 @@ public class CorsConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/api/**")
-                .allowedOriginPatterns(origins)
+                .allowedOrigins(origins)
                 .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                 // o front pode ler qual fila recebeu e o nome do arquivo baixado
                 .exposedHeaders(CabecalhoSnapshot.NOME, HttpHeaders.CONTENT_DISPOSITION);

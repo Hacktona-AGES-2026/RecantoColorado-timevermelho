@@ -1,8 +1,7 @@
 // Cliente da API do FilaVIVA. Os tipos espelham os DTOs Java em backend/.../api/dto.
 // Contrato completo também na seção 3 do PLANO.md.
 
-// Vazio = mesma origem: o Next repassa /api para o backend (next.config.ts).
-export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "";
+export const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8080";
 
 export type ClasseSwalis = "A1" | "A2" | "B" | "C" | "D";
 export type StatusFila = "ATIVA" | "SAIDA_SUGERIDA" | "SAIDA_CONFIRMADA";

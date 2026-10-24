@@ -7,14 +7,9 @@ Thumbs.db
 .vscode/
 *.iml
 
-# Segredos locais (chaves de API nunca vão para o Git; veja scripts/verificar-segredos.sh)
+# Segredos locais
 .env
-.env.*
-!.env.example
-application-local.properties
-application-secret*.properties
-*.pem
-*.key
+.env.local
 
 # Python (protótipo)
 __pycache__/

@@ -70,11 +70,10 @@
 			<version>1.14.1</version>
 		</dependency>
 		<!-- Banco em memória só para os testes (não precisa do Docker para rodar mvn test) -->
-		<!-- Banco em memória: padrão para rodar direto no localhost (sem Docker) e para os testes -->
 		<dependency>
 			<groupId>com.h2database</groupId>
 			<artifactId>h2</artifactId>
-			<scope>runtime</scope>
+			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>

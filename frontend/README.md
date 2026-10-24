@@ -5,7 +5,7 @@ Como rodar o projeto inteiro (banco, backend e frontend): veja o [README da raiz
 
 ## Rodar só o frontend
 
-Precisa do backend no ar em `http://localhost:8080`. O navegador chama `/api/...` no próprio Next, que repassa para o backend (`next.config.ts`); backend em outro endereço: `BACKEND_URL=http://host:porta npm run dev`.
+Precisa do backend no ar em `http://localhost:8080`.
 
 ```bash
 npm install
@@ -14,7 +14,7 @@ npm run build    # confere se compila
 npm run lint
 ```
 
-Não precisa de `.env.local`. `NEXT_PUBLIC_API_URL` (em `.env.example`) só serve para o navegador chamar uma API direto, sem o repasse.
+Para apontar para outra API, copie `.env.example` para `.env.local` e ajuste `NEXT_PUBLIC_API_URL`.
 
 ## Onde fica cada coisa
 
