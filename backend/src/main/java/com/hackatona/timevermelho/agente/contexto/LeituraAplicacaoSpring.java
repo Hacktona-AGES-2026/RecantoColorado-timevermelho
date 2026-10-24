@@ -114,8 +114,14 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
         var snap = fila.atual();
         List<ResultadoPaciente> base = c.status() == ConsultaFila.Status.ATIVA ? snap.ativos() : snap.todos();
         Set<String> ids = solicitacoesPedidas(c);
-        List<ResultadoPaciente> achados = base.stream().filter(r -> combina(r, c, ids))
+        List<ResultadoPaciente> achados = base.stream().filter(r -> combina(r, c, ids, false))
                 .collect(Collectors.toCollection(ArrayList::new));
+        // Nome digitado com erro ("Lopez" por "Lopes"): só se ninguém bateu exato, tenta os nomes parecidos
+        boolean aproximado = false;
+        if (achados.isEmpty() && !c.nomes().isEmpty()) {
+            achados = base.stream().filter(r -> combina(r, c, ids, true)).collect(Collectors.toCollection(ArrayList::new));
+            aproximado = !achados.isEmpty();
+        }
         Comparator<ResultadoPaciente> ordem = switch (c.ordem()) {
             case ESPERA -> Comparator.comparingInt((ResultadoPaciente r) -> r.getCaso().diasEmFila()).reversed();
             case SCORE -> Comparator.comparingDouble(ResultadoPaciente::getScore).reversed();
@@ -125,7 +131,7 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
         List<LinhaPaciente> linhas = c.listar()
                 ? achados.stream().limit(c.limite()).map(LeituraAplicacaoSpring::linha).toList()
                 : List.of();
-        return new ResultadoConsulta(achados.size(), resumir(c, achados), linhas);
+        return new ResultadoConsulta(achados.size(), resumir(c, achados, aproximado), linhas);
     }
 
     /**
@@ -148,7 +154,7 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
         return ids;
     }
 
-    private static boolean combina(ResultadoPaciente r, ConsultaFila c, Set<String> ids) {
+    private static boolean combina(ResultadoPaciente r, ConsultaFila c, Set<String> ids, boolean aproximado) {
         Caso caso = r.getCaso();
         if (c.status() == ConsultaFila.Status.SAIDA_SUGERIDA && r.getStatus() != StatusFila.SAIDA_SUGERIDA) return false;
         if (c.status() == ConsultaFila.Status.SAIDA_CONFIRMADA && r.getStatus() != StatusFila.SAIDA_CONFIRMADA) return false;
@@ -168,15 +174,54 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
         // número de solicitação ou ID de paciente: vale a solicitação pedida (ou a principal dela) e, sem o CSV,
         // ainda o ID de paciente da própria fila
         if (ids != null && !ids.contains(caso.solicitacaoId()) && !c.pacientes().contains(caso.pacienteId())) return false;
-        if (!c.nomes().isEmpty() && c.nomes().stream().noneMatch(n -> nomeContem(caso.nome(), n))) return false;
+        if (!c.nomes().isEmpty() && c.nomes().stream().noneMatch(n -> nomeContem(caso.nome(), n, aproximado))) return false;
         return true;
     }
 
-    /** Cada palavra pedida começa uma palavra do nome (sem acento e sem caixa): "eliane ramos" acha "Eliane Lopes Ramos". */
-    private static boolean nomeContem(String nome, String pedido) {
-        if (nome == null) return false;
-        List<String> palavras = List.of(ExtratorDeTexto.normalizar(nome).split("\\s+"));
-        return java.util.Arrays.stream(pedido.split(" ")).allMatch(p -> palavras.stream().anyMatch(w -> w.startsWith(p)));
+    /** Palavras que a pessoa escreve junto do nome, mas que não fazem parte dele ("dona Eliane", "Ari da Costa"). */
+    private static final Set<String> FORA_DO_NOME = Set.of("sr", "sra", "srta", "senhor", "senhora", "dona", "seu", "dr",
+            "dra", "paciente", "da", "de", "do", "das", "dos", "e");
+
+    /**
+     * Cada palavra pedida bate com uma palavra do nome, sem acento e sem caixa: "eliane ramos" acha "Eliane Lopes Ramos".
+     * Exato: a palavra do nome começa com a pedida. Aproximado (só usado quando ninguém bateu exato): também vale
+     * um erro de digitação pequeno, de 1 letra em palavras de 4 a 6 letras e de até 2 a partir de 7.
+     */
+    static boolean nomeContem(String nome, String pedido, boolean aproximado) {
+        if (nome == null || pedido == null) return false;
+        List<String> palavras = List.of(ExtratorDeTexto.normalizar(nome).replaceAll("[^\\p{L} ]", " ").strip().split("\\s+"));
+        List<String> pedidas = java.util.Arrays.stream(ExtratorDeTexto.normalizar(pedido).replaceAll("[^\\p{L} ]", " ")
+                .strip().split("\\s+")).filter(p -> !p.isEmpty() && !FORA_DO_NOME.contains(p)).toList();
+        if (pedidas.isEmpty()) return false;
+        return pedidas.stream().allMatch(p -> palavras.stream().anyMatch(w -> w.startsWith(p)
+                || (aproximado && parecida(w, p))));
+    }
+
+    private static boolean parecida(String palavraDoNome, String pedida) {
+        if (pedida.length() < 4) return false;
+        int tolerancia = pedida.length() >= 7 ? 2 : 1;
+        return Math.abs(palavraDoNome.length() - pedida.length()) <= tolerancia
+                && distancia(palavraDoNome, pedida) <= tolerancia;
+    }
+
+    /**
+     * Distância de edição (Damerau-Levenshtein, alinhamento ótimo): quantas letras inserir, apagar, trocar ou inverter
+     * com a vizinha ("elaine" → "eliane" é 1) para uma palavra virar a outra.
+     */
+    static int distancia(String a, String b) {
+        int[][] d = new int[a.length() + 1][b.length() + 1];
+        for (int i = 0; i <= a.length(); i++) d[i][0] = i;
+        for (int j = 0; j <= b.length(); j++) d[0][j] = j;
+        for (int i = 1; i <= a.length(); i++) {
+            for (int j = 1; j <= b.length(); j++) {
+                int troca = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
+                d[i][j] = Math.min(Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1), d[i - 1][j - 1] + troca);
+                if (i > 1 && j > 1 && a.charAt(i - 1) == b.charAt(j - 2) && a.charAt(i - 2) == b.charAt(j - 1)) {
+                    d[i][j] = Math.min(d[i][j], d[i - 2][j - 2] + 1);
+                }
+            }
+        }
+        return d[a.length()][b.length()];
     }
 
     private static LinhaPaciente linha(ResultadoPaciente r) {
@@ -188,8 +233,12 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
     }
 
     /** Os números da consulta, em texto, para a IA: nada de nome, identificador ou CID de alguém. */
-    private String resumir(ConsultaFila c, List<ResultadoPaciente> achados) {
+    private String resumir(ConsultaFila c, List<ResultadoPaciente> achados, boolean aproximado) {
         StringBuilder sb = new StringBuilder();
+        if (aproximado) {
+            sb.append("Nenhum nome exatamente igual ao informado. A tabela mostra os nomes MAIS PARECIDOS (pequena diferença ")
+                    .append("de grafia): diga isso e peça para a pessoa confirmar na tabela se é o paciente certo.\n");
+        }
         sb.append("Filtros aplicados: ").append(ContextoDados.rotulo(c.descricaoParaIA())).append(".\n");
         if (!c.naoEncontrados().isEmpty()) {
             sb.append("Termos pedidos que NÃO existem na fila: ")
