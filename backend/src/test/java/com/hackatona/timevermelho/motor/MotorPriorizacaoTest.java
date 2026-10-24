@@ -271,6 +271,18 @@ class MotorPriorizacaoTest {
         assertThat(GuardRegraDeOuro.respeitada(fila)).isTrue();
     }
 
+    @Test
+    void promocaoSustentadaSoPorTextoDoCadastroNaoUltrapassaCancer() {
+        // achado do estresse: "doença grave descrita" no texto contava como evidência para a promoção
+        var casos = comCinco(caso("N0", "I251").dor(1)
+                .justificativa("DAC triarterial, angina CCS III, FE 36%. Dor em repouso, uso de muletas.").build());
+        var n0 = de(motor.priorizar(casos, Pesos.PADRAO, PROMOVE_N0), "N0");
+        assertThat(n0.getClassificacao().classeCalculada()).isEqualTo(ClasseSwalis.B); // classe provisória por texto
+        assertThat(n0.isPromocaoSemEvidencia()).isTrue();
+        assertThat(n0.getEvidenciaDaPromocao()).isNull();
+        assertThat(n0.getPosicao()).isEqualTo(6); // abaixo dos 5 cânceres
+    }
+
     // ---------- lacuna 2: texto dos eventos novos ----------
 
     static Evento novoComTexto(String sol, String tipo, String resultado, String texto) {

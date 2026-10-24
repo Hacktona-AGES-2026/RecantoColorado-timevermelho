@@ -38,13 +38,12 @@ public class MotorPriorizacao {
 
     /**
      * O que conta como evidência de agravamento para uma promoção manual passar à frente de protegidos:
-     * atendimentos, exames e achados clínicos de piora ou de urgência. Não contam sozinhos: dor, limitação,
-     * dado faltando, relato de piora (geralmente por telefone) nem relato grave ainda não confirmado.
+     * só dados ESTRUTURADOS — atendimento ou exame de piora registrado, ou CID de urgência. Texto livre (do médico,
+     * das observações ou de eventos), dor, limitação, dado faltando e relato de piora não contam sozinhos.
      */
     static final java.util.Set<TipoSinal> EVIDENCIA_DE_AGRAVAMENTO = java.util.EnumSet.of(
-            TipoSinal.ALARME_GRAVE, TipoSinal.ALARME_FUNCIONAL, TipoSinal.GRAVIDADE_CLINICA, TipoSinal.PROGRESSAO_IMAGEM,
-            TipoSinal.PS_RECENTE, TipoSinal.INTERNACAO_RECENTE, TipoSinal.PS_TEXTO, TipoSinal.REAVALIACAO_PIORA,
-            TipoSinal.CID_URGENTE, TipoSinal.SUSPEITA_MALIGNIDADE);
+            TipoSinal.PROGRESSAO_IMAGEM, TipoSinal.PS_RECENTE, TipoSinal.INTERNACAO_RECENTE, TipoSinal.REAVALIACAO_PIORA,
+            TipoSinal.CID_URGENTE);
 
     /** Sinais lidos do texto livre do cadastro (justificativa do médico e observações). */
     private static final java.util.Set<TipoSinal> TIPOS_DE_TEXTO = java.util.EnumSet.of(TipoSinal.ALARME_GRAVE,
