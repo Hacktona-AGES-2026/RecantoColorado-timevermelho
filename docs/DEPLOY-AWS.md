@@ -49,15 +49,15 @@ No console: **EC2 → Instances → filaviva → Connect → aba EC2 Instance Co
 
 ## Ligar o assistente de IA (chave)
 
-A chave nunca vai no User data, na imagem nem no Git. Coloque direto na máquina (no terminal do Instance Connect):
+A chave nunca vai no User data, na imagem nem no Git. No terminal da máquina (Instance Connect), rode o comando curto abaixo e cole a chave **uma vez** quando ele pedir. Ela não aparece na tela.
 
 ```bash
-cd /opt/filaviva
-cp backend/.env.example backend/.env
-nano backend/.env          # cole a chave em IA_PROVEDOR_1_CHAVE e salve
-chmod 600 backend/.env
-sudo docker compose -f docker-compose.prod.yml up -d   # recria o backend com a chave
+cd /opt/filaviva && git pull -q && bash deploy/colocar-chave.sh
 ```
+
+O `deploy/colocar-chave.sh` grava a chave em `backend/.env`, com permissão só do dono, e reinicia o backend. Ele mostra só o tamanho da chave, nunca a chave.
+
+Ele existe porque o terminal do navegador costuma estragar o que se cola nele. Dá para colar a chave pelo `nano`, mas aí entram junto códigos invisíveis e, às vezes, o texto repetido, e a OpenAI recusa a chave ("chave recusada" em `/api/agente/status`). O script limpa isso: tira os códigos e, se a chave vier repetida, usa só a primeira.
 
 Sem a chave, o assistente aparece desligado e o resto do FilaVIVA funciona normalmente.
 
