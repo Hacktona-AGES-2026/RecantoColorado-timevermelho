@@ -40,14 +40,16 @@ class DatasetCompletoTest {
     }
 
     @Test
-    void exportTrazAtivosESaidasSugeridasNoFim() {
+    void exportTrazTodosNaFilaInclusiveSaidasSugeridas() {
         var snap = fila.atual();
-        long sugeridas = snap.todos().stream().filter(r -> r.getStatus() == StatusFila.SAIDA_SUGERIDA).count();
+        var sugeridas = snap.todos().stream().filter(r -> r.getStatus() == StatusFila.SAIDA_SUGERIDA).toList();
+        assertThat(sugeridas).isNotEmpty();
+        // sem decisão do regulador, ninguém sai: todos os 919 casos (941 menos duplicatas) estão no arquivo
+        assertThat(snap.ativos()).hasSize(919).containsAll(sugeridas);
         String csv = export.csv();
         assertThat(csv).startsWith("solicitacao_id,posicao,justificativa\n");
-        assertThat(sugeridas).isPositive();
-        assertThat(csv.lines().count()).isEqualTo(snap.ativos().size() + sugeridas + 1);
-        assertThat(csv.lines().toList().getLast()).contains("SAÍDA SUGERIDA");
+        assertThat(csv.lines().count()).isEqualTo(919 + 1L);
+        assertThat(csv).contains("saída sugerida aguardando o regulador");
     }
 
     @Test

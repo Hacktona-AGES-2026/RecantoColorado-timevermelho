@@ -9,7 +9,7 @@ public enum TipoReavaliacao {
     SEM_CONTATO("Sem contato com o paciente"),
     CONFIRMAR_SAIDA("Confirmar saída da fila"),
     DESCOMPENSACAO_CLINICA("Descompensação clínica: encaminhar para controle antes da cirurgia"),
-    REGRA_DE_OURO("Posição corrigida pela regra de ouro");
+    REGRA_DE_OURO("Posição limitada pela regra de ouro");
 
     private final String titulo;
 

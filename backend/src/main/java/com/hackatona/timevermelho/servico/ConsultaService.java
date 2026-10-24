@@ -45,7 +45,9 @@ public class ConsultaService {
         var snap = fila.atual();
         String statusFiltro = status == null || status.isBlank() ? "ATIVA" : status.toUpperCase(Locale.ROOT);
         Stream<ResultadoPaciente> s = snap.todos().stream();
-        if (!statusFiltro.equals("TODOS")) s = s.filter(r -> r.getStatus().name().equals(statusFiltro));
+        // "ATIVA" = todos que estão na fila, inclusive saídas sugeridas ainda não confirmadas
+        if (statusFiltro.equals("ATIVA")) s = s.filter(r -> r.getStatus().naFila());
+        else if (!statusFiltro.equals("TODOS")) s = s.filter(r -> r.getStatus().name().equals(statusFiltro));
         if (classe != null && !classe.isBlank()) s = s.filter(r -> r.classe().name().equalsIgnoreCase(classe));
         if (especialidade != null && !especialidade.isBlank()) {
             s = s.filter(r -> especialidade.equalsIgnoreCase(r.getCaso().especialidade()));

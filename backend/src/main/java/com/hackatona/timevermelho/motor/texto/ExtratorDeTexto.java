@@ -28,6 +28,7 @@ public class ExtratorDeTexto {
         adicionar(TipoSinal.ALARME_GRAVE, r.alarmesGraves(), false);
         adicionar(TipoSinal.SUSPEITA_MALIGNIDADE, r.suspeitaMalignidade(), false);
         adicionar(TipoSinal.ALARME_FUNCIONAL, r.alarmesFuncionais(), false);
+        adicionar(TipoSinal.GRAVIDADE_CLINICA, r.gravidadeClinica(), false);
         adicionar(TipoSinal.PS_TEXTO, r.psNoTexto(), false);
         adicionar(TipoSinal.RELATA_PIORA, r.piora(), false);
         adicionar(TipoSinal.MELHORA_RELATADA, r.melhora(), true);

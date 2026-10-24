@@ -43,30 +43,30 @@ public class GuardRegraDeOuro {
     }
 
     /**
-     * Recebe a fila já ordenada e devolve uma nova ordem em que todo oncológico abaixo do
-     * primeiro paciente sem urgência é colocado logo antes dele (mantendo a ordem entre eles).
+     * Recebe a fila já ordenada e faz o menor ajuste que garante a regra: todo paciente
+     * "sem urgência" (definição oficial) que esteja acima do último oncológico desce para logo
+     * depois dele, mantendo a ordem entre eles. Quem tem urgência não sai do lugar.
      */
     public List<ResultadoPaciente> aplicar(List<ResultadoPaciente> fila) {
-        int primeiroCalmo = -1;
+        int ultimoOnco = -1;
         for (int i = 0; i < fila.size(); i++) {
-            if (fila.get(i).isSemUrgencia()) {
-                primeiroCalmo = i;
-                break;
-            }
+            if (fila.get(i).getCaso().oncologicoPeloCid()) ultimoOnco = i;
         }
-        if (primeiroCalmo < 0) return fila;
+        if (ultimoOnco < 0) return fila;
 
-        List<ResultadoPaciente> nova = new ArrayList<>(fila.subList(0, primeiroCalmo));
-        List<ResultadoPaciente> resto = new ArrayList<>();
-        for (ResultadoPaciente r : fila.subList(primeiroCalmo, fila.size())) {
-            if (r.getCaso().oncologicoPeloCid()) {
+        List<ResultadoPaciente> nova = new ArrayList<>(fila.size());
+        List<ResultadoPaciente> descer = new ArrayList<>();
+        for (int i = 0; i <= ultimoOnco; i++) {
+            ResultadoPaciente r = fila.get(i);
+            if (r.isSemUrgencia()) {
                 r.setMovidoPelaRegraDeOuro(true);
-                nova.add(r);
+                descer.add(r);
             } else {
-                resto.add(r);
+                nova.add(r);
             }
         }
-        nova.addAll(resto);
+        nova.addAll(descer);
+        nova.addAll(fila.subList(ultimoOnco + 1, fila.size()));
         return nova;
     }
 

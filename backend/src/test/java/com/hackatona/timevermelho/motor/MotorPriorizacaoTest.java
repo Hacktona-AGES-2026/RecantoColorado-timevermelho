@@ -62,6 +62,25 @@ class MotorPriorizacaoTest {
     }
 
     @Test
+    void necroseAssepticaNaoEhSepse() {
+        var c = caso("11", "M169").justificativa("Necrose asseptica de cabeca femoral direita, dor intensa.").build();
+        assertThat(avaliar(c).temSinal(TipoSinal.ALARME_GRAVE)).isFalse();
+        var sepse = caso("12", "N201").justificativa("ITU de repeticao com sepse urinaria ha 1 mes.").build();
+        assertThat(avaliar(sepse).classe()).isEqualTo(ClasseSwalis.A1);
+    }
+
+    @Test
+    void doencaCoronariaGraveNaoFicaEmD() {
+        // dor baixa e limitação leve, mas o texto descreve doença grave
+        var tronco = caso("13", "I251").justificativa("DOENCA ARTERIAL CORONARIANA MULTIARTERIAL. ANGINA ESTAVEL CCS II. CATE: TRONCO 80%.").build();
+        assertThat(avaliar(tronco).classe()).isEqualTo(ClasseSwalis.A1);
+        var tri = caso("14", "I251").justificativa("DAC triarterial, angina CCS III, FE 36%. Cateterismo: lesoes >70% em DA, CX e CD.").build();
+        assertThat(avaliar(tri).classe()).isEqualTo(ClasseSwalis.B);
+        var feNormal = caso("15", "I251").justificativa("Cardiopatia isquemica estavel, FE 61%, angina CCS I com medicacao.").build();
+        assertThat(avaliar(feNormal).classe()).isEqualTo(ClasseSwalis.D);
+    }
+
+    @Test
     void alarmeNoTextoViraA1() {
         var c = caso("5", "K409").justificativa("Hernia inguinal volumosa com episodio de encarceramento ha 2 semanas.").build();
         assertThat(avaliar(c).classe()).isEqualTo(ClasseSwalis.A1);
@@ -89,11 +108,27 @@ class MotorPriorizacaoTest {
     }
 
     @Test
-    void desistenciaDeNaoOncologicoViraSaidaSugeridaMasOncologicoFica() {
-        var naoOnco = caso("9", "K409").observacoes("PCT DESISTIU DO PROCEDIMENTO. SOLICITA RETIRADA DA FILA.").build();
-        var onco = caso("10", "C509").observacoes("PCT DESISTIU DO PROCEDIMENTO. SOLICITA RETIRADA DA FILA.").build();
-        assertThat(avaliar(naoOnco).getStatus()).isEqualTo(StatusFila.SAIDA_SUGERIDA);
-        assertThat(avaliar(onco).getStatus()).isEqualTo(StatusFila.ATIVA);
+    void saidaSugeridaContinuaNaFilaAteORegularConfirmar() {
+        String desistiu = "PCT DESISTIU DO PROCEDIMENTO. SOLICITA RETIRADA DA FILA.";
+        var naoOnco = caso("9", "K409").observacoes(desistiu).build();
+        var onco = caso("10", "C509").observacoes(desistiu).build();
+        var fila = motor.priorizar(List.of(naoOnco, onco), Pesos.PADRAO, Map.of());
+        // ninguém sai sem decisão humana: os dois têm posição e aviso de reavaliação
+        assertThat(fila).allSatisfy(r -> {
+            assertThat(r.getStatus()).isEqualTo(StatusFila.SAIDA_SUGERIDA);
+            assertThat(r.getPosicao()).isNotNull();
+            assertThat(r.getJustificativa()).contains("saída sugerida aguardando o regulador");
+            assertThat(r.getReavaliacoes()).extracting(Reavaliacao::tipo).contains(TipoReavaliacao.CONFIRMAR_SAIDA);
+        });
+        // confirmou: sai da fila; recusou: volta a ser paciente comum da fila
+        var confirmada = motor.priorizar(List.of(naoOnco), Pesos.PADRAO,
+                Map.of("9", new DecisaoRegulador(null, null, true, "confirmado por telefone")));
+        assertThat(confirmada.getFirst().getStatus()).isEqualTo(StatusFila.SAIDA_CONFIRMADA);
+        assertThat(confirmada.getFirst().getPosicao()).isNull();
+        var recusada = motor.priorizar(List.of(naoOnco), Pesos.PADRAO,
+                Map.of("9", new DecisaoRegulador(null, null, false, "paciente quer operar")));
+        assertThat(recusada.getFirst().getStatus()).isEqualTo(StatusFila.ATIVA);
+        assertThat(recusada.getFirst().getPosicao()).isEqualTo(1);
     }
 
     @Test

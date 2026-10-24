@@ -55,7 +55,7 @@ public class AlertaService {
         }
 
         List<Dtos.Saida> saidas = snap.todos().stream()
-                .filter(r -> r.getSinalSaida() != null && r.getStatus() != StatusFila.SAIDA_CONFIRMADA)
+                .filter(r -> r.getStatus() == StatusFila.SAIDA_SUGERIDA)
                 .map(r -> new Dtos.Saida(r.getCaso().solicitacaoId(), r.getCaso().nome(), r.getCaso().cidFormatado(),
                         r.oncologico(), r.getStatus().name(), r.getSinalSaida().descricao(),
                         r.getSinalSaida().evidencia(), r.getSinalSaida().fonte()))

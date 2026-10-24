@@ -16,6 +16,7 @@ public record RegrasClinicas(
         List<Termo> alarmesGraves,
         List<Termo> suspeitaMalignidade,
         List<Termo> alarmesFuncionais,
+        List<Termo> gravidadeClinica,
         List<Termo> psNoTexto,
         List<Termo> piora,
         List<Termo> melhora,
