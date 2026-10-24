@@ -24,7 +24,51 @@ Um **framework clínico explícito (SWALIS adaptado)** decide a urgência; um **
 | D | 360 dias | O resto |
 
 4. **Dentro da classe**, o score de 0–100 ordena. Ele tem 6 componentes, cada um explicado na tela: diagnóstico 30, piora 25, dor 15, limitação 10, tempo de espera relativo ao prazo 15, ASA/risco cirúrgico 5. O regulador pode testar outros pesos no simulador.
-5. **Trava da regra de ouro**: depois de ordenar, nenhum CID C* pode ficar abaixo de um paciente sem urgência clínica. Usamos **exatamente a mesma definição conservadora do verificador oficial**, inclusive olhando só os eventos do dataset (veja "Decisões difíceis"). A trava faz o menor ajuste possível: quem é "sem urgência" pela definição oficial e estava acima de algum oncológico desce para logo depois do último oncológico, e quem tem urgência não sai do lugar. Hoje isso afeta 2 pacientes (com lesão de tronco de coronária, dor baixa e nenhum evento), marcados na tela e na lista de reavaliação. A checagem roda a cada recálculo; se falhar, o sistema para em vez de mostrar uma fila insegura.
+5. **Trava da regra de ouro**: depois de ordenar, como **restrição explícita** (não como pontos no score), nenhum paciente protegido pode ficar abaixo de um paciente sem urgência clínica. A trava faz o menor ajuste possível: quem é "sem urgência" e estava acima do último protegido desce para logo depois dele; quem tem urgência não sai do lugar. Quem é "sem urgência" e quem é protegido depende da fila (veja "Duas filas" abaixo). A checagem roda a cada recálculo, nas duas filas; se falhar, o sistema para em vez de mostrar uma fila insegura.
+
+## Duas filas: operacional e de referência
+
+O verificador oficial (`verificar_fila_priorizada.py`) decide quem é "sem urgência" lendo **só o dataset de referência**. Ele não enxerga eventos registrados depois, nem urgências que só aparecem na nossa leitura do texto do médico. Testamos: com os critérios de urgência atualizados, a fila da tela passa a divergir do que o verificador aceita. Por isso existem **duas filas, sempre identificadas**:
+
+| | **Fila operacional** | **Fila de referência — entrega oficial** |
+|---|---|---|
+| Para quem | O regulador, na tela e na API | A banca: gera o `fila_priorizada.csv` |
+| Dados | Dataset + eventos e decisões registrados | Só o dataset de referência, sem eventos novos nem decisões |
+| Quem é "sem urgência" | Classe clínica calculada D, com dor e limitação **informadas**, e nenhum critério de urgência do verificador em **todos** os eventos (inclusive os novos). Dado ausente nunca conta como calmo | Exatamente o verificador: só eventos do dataset, dado ausente tratado como "nenhum" |
+| Quem é protegido | CID C* **ou biópsia positiva** | CID C* (a regra oficial) |
+| Recalcula | A cada evento ou decisão | Uma vez; é reproduzível (versão = hash dos CSVs do dataset e do `regras.json`) |
+| Identificação | `operacional`, versão `op-N`, horário | `oficial`, versão `ref-<hash>`, horário |
+| Passa no verificador? | Não necessariamente (ver abaixo) | **Sim** |
+
+- **Uma promoção manual só passa à frente de protegidos com evidência de agravamento registrada.** A classe calculada vem das regras clínicas, não do ajuste do regulador.
+  - Promover um paciente acima da classe calculada registra a decisão, com justificativa e autor na auditoria. Mas, se não houver evidência de agravamento, ele fica logo abaixo de todos os protegidos, com o selo "posição limitada pela regra de ouro" e o pedido para registrar o atendimento ou exame que justifica a urgência. Isso vale também para quem tem dor moderada ou dado faltando.
+  - **Conta como evidência:** PS ou internação recente, progressão em imagem, reavaliação com piora, alarme grave ou funcional, doença grave descrita, CID de urgência e sinais de malignidade.
+  - **Não conta como evidência:** dor, limitação, dado faltando, relato de piora (geralmente por telefone) ou um relato grave ainda não confirmado.
+  - Quando a promoção passa, a justificativa cita a evidência e a fonte (ex.: "evidência da promoção: Pronto-socorro em 23/10/2026 (evento EVT-…)").
+- **Evidência estruturada nova reclassifica; texto livre não.** Uma progressão em imagem, uma internação ou uma biópsia positiva registradas agora (tipo e resultado do evento) reclassificam o paciente e recalculam score e posição. Para o texto livre, a política está em "Texto livre: só alerta e evidência" abaixo.
+
+## Texto livre: só alerta e evidência
+
+Política conservadora, adotada ao estabilizar o motor:
+
+- **Texto novo (descrição de eventos registrados depois da importação) nunca muda a classe.** Uma menção **afirmativa** de alarme grave ("sepse", "hérnia encarcerada"…) gera "possível agravamento grave, a confirmar". Isso abre uma **REVISÃO CLÍNICA URGENTE** (primeiro grupo da lista de reavaliação) e dá um pequeno ganho de score dentro da própria classe. Menções **negadas** ("sem sinais de", "afastada"), **hipotéticas** ("risco de", "suspeita de", "a descartar", "orientado sobre") e **históricas** ("história de", "há 5 anos", "em 2019", "prévia") são ignoradas. A classe vem do evento estruturado: uma internação leva a B.
+- **Texto não serve, sozinho, para promover à frente de cânceres.** O regulador pode promover com base no texto, mas precisa haver um atendimento ou exame estruturado registrado (PS, internação, imagem, reavaliação). Esse registro aparece na justificativa como evidência da promoção.
+- **Texto do cadastro (justificativa do médico e observações do dataset de referência): classificação mantida, mas marcada como provisória.** Hoje, 85 pacientes têm a classe definida pelo texto. Para eles:
+  - Rebaixar automaticamente seria o texto (ou a falta dele) provocando rebaixamento. Por isso **a classe e a posição foram mantidas** e a justificativa diz "classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: X)".
+  - Quando a classe provisória é A1 ou A2, o paciente entra em **REVISÃO CLÍNICA URGENTE**, com o trecho original e a fonte, e o aviso de que **não é confirmação médica**.
+  - Entre eles estão os **12 pacientes cuja urgência está só no texto e que cairiam de A1 para D** se o texto fosse ignorado:
+    - 2 com hérnia encarcerada reduzida no PS;
+    - 2 com retenção urinária aguda;
+    - 3 com túnel do carpo com atrofia;
+    - colangite, pielonefrite obstrutiva, colelitíase;
+    - 2 com "TRONCO 80%".
+  - Menções hipotéticas ou históricas nesse texto são marcadas como tal (20 justificativas); ainda contam para a classe provisória, pela mesma razão.
+- **Limitação assumida:** para esses 85, o texto do dataset continua definindo a classe até a revisão humana. Não há como manter a posição sem usar a classe que o texto indica; inventar uma faixa intermediária seria uma regra clínica nova. Preferimos manter, marcar e pedir revisão. A lista está em [docs/VALIDACAO-MENTOR.md](docs/VALIDACAO-MENTOR.md).
+- **Ainda é leitura por palavras-chave:** só negação, hipótese e histórico são tratados, e nada disso foi validado por profissional de saúde.
+- **Toda resposta da API diz de qual fila é**: cabeçalho `X-FilaViva-Snapshot` (ex.: `operacional; versao=op-12; calculado=…`), campo `snapshot` na resposta da fila e os dois snapshots em `/api/status`.
+- **Downloads**: `GET /api/fila/export.csv` entrega por padrão a fila de referência, com o nome `fila_priorizada.csv`. `?snapshot=operacional` entrega a fila da tela, com o nome `fila_operacional_op-N_<horário>.csv`. Com `&versao=op-N`, a API recusa (HTTP 409) se a fila mudou desde que a tela foi carregada; assim o arquivo e a tela nunca divergem em silêncio.
+- **A fila operacional não é um entregável.** Ela pode reprovar no verificador oficial, mesmo sem nenhum evento novo, porque reconhece urgências que ele não vê. Hoje são 2 pacientes com "CATE: TRONCO 80%" (`SOL-2026-00960` e `SOL-2026-00765`): na fila operacional seguem a ordem clínica (A1); na de referência ficam abaixo de todos os oncológicos. Os dois aparecem na revisão como "Urgência que o verificador oficial não reconhece", para o regulador confirmar. Essa leitura do texto ainda **não foi validada por um profissional de saúde** (ver [docs/VALIDACAO-MENTOR.md](docs/VALIDACAO-MENTOR.md)).
+- **Simulações não mexem em nenhuma das duas filas.**
 
 ## Decisões difíceis
 
@@ -33,7 +77,7 @@ Um **framework clínico explícito (SWALIS adaptado)** decide a urgência; um **
 - **Usamos o CID, não a flag.** 44 flags oncológicas não batem com o CID. A flag não entra em nenhuma regra; só gera aviso de "cadastro com flag errada".
 - **Dado faltando não rebaixa.** Sem dor ou limitação informadas, o paciente fica no mínimo em C e vai para a lista de reavaliação. Não colocamos ninguém no fim da fila por falta de informação.
 - **Oncológico nunca é rebaixado, nem pelo regulador.** O regulador pode promover qualquer um e rebaixar quem não tem câncer, sempre com justificativa. Tentar colocar um câncer abaixo de A2 é recusado com mensagem clara: se o diagnóstico mudou, registre a nova biópsia.
-- **A regra de ouro só aceita a evidência do dataset oficial.** Testamos piorar ao vivo um paciente sem urgência (PS, internação, reavaliação com piora, imagem com progressão) e depois promovê-lo para A1. Ele passou à frente de 126 pacientes com câncer, e o verificador oficial reprovou o CSV exportado naquele momento: o verificador só lê o `eventos_clinicos.csv` original, então para ele o paciente continuava "sem urgência". Corrigimos de forma conservadora. A trava usa só os eventos do dataset, como o verificador. Um evento novo ou uma promoção continuam subindo o paciente acima dos que não têm câncer, mas não à frente de quem tem câncer; o paciente fica logo abaixo do último oncológico, com o selo "posição limitada pela regra de ouro". Isso vale em qualquer momento da demo, inclusive para a biópsia positiva registrada pelo botão de demo. Em produção, com o hospital alimentando os mesmos dados que o auditor lê, essa restrição deixaria de ser necessária.
+- **Separar a fila da tela do arquivo de entrega.** Testamos piorar ao vivo um paciente sem urgência e promovê-lo para A1: ele passou à frente de 126 pacientes com câncer, e o verificador oficial reprovou o CSV exportado, porque só lê o `eventos_clinicos.csv` original. Uma primeira correção fez a trava ignorar eventos novos; ela passava no verificador, mas segurava agravamentos reais (uma biópsia positiva nova ficava atrás de 26 cânceres com score menor). Ficamos com a separação descrita em "Duas filas": a tela reconhece o agravamento e o arquivo de entrega continua reproduzível e aprovado, cada um identificado.
 - **Ninguém sai da fila sem decisão humana.** Desistência, cirurgia em outro serviço ou "operou pelo convênio" (em eventos ou observações) viram **saída sugerida**: o paciente **continua na posição calculada**, com um selo na tela e o aviso na justificativa, e entra na lista "Confirmar saída" para o regulador. Só sai quando o regulador confirma; se recusar, o aviso some. Isso vale também para quem tem câncer. O custo é que um paciente que talvez já tenha operado pode ocupar uma vaga alta (3 dos 24 estão em A1); por isso a confirmação aparece em destaque na revisão diária. Decisão a validar com o mentor.
 - **Texto livre com cuidado clínico.** Revisando todos os alarmes caso a caso, achamos dois erros e corrigimos, cada um com teste:
   - "septic" casava dentro de "asséptica" (necrose asséptica é justamente sem infecção) e colocava 7 pacientes em A1 por "sepse";
@@ -43,7 +87,7 @@ Um **framework clínico explícito (SWALIS adaptado)** decide a urgência; um **
 
 ## Como o `fila_priorizada.csv` está montado (919 de 941)
 
-O arquivo traz **todos os 919 pacientes da fila, na ordem do FilaVIVA**. As 24 **saídas sugeridas** (desistiu, operou em outro serviço ou pelo convênio) estão na posição calculada, com a justificativa terminando em "saída sugerida aguardando o regulador (motivo)". Distribuição: A1 146, A2 142, B 224, C 205, D 202.
+O arquivo é a **fila de referência**: só o dataset, gravado na raiz toda vez que o backend sobe e igual, byte a byte, a cada execução. Traz **todos os 919 pacientes da fila, na ordem do FilaVIVA**. As 24 **saídas sugeridas** (desistiu, operou em outro serviço ou pelo convênio) estão na posição calculada, com a justificativa terminando em "saída sugerida aguardando o regulador (motivo)". Distribuição: A1 146, A2 142, B 224, C 205, D 202.
 
 **Ficaram fora só as 22 solicitações duplicadas** (mesmo paciente e mesmo procedimento). Mesclamos na de entrada mais antiga, porque o paciente espera desde lá; eventos e observações da duplicata passam para a principal. 5 delas são oncológicas (`SOL-2023-00088`, `SOL-2026-00865`, `SOL-2026-00864`, `SOL-2026-01014`, `SOL-2026-00816`) e **a principal de cada uma está no arquivo**, com o mesmo CID. Se uma duplicata tivesse CID de câncer e a principal não, o CID de câncer passaria para a principal.
 
@@ -51,8 +95,10 @@ O arquivo passa no `verificar_fila_priorizada.py`: regra de ouro respeitada, 100
 
 ## Como validamos
 
-- `backend`: 19 testes automáticos (motor e dataset completo).
-- `scripts/teste_integracao.py`: 37 verificações contra o sistema real (Postgres, backend e frontend no ar), passando pelos fluxos da demo, e reinicia a demo no fim.
+- `backend`: 47 testes automáticos.
+  - **Motor:** regra de ouro nas duas filas; promoção com e sem evidência; texto afirmativo, negado, hipotético e histórico (só alerta, nunca muda a classe); classe provisória por texto; dado ausente; biópsia nova; 300 cenários aleatórios.
+  - **Dataset completo:** os 12 pacientes com urgência só no texto (mantidos, em revisão urgente, nas duas filas); regressão do `SOL-2026-00351`; pacientes `SOL-2026-00738`, `SOL-2026-00950`, `SOL-2025-00173` e os de tronco coronário; 40 ações aleatórias sem nenhum paciente sem urgência acima de um CID C, nas duas filas; simulação; igualdade API = CSV operacional; fila de referência igual ao `fila_priorizada.csv`.
+- `scripts/teste_integracao.py`: 42 verificações contra o sistema real (Postgres, backend e frontend no ar), passando pelos fluxos da demo e pelas duas filas, e reinicia a demo no fim.
 - `scripts/conferir_csv.py` e o verificador oficial sobre o CSV final.
 - Classificação a revisar com o mentor clínico usando [docs/VALIDACAO-MENTOR.md](docs/VALIDACAO-MENTOR.md) (regras, contagens, casos reais e perguntas).
 - Demo ensaiada com [docs/ROTEIRO-DEMO.md](docs/ROTEIRO-DEMO.md).

@@ -21,6 +21,7 @@ sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 PACIENTE_DEMO = "SOL-2026-00351"  # CID D44.0, prioridade "baixa", biópsia positiva
 falhas = []
+cabecalhos = {}  # cabeçalhos da última resposta (ex.: X-FilaViva-Snapshot)
 
 
 def pedir(metodo, url, corpo=None):
@@ -28,6 +29,8 @@ def pedir(metodo, url, corpo=None):
     req = urllib.request.Request(url, data=dados, method=metodo, headers={"Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
+            cabecalhos.clear()
+            cabecalhos.update({k.lower(): v for k, v in r.headers.items()})
             bruto = r.read().decode("utf-8")
             return r.status, (json.loads(bruto) if "json" in r.headers.get("Content-Type", "") else bruto)
     except urllib.error.HTTPError as e:
@@ -70,6 +73,16 @@ def main():
     linhas = list(csv.DictReader(io.StringIO(texto)))
     checar("export.csv tem cabeçalho e 919 linhas", st == 200 and len(linhas) == 919, f"{len(linhas)} linhas")
     checar("nenhuma justificativa vazia", all(l["justificativa"].strip() for l in linhas))
+    checar("o download padrão é a fila de referência (entrega oficial)",
+           cabecalhos.get("x-filaviva-snapshot", "").startswith("oficial")
+           and 'filename="fila_priorizada.csv"' in cabecalhos.get("content-disposition", ""),
+           cabecalhos.get("x-filaviva-snapshot", ""))
+    oficial_inicial = texto
+    st, s = pedir("GET", f"{api}/status")
+    checar("status mostra os dois snapshots, com versão e horário",
+           {"operacional", "oficial"} <= set(s.get("snapshots", {}))
+           and all(v.get("versao") and v.get("calculadoEm") for v in s["snapshots"].values()),
+           ", ".join(f"{k}={v.get('versao')}" for k, v in s.get("snapshots", {}).items()))
     st, ind = pedir("GET", f"{api}/indicadores")
     viol = next(c for c in ind["comparacoes"] if "abaixo de um paciente sem urgência" in c["indicador"])
     checar("zero oncológicos abaixo de um paciente sem urgência", viol["depois"] == "0", f"hoje={viol['antes']}")
@@ -118,33 +131,68 @@ def main():
     st, f2 = pedir("GET", f"{api}/fila?tamanho=1")
     checar("fila diminui em 1 depois da confirmação", f2["total"] == 918, f"total={f2['total']}")
 
-    print("\n6b. Regra de ouro com piora registrada ao vivo + promoção pelo regulador")
-    # o verificador oficial só vê o dataset: piora registrada agora não pode pôr ninguém à frente de um câncer
+    print("\n6b. Regra de ouro na fila operacional: promoção sem evidência × com evidência nova")
+
+    def fila_toda():
+        todos = []
+        for pagina in range(2):
+            todos += pedir("GET", f"{api}/fila?tamanho=500&pagina={pagina}")[1]["itens"]
+        return todos
+
+    def oncos_abaixo_de(sid):
+        todos = fila_toda()
+        pos = next(i["posicao"] for i in todos if i["solicitacaoId"] == sid)
+        return pos, [i for i in todos if i["cid"].startswith("C") and i["posicao"] > pos]
+
     st, d = pedir("GET", f"{api}/fila?classe=D&tamanho=50")
-    calmo_d = next(i for i in d["itens"] if not i["oncologico"] and i["status"] == "ATIVA")["solicitacaoId"]
-    for ev in [{"tipo": "pronto_socorro", "resultado": "observacao"}, {"tipo": "internacao", "resultado": "alta",
-                                                                       "valorNumerico": 8}]:
-        pedir("POST", f"{api}/eventos", {"solicitacaoId": calmo_d, **ev})
-    pedir("POST", f"{api}/ajustes", {"solicitacaoId": calmo_d, "tipo": "ALTERAR_CLASSE", "classeNova": "A1",
-                                     "justificativa": "teste de promoção após piora ao vivo"})
-    todos = []
-    for pagina in range(2):
-        todos += pedir("GET", f"{api}/fila?tamanho=500&pagina={pagina}")[1]["itens"]
-    pos_calmo = next(i["posicao"] for i in todos if i["solicitacaoId"] == calmo_d)
-    oncos_abaixo = [i for i in todos if i["cid"].startswith("C") and i["posicao"] > pos_calmo]
-    checar("paciente promovido não passa à frente de nenhum câncer", not oncos_abaixo,
-           f"posição {pos_calmo}, oncológicos abaixo: {len(oncos_abaixo)}")
+    calmos = [i["solicitacaoId"] for i in d["itens"] if not i["oncologico"] and i["status"] == "ATIVA"][:2]
+    sem_evid, com_evid = calmos
+    # (a) promoção sem nenhuma evidência clínica: não contorna a regra
+    pedir("POST", f"{api}/ajustes", {"solicitacaoId": sem_evid, "tipo": "ALTERAR_CLASSE", "classeNova": "A1",
+                                     "justificativa": "teste de promoção sem evidência"})
+    pos, abaixo = oncos_abaixo_de(sem_evid)
+    checar("promoção sem evidência não passa à frente de nenhum câncer", not abaixo,
+           f"posição {pos}, oncológicos abaixo: {len(abaixo)}")
+    # (b) progressão registrada agora + promoção: a urgência nova é considerada, sem bloqueio artificial
+    pedir("POST", f"{api}/eventos", {"solicitacaoId": com_evid, "tipo": "exame_imagem", "resultado": "progressao",
+                                     "descricao": "piora em imagem (teste)"})
+    pedir("POST", f"{api}/ajustes", {"solicitacaoId": com_evid, "tipo": "ALTERAR_CLASSE", "classeNova": "A1",
+                                     "justificativa": "teste de promoção com evidência nova"})
+    pos, abaixo = oncos_abaixo_de(com_evid)
+    checar("com evidência nova, o paciente urgente pode passar à frente de cânceres", len(abaixo) > 0,
+           f"posição {pos}, oncológicos abaixo: {len(abaixo)}")
     st, ind = pedir("GET", f"{api}/indicadores")
     viol = next(c for c in ind["comparacoes"] if "abaixo de um paciente sem urgência" in c["indicador"])
-    checar("regra de ouro continua em zero depois da promoção", viol["depois"] == "0", viol["depois"])
+    checar("regra de ouro em zero na fila operacional", viol["depois"] == "0", viol["depois"])
+    # (c) a fila operacional e o CSV operacional são o mesmo snapshot
+    st, pag = pedir("GET", f"{api}/fila?tamanho=1")
+    versao_op = pag["snapshot"]["versao"]
+    st, texto_op = pedir("GET", f"{api}/fila/export.csv?snapshot=operacional&versao={versao_op}")
+    checar("CSV operacional traz a mesma versão da tela", st == 200 and f"versao={versao_op}"
+           in cabecalhos.get("x-filaviva-snapshot", "") and "fila_operacional_" in cabecalhos.get("content-disposition", ""),
+           cabecalhos.get("x-filaviva-snapshot", ""))
+    linhas_op = list(csv.DictReader(io.StringIO(texto_op)))
+    tela = fila_toda()
+    checar("CSV operacional = fila da tela (ordem, posições e justificativas)",
+           [(l["solicitacao_id"], int(l["posicao"]), l["justificativa"]) for l in linhas_op]
+           == [(i["solicitacaoId"], i["posicao"], i["justificativa"]) for i in tela])
+    st, _ = pedir("GET", f"{api}/fila/export.csv?snapshot=operacional&versao=op-0")
+    checar("versão desatualizada é recusada (409), sem divergência silenciosa", st == 409, str(st))
+    # (d) a fila de referência não mudou com nada disso
+    st, texto_of = pedir("GET", f"{api}/fila/export.csv?snapshot=oficial")
+    checar("fila de referência continua igual depois de eventos e decisões", texto_of == oficial_inicial)
 
     print("\n7. Simulações não gravam nada")
     st, d = pedir("GET", f"{api}/fila?classe=D&tamanho=50")
     calmo = next(i for i in d["itens"] if not i["oncologico"] and i["status"] == "ATIVA")
+    st, antes_sim = pedir("GET", f"{api}/fila?tamanho=1")
     st, sim = pedir("POST", f"{api}/simulacao", {"solicitacaoId": calmo["solicitacaoId"], "dor": 9})
     checar("dor 9 hipotética leva para B", st == 200 and sim["depois"]["classe"] == "B", sim.get("mensagem", ""))
     st, depois = pedir("GET", f"{api}/pacientes/{calmo['solicitacaoId']}")
     checar("paciente real continua igual", depois["item"]["classe"] == "D")
+    st, depois_sim = pedir("GET", f"{api}/fila?tamanho=1")
+    checar("simulação não cria nova versão da fila operacional",
+           depois_sim["snapshot"]["versao"] == antes_sim["snapshot"]["versao"], depois_sim["snapshot"]["versao"])
     st, pes = pedir("POST", f"{api}/simulacao/pesos", {"diagnostico": 30, "piora": 25, "dor": 15, "limitacao": 10,
                                                        "espera": 50, "risco": 5})
     checar("simulação de pesos respeita a regra de ouro", st == 200 and pes["regraDeOuroRespeitada"],

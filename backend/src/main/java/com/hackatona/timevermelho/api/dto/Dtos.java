@@ -35,8 +35,12 @@ public final class Dtos {
                            String status, boolean movidoPelaRegraDeOuro, int reavaliacoes, List<Motivo> motivos,
                            String justificativa) {}
 
+    /** Qual fila uma resposta representa. */
+    public record SnapshotDto(String tipo, String versao, java.time.Instant calculadoEm, int eventosRegistrados,
+                              int decisoesRegulador, String descricao) {}
+
     public record Pagina<T>(List<T> itens, long total, int pagina, int tamanho, Map<String, Long> porClasse,
-                            List<String> especialidades) {}
+                            List<String> especialidades, SnapshotDto snapshot) {}
 
     // ---------- paciente ----------
 

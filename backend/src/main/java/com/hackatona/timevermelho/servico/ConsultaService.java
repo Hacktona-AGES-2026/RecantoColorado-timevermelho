@@ -71,7 +71,7 @@ public class ConsultaService {
         for (ClasseSwalis c : ClasseSwalis.values()) porClasse.put(c.name(), 0L);
         snap.ativos().forEach(r -> porClasse.merge(r.classe().name(), 1L, Long::sum));
         List<String> especialidades = snap.todos().stream().map(r -> r.getCaso().especialidade()).distinct().sorted().toList();
-        return new Dtos.Pagina<>(itens, filtrados.size(), pag, tam, porClasse, especialidades);
+        return new Dtos.Pagina<>(itens, filtrados.size(), pag, tam, porClasse, especialidades, Conversor.snapshot(snap.info()));
     }
 
     private static boolean contem(String campo, String busca) {

@@ -32,6 +32,9 @@ public class AnalisadorReavaliacao {
                 case SEM_CONTATO -> add(r, TipoReavaliacao.SEM_CONTATO, s.descricao());
                 case HBA1C_ALTA -> add(r, TipoReavaliacao.DESCOMPENSACAO_CLINICA,
                         s.descricao() + ": diabetes descontrolado para cirurgia eletiva");
+                case ALARME_A_CONFIRMAR -> add(r, TipoReavaliacao.REVISAO_URGENTE,
+                        s.descricao() + " — relatado em \"" + s.evidencia() + "\" (" + s.fonte() + "). Não muda a "
+                                + "classe sozinho: confirme com avaliação clínica e registre o atendimento");
                 default -> { }
             }
         }
@@ -43,9 +46,27 @@ public class AnalisadorReavaliacao {
         }
 
         if (r.isMovidoPelaRegraDeOuro()) {
-            add(r, TipoReavaliacao.REGRA_DE_OURO,
-                    "Classe " + r.classe() + " pelo FilaVIVA, mas sem urgência pela definição oficial (dor e limitação baixas, "
-                            + "sem evento de piora): ficou abaixo de todos os oncológicos. Revisar se o texto do médico indica urgência");
+            add(r, TipoReavaliacao.REGRA_DE_OURO, r.getReferencia() == Referencia.OFICIAL
+                    ? "Classe " + r.classe() + ", mas sem urgência pela definição oficial (dor e limitação baixas, "
+                            + "sem evento de piora no dataset): ficou abaixo de todos os oncológicos"
+                    : "Classe " + r.classe() + " por decisão do regulador, mas sem evidência de agravamento registrada "
+                            + "(classe pelas regras clínicas: " + r.getClassificacao().classeCalculada() + "): ficou abaixo de "
+                            + "todos os oncológicos. Registre o atendimento ou exame que justifica a urgência para ultrapassá-los");
+        }
+        ClasseSwalis calculada = r.getClassificacao().classeCalculada();
+        if (r.isClassePorTexto() && (calculada == ClasseSwalis.A1 || calculada == ClasseSwalis.A2)) {
+            Sinal texto = r.getClassificacao().determinantes().stream().filter(MotorPriorizacao::vemDeTextoLivre)
+                    .findFirst().orElse(null);
+            add(r, TipoReavaliacao.REVISAO_URGENTE, "Classe " + calculada + " provisória: a urgência está só no texto"
+                    + (texto == null ? "" : " — " + texto.descricao() + ": \"" + texto.evidencia() + "\" (" + texto.fonte() + ")")
+                    + ". Pelos dados estruturados seria " + r.getClasseEstruturada() + ". A posição foi mantida até a "
+                    + "revisão clínica; isto não é confirmação médica de " + calculada);
+        }
+        if (r.isDivergenteDoVerificador()) {
+            add(r, TipoReavaliacao.DIVERGENCIA_VERIFICADOR, "Classe " + r.getClassificacao().classeCalculada()
+                    + " pela leitura do FilaVIVA (" + r.getClassificacao().regra() + "), mas a definição do verificador "
+                    + "oficial não reconhece essa urgência. Na fila operacional ele segue a ordem clínica; na fila de "
+                    + "referência da entrega fica abaixo dos oncológicos. Confirmar com o regulador");
         }
     }
 

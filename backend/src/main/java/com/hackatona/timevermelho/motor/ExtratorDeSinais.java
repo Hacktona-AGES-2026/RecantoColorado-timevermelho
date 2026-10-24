@@ -39,8 +39,29 @@ public class ExtratorDeSinais {
         eventos(c, s);
         sintomas(c, s);
         s.addAll(texto.extrair(c.justificativa(), c.observacoes()));
+        textoDosEventosNovos(c, s);
         qualidadeDoCadastro(c, s);
         return s;
+    }
+
+    /**
+     * Lê a descrição dos eventos registrados depois da importação (os do dataset de referência ficam como
+     * estão). O texto nunca muda a classe: o que muda é o tipo e o resultado estruturados do evento. Uma
+     * menção afirmativa de alarme grave só gera "possível agravamento grave, a confirmar" (revisão urgente).
+     */
+    private void textoDosEventosNovos(Caso c, List<Sinal> s) {
+        if (c.eventos() == null) return;
+        Set<String> jaTem = new java.util.HashSet<>();
+        for (Sinal x : s) jaTem.add(x.tipo() + "|" + x.descricao());
+        for (Evento e : c.eventos()) {
+            if (!e.sintetico() || e.descricao() == null || e.descricao().isBlank()) continue;
+            for (Sinal achado : texto.extrairDeEvento(e.descricao(), "evento " + e.id())) {
+                if (jaTem.add(achado.tipo() + "|" + achado.descricao())) {
+                    s.add(new Sinal(achado.tipo(), achado.descricao() + " (evento de " + e.data().format(BR) + ")",
+                            achado.evidencia(), achado.fonte(), e.data()));
+                }
+            }
+        }
     }
 
     private void diagnostico(Caso c, List<Sinal> s) {

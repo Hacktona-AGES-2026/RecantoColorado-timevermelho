@@ -21,6 +21,11 @@ public class TratamentoDeErros {
         return ResponseEntity.status(HttpStatus.UNPROCESSABLE_CONTENT).body(new Dtos.Erro(e.getMessage()));
     }
 
+    @ExceptionHandler(Erros.Conflito.class)
+    ResponseEntity<Dtos.Erro> conflito(Erros.Conflito e) {
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(new Dtos.Erro(e.getMessage()));
+    }
+
     @ExceptionHandler(Erros.NaoEncontrado.class)
     ResponseEntity<Dtos.Erro> naoEncontrado(Erros.NaoEncontrado e) {
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(new Dtos.Erro(e.getMessage()));

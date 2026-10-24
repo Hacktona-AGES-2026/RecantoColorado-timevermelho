@@ -62,7 +62,7 @@ public class IndicadoresService {
                 "Quem piorou durante a espera"));
         comp.add(new Dtos.Comparacao("Sem urgência clínica no último terço",
                 pct(ativos, calmo, antes, p -> p > 2 * n / 3.0), pct(ativos, calmo, depois, p -> p > 2 * n / 3.0),
-                "Definição conservadora do verificador oficial"));
+                "Sem evidência clínica de urgência na fila operacional (dado ausente não conta como calmo)"));
         comp.add(new Dtos.Comparacao("Urgentes (A1/A2) sem prioridade \"alta\" no cadastro",
                 String.valueOf(ativos.stream().filter(urgente).filter(r -> !"alta".equals(r.getCaso().prioridadeManual())).count()),
                 "0", "Casos urgentes que a prioridade manual não enxergava"));

@@ -19,7 +19,9 @@ import com.hackatona.timevermelho.servico.AlertaService;
 import com.hackatona.timevermelho.servico.ConsultaService;
 import com.hackatona.timevermelho.servico.DecisaoService;
 import com.hackatona.timevermelho.servico.DemoService;
+import com.hackatona.timevermelho.servico.Erros;
 import com.hackatona.timevermelho.servico.ExportService;
+import com.hackatona.timevermelho.servico.FilaService;
 import com.hackatona.timevermelho.servico.IndicadoresService;
 import com.hackatona.timevermelho.servico.SimulacaoService;
 
@@ -38,9 +40,11 @@ public class FilaController {
     private final IndicadoresService indicadores;
     private final ExportService export;
     private final DemoService demo;
+    private final FilaService fila;
 
     public FilaController(ConsultaService consulta, DecisaoService decisao, SimulacaoService simulacao,
-                          AlertaService alertas, IndicadoresService indicadores, ExportService export, DemoService demo) {
+                          AlertaService alertas, IndicadoresService indicadores, ExportService export, DemoService demo,
+                          FilaService fila) {
         this.consulta = consulta;
         this.decisao = decisao;
         this.simulacao = simulacao;
@@ -48,6 +52,7 @@ public class FilaController {
         this.indicadores = indicadores;
         this.export = export;
         this.demo = demo;
+        this.fila = fila;
     }
 
     @GetMapping("/fila")
@@ -61,12 +66,29 @@ public class FilaController {
         return consulta.fila(classe, especialidade, busca, status, oncologico, pagina, tamanho);
     }
 
+    /**
+     * CSV no formato do entregável.
+     * - padrão / snapshot=oficial: "Fila de referência — entrega oficial" (fila_priorizada.csv).
+     * - snapshot=operacional: a mesma fila que a API mostra. Com versao=op-N, recusa (409) se a fila já
+     *   mudou, para a tela e o arquivo nunca divergirem em silêncio.
+     */
     @GetMapping(value = "/fila/export.csv", produces = "text/csv")
-    public ResponseEntity<byte[]> exportar() {
+    public ResponseEntity<byte[]> exportar(@RequestParam(defaultValue = FilaService.OFICIAL) String snapshot,
+                                           @RequestParam(required = false) String versao) {
+        FilaService.Snapshot s = switch (snapshot.toLowerCase(java.util.Locale.ROOT)) {
+            case FilaService.OFICIAL -> fila.oficial();
+            case FilaService.OPERACIONAL -> fila.atual();
+            default -> throw new Erros.RegraNegocio("snapshot deve ser \"oficial\" ou \"operacional\"");
+        };
+        if (versao != null && !versao.isBlank() && !versao.equals(s.info().versao())) {
+            throw new Erros.Conflito("A fila " + s.info().tipo() + " mudou: pedida a versão " + versao
+                    + ", atual é " + s.info().versao() + ". Atualize a tela e baixe de novo.");
+        }
         return ResponseEntity.ok()
-                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"fila_priorizada.csv\"")
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + ExportService.nomeArquivo(s) + "\"")
+                .header(CabecalhoSnapshot.NOME, s.info().cabecalho())
                 .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
-                .body(export.csv().getBytes(StandardCharsets.UTF_8));
+                .body(export.csv(s).getBytes(StandardCharsets.UTF_8));
     }
 
     @GetMapping("/pacientes/{solicitacaoId}")

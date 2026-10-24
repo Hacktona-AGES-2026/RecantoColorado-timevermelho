@@ -40,8 +40,11 @@ public class Inicializacao implements ApplicationRunner {
         fila.recalcular();
         if (!arquivoExport.isBlank()) {
             Path destino = Path.of(arquivoExport);
-            Files.writeString(destino, export.csv());
-            log.info("fila_priorizada.csv gravado em {}", destino.toAbsolutePath().normalize());
+            // o entregável é sempre a fila de referência (só o dataset), nunca a operacional
+            var oficial = fila.oficial();
+            Files.writeString(destino, export.csv(oficial));
+            log.info("fila_priorizada.csv (fila de referência {}) gravado em {}", oficial.info().versao(),
+                    destino.toAbsolutePath().normalize());
         }
     }
 }

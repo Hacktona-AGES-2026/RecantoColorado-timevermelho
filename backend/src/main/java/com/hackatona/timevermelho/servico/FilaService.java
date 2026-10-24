@@ -1,12 +1,21 @@
 package com.hackatona.timevermelho.servico;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,20 +40,38 @@ import com.hackatona.timevermelho.motor.Evento;
 import com.hackatona.timevermelho.motor.GuardRegraDeOuro;
 import com.hackatona.timevermelho.motor.MotorPriorizacao;
 import com.hackatona.timevermelho.motor.Pesos;
+import com.hackatona.timevermelho.motor.Referencia;
 import com.hackatona.timevermelho.motor.ResultadoPaciente;
 
 /**
- * Mantém a fila calculada em memória (941 pacientes cabem com folga) e recalcula
- * inteira a cada evento novo ou decisão do regulador. Leituras nunca tocam no banco.
+ * Mantém duas filas em memória (941 pacientes cabem com folga):
+ * - operacional: a que o regulador vê. Dados originais + eventos e decisões registrados; recalculada
+ *   inteira a cada mudança; regra de ouro sobre a situação clínica atual.
+ * - oficial: a fila de referência da entrega (fila_priorizada.csv). Só o dataset, sem eventos novos nem
+ *   decisões, com a interpretação do verificador oficial; reproduzível.
+ * Leituras nunca tocam no banco.
  */
 @Service
 public class FilaService {
 
     private static final Logger log = LoggerFactory.getLogger(FilaService.class);
 
+    public static final String OPERACIONAL = "operacional";
+    public static final String OFICIAL = "oficial";
+    public static final String SIMULACAO = "simulacao";
+
+    /** Identidade de um snapshot: o que é, qual versão e quando foi calculado. */
+    public record Info(String tipo, String versao, Instant calculadoEm, int eventosRegistrados, int decisoesRegulador) {
+
+        /** Valor do cabeçalho HTTP X-FilaViva-Snapshot. */
+        public String cabecalho() {
+            return tipo + "; versao=" + versao + "; calculado=" + calculadoEm;
+        }
+    }
+
     /** Foto da fila num instante. Imutável: cada recálculo gera uma nova. */
     public record Snapshot(List<Caso> casos, Map<String, DecisaoRegulador> decisoes, List<ResultadoPaciente> todos,
-                           Map<String, ResultadoPaciente> porId, List<ResultadoPaciente> ativos) {
+                           Map<String, ResultadoPaciente> porId, List<ResultadoPaciente> ativos, Info info) {
 
         public ResultadoPaciente get(String solicitacaoId) {
             return porId.get(solicitacaoId);
@@ -57,22 +84,34 @@ public class FilaService {
     private final AjusteReguladorRepository ajustes;
     private final MotorPriorizacao motor;
     private final LocalDate referencia;
+    private final Path pastaDataset;
+    private final AtomicLong versaoOperacional = new AtomicLong();
     private volatile Snapshot atual;
+    private volatile Snapshot oficial;
 
     public FilaService(SolicitacaoRepository solicitacoes, EventoClinicoRepository eventos,
                        ProcedimentoRepository procedimentos, AjusteReguladorRepository ajustes,
-                       MotorPriorizacao motor, @Value("${app.data-referencia}") LocalDate referencia) {
+                       MotorPriorizacao motor, @Value("${app.data-referencia}") LocalDate referencia,
+                       @Value("${app.dataset.dir}") String pastaDataset) {
         this.solicitacoes = solicitacoes;
         this.eventos = eventos;
         this.procedimentos = procedimentos;
         this.ajustes = ajustes;
         this.motor = motor;
         this.referencia = referencia;
+        this.pastaDataset = Path.of(pastaDataset);
     }
 
+    /** Fila operacional: a que o regulador vê e a API devolve. */
     public Snapshot atual() {
         if (atual == null) recalcular();
         return atual;
+    }
+
+    /** Fila de referência da entrega: só o dataset, independente de eventos e decisões registrados. */
+    public Snapshot oficial() {
+        if (oficial == null) recalcular();
+        return oficial;
     }
 
     public LocalDate referencia() {
@@ -84,22 +123,67 @@ public class FilaService {
         long inicio = System.currentTimeMillis();
         List<Caso> casos = carregarCasos();
         Map<String, DecisaoRegulador> decisoes = carregarDecisoes();
-        atual = calcular(casos, decisoes, Pesos.PADRAO);
-        log.info("Fila recalculada: {} ativos de {} em {} ms", atual.ativos().size(), casos.size(),
-                System.currentTimeMillis() - inicio);
-        if (!GuardRegraDeOuro.respeitada(atual.ativos())) {
-            throw new IllegalStateException("Regra de ouro violada após recálculo — isso não deveria acontecer");
-        }
+        int eventosNovos = (int) casos.stream().flatMap(c -> c.eventos().stream()).filter(Evento::sintetico).count();
+        Info info = new Info(OPERACIONAL, "op-" + versaoOperacional.incrementAndGet(), Instant.now(), eventosNovos,
+                decisoes.size());
+        Snapshot novo = calcular(casos, decisoes, Pesos.PADRAO, Referencia.ATUAL, info);
+        exigirRegraDeOuro(novo);
+        atual = novo;
+        // a referência oficial não muda enquanto o sistema roda: calcula uma vez
+        if (oficial == null) oficial = calcularOficial(casos);
+        log.info("Fila operacional {} recalculada: {} na fila de {} em {} ms ({} eventos novos, {} decisões)",
+                info.versao(), atual.ativos().size(), casos.size(), System.currentTimeMillis() - inicio,
+                eventosNovos, decisoes.size());
         return atual;
     }
 
-    /** Roda o motor sem salvar nada (simulações). */
+    /** Roda o motor sem salvar nada (simulações). Nunca substitui a fila operacional nem a oficial. */
     public Snapshot calcular(List<Caso> casos, Map<String, DecisaoRegulador> decisoes, Pesos pesos) {
-        List<ResultadoPaciente> todos = motor.priorizar(casos, pesos, decisoes);
+        return calcular(casos, decisoes, pesos, Referencia.ATUAL,
+                new Info(SIMULACAO, "sim", Instant.now(), 0, decisoes.size()));
+    }
+
+    private Snapshot calcular(List<Caso> casos, Map<String, DecisaoRegulador> decisoes, Pesos pesos,
+                              Referencia ref, Info info) {
+        List<ResultadoPaciente> todos = motor.priorizar(casos, pesos, decisoes, ref);
         Map<String, ResultadoPaciente> porId = todos.stream()
                 .collect(Collectors.toMap(r -> r.getCaso().solicitacaoId(), Function.identity(), (a, b) -> a, LinkedHashMap::new));
         List<ResultadoPaciente> ativos = todos.stream().filter(r -> r.getStatus().naFila()).toList();
-        return new Snapshot(casos, decisoes, todos, porId, ativos);
+        return new Snapshot(casos, decisoes, todos, porId, ativos, info);
+    }
+
+    /** Mesmos casos, só com os eventos do dataset e sem decisões do regulador. */
+    private Snapshot calcularOficial(List<Caso> casos) {
+        List<Caso> referenciaDataset = casos.stream()
+                .map(c -> c.toBuilder().eventos(c.eventos().stream().filter(e -> !e.sintetico()).toList()).build())
+                .toList();
+        Info info = new Info(OFICIAL, "ref-" + impressaoDigitalDaReferencia(), Instant.now(), 0, 0);
+        Snapshot s = calcular(referenciaDataset, Map.of(), Pesos.PADRAO, Referencia.OFICIAL, info);
+        exigirRegraDeOuro(s);
+        log.info("Fila de referência {} calculada: {} na fila", info.versao(), s.ativos().size());
+        return s;
+    }
+
+    private static void exigirRegraDeOuro(Snapshot s) {
+        if (!GuardRegraDeOuro.respeitada(s.ativos())) {
+            throw new IllegalStateException("Regra de ouro violada na fila " + s.info().tipo() + " — isso não deveria acontecer");
+        }
+    }
+
+    /** Versão da referência: hash dos CSVs do dataset e do regras.json. Mesmos dados e regras, mesma versão. */
+    private String impressaoDigitalDaReferencia() {
+        try {
+            MessageDigest sha = MessageDigest.getInstance("SHA-256");
+            for (String arquivo : List.of("fila_cirurgica.csv", "eventos_clinicos.csv", "procedimentos.csv")) {
+                sha.update(Files.readAllBytes(pastaDataset.resolve(arquivo)));
+            }
+            try (InputStream regras = getClass().getResourceAsStream("/regras.json")) {
+                if (regras != null) sha.update(regras.readAllBytes());
+            }
+            return HexFormat.of().formatHex(sha.digest()).substring(0, 12);
+        } catch (IOException | NoSuchAlgorithmException e) {
+            throw new IllegalStateException("Não consegui calcular a versão da referência", e);
+        }
     }
 
     private List<Caso> carregarCasos() {

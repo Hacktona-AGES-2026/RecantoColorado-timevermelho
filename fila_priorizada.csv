@@ -29,8 +29,8 @@ SOL-2026-00009,27,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progress
 SOL-2026-00657,28,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C61 — Neoplasia maligna da prostata · Biópsia positiva em 08/06/2026 · Internação em 13/08/2026 (8 dias) · 95 dias de fila (633% do prazo) · score 77
 SOL-2026-00808,29,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C50.9 — Neoplasia maligna da mama, nao especificada · Biópsia positiva em 22/07/2026 · Pronto-socorro em 24/08/2026 · 60 dias de fila (400% do prazo) · score 77"
 SOL-2026-00836,30,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C73 — Neoplasia maligna da glandula tireoide · Biópsia positiva em 14/07/2026 · Pronto-socorro em 03/09/2026 · 56 dias de fila (373% do prazo) · score 77
-SOL-2026-00131,31,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C16.2 — Neoplasia maligna do corpo do estomago · Biópsia positiva em 08/01/2026 · Perda de peso · 251 dias de fila (1673% do prazo) · score 76
-SOL-2026-00846,32,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C16.9 — Neoplasia maligna do estomago, nao especificado · Biópsia positiva em 15/07/2026 · Perda de peso · 54 dias de fila (360% do prazo) · score 76"
+SOL-2026-00131,31,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C16.2 — Neoplasia maligna do corpo do estomago · Biópsia positiva em 08/01/2026 · Perda de peso · 251 dias de fila (1673% do prazo) · score 76"
+SOL-2026-00846,32,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C16.9 — Neoplasia maligna do estomago, nao especificado · Biópsia positiva em 15/07/2026 · Perda de peso · 54 dias de fila (360% do prazo) · score 76"
 SOL-2026-00915,33,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C44.3 — Neoplasia maligna da pele de outras partes e partes nao especificadas da face · Biópsia positiva em 18/08/2026 · Internação em 16/09/2026 (3 dias) · 45 dias de fila (300% do prazo) · score 75
 SOL-2024-00165,34,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C44.3 — Neoplasia maligna da pele de outras partes e partes nao especificadas da face · Biópsia positiva em 24/10/2024 · Progressão em imagem em 26/07/2026 · 706 dias de fila (4707% do prazo) · score 75
 SOL-2025-00071,35,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C18.7 — Neoplasia maligna do colon sigmoide · Progressão em imagem em 29/09/2026 · Reavaliação com piora em 22/10/2026 · 588 dias de fila (3920% do prazo) · score 75
@@ -46,30 +46,30 @@ SOL-2025-00407,44,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · H�
 SOL-2025-00140,45,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia ventral com obstrução · 516 dias de fila (3440% do prazo) · score 70
 SOL-2025-00301,46,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Angina instável · 395 dias de fila (2633% do prazo) · score 70
 SOL-2026-00610,47,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · Biópsia positiva em 20/09/2026 · Reavaliação com piora em 09/10/2026 · CID D25.9 no cadastro diverge do laudo · 108 dias de fila (720% do prazo) · score 69
-SOL-2026-00732,48,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C16.9 — Neoplasia maligna do estomago, nao especificado · Biópsia positiva em 25/07/2026 · Perda de peso · 78 dias de fila (520% do prazo) · score 69"
-SOL-2025-00420,49,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C16.2 — Neoplasia maligna do corpo do estomago · Biópsia positiva em 16/11/2025 · Perda de peso · 334 dias de fila (2227% do prazo) · score 68
+SOL-2026-00732,48,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C16.9 — Neoplasia maligna do estomago, nao especificado · Biópsia positiva em 25/07/2026 · Perda de peso · 78 dias de fila (520% do prazo) · score 69"
+SOL-2025-00420,49,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C16.2 — Neoplasia maligna do corpo do estomago · Biópsia positiva em 16/11/2025 · Perda de peso · 334 dias de fila (2227% do prazo) · score 68"
 SOL-2026-00425,50,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Calculose da vesícula com colecistite aguda · 152 dias de fila (1013% do prazo) · score 66
 SOL-2026-00319,51,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal unilateral com obstrução · 191 dias de fila (1273% do prazo) · score 66
-SOL-2026-00834,52,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C18.0 — Neoplasia maligna do ceco · Perda de peso · 56 dias de fila (373% do prazo) · score 66
-SOL-2026-00250,53,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C18.0 — Neoplasia maligna do ceco · Perda de peso · 213 dias de fila (1420% do prazo) · score 65
+SOL-2026-00834,52,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C18.0 — Neoplasia maligna do ceco · Perda de peso · 56 dias de fila (373% do prazo) · score 66"
+SOL-2026-00250,53,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C18.0 — Neoplasia maligna do ceco · Perda de peso · 213 dias de fila (1420% do prazo) · score 65"
 SOL-2024-00182,54,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Calculose da vesícula com colecistite aguda · 679 dias de fila (4527% do prazo) · score 64
 SOL-2026-00806,55,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hidronefrose com obstrução por cálculo · 60 dias de fila (400% do prazo) · score 63
 SOL-2025-00287,56,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia ventral com obstrução · 401 dias de fila (2673% do prazo) · score 63
 SOL-2024-00082,57,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C61 — Neoplasia maligna da prostata · Biópsia positiva em 13/06/2024 · Reavaliação com piora em 03/10/2026 · 838 dias de fila (5587% do prazo) · score 63
-SOL-2024-00171,58,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C50.9 — Neoplasia maligna da mama, nao especificada · Linfonodo palpável/fixo · 694 dias de fila (4627% do prazo) · score 63"
+SOL-2024-00171,58,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C50.9 — Neoplasia maligna da mama, nao especificada · Linfonodo palpável/fixo · 694 dias de fila (4627% do prazo) · score 63"
 SOL-2026-00145,59,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal unilateral com obstrução · 247 dias de fila (1647% do prazo) · score 63
 SOL-2026-00296,60,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal bilateral com obstrução · 197 dias de fila (1313% do prazo) · score 63
 SOL-2026-00097,61,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal unilateral com obstrução · 264 dias de fila (1760% do prazo) · score 62
 SOL-2026-00849,62,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal bilateral com obstrução · 53 dias de fila (353% do prazo) · score 62
-SOL-2026-00996,63,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C16.9 — Neoplasia maligna do estomago, nao especificado · Biópsia positiva em 28/08/2026 · Perda de peso · 24 dias de fila (160% do prazo) · score 62"
+SOL-2026-00996,63,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C16.9 — Neoplasia maligna do estomago, nao especificado · Biópsia positiva em 28/08/2026 · Perda de peso · 24 dias de fila (160% do prazo) · score 62"
 SOL-2025-00478,64,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · Biópsia positiva em 17/08/2026 · Reavaliação com piora em 01/10/2026 · CID D12.6 no cadastro diverge do laudo · 310 dias de fila (2067% do prazo) · score 61
 SOL-2026-00769,65,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal unilateral com obstrução · 69 dias de fila (460% do prazo) · score 61
 SOL-2025-00077,66,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia umbilical com obstrução · 582 dias de fila (3880% do prazo) · score 61
 SOL-2025-00142,67,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal bilateral com obstrução · 515 dias de fila (3433% do prazo) · score 61
-SOL-2026-00400,68,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Lesão de tronco de coronária · 160 dias de fila (1067% do prazo) · score 61
-SOL-2026-00460,69,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C50.9 — Neoplasia maligna da mama, nao especificada · Biópsia positiva em 08/05/2026 · Linfonodo palpável/fixo · 144 dias de fila (960% do prazo) · score 61"
-SOL-2026-00795,70,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C50.4 — Neoplasia maligna do quadrante superior externo da mama · Biópsia positiva em 30/06/2026 · Linfonodo palpável/fixo · 62 dias de fila (413% do prazo) · score 61
-SOL-2026-00814,71,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Lesão de tronco de coronária · Síncope · 59 dias de fila (393% do prazo) · score 61
+SOL-2026-00400,68,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Lesão de tronco de coronária · 160 dias de fila (1067% do prazo) · score 61"
+SOL-2026-00460,69,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C50.9 — Neoplasia maligna da mama, nao especificada · Biópsia positiva em 08/05/2026 · Linfonodo palpável/fixo · 144 dias de fila (960% do prazo) · score 61"
+SOL-2026-00795,70,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C50.4 — Neoplasia maligna do quadrante superior externo da mama · Biópsia positiva em 30/06/2026 · Linfonodo palpável/fixo · 62 dias de fila (413% do prazo) · score 61"
+SOL-2026-00814,71,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Lesão de tronco de coronária · Síncope · 59 dias de fila (393% do prazo) · score 61"
 SOL-2023-00074,72,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C44.3 — Neoplasia maligna da pele de outras partes e partes nao especificadas da face · Biópsia positiva em 28/09/2023 · Reavaliação com piora em 08/09/2026 · 1085 dias de fila (7233% do prazo) · score 60
 SOL-2026-00746,73,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal bilateral com obstrução · 74 dias de fila (493% do prazo) · score 60
 SOL-2026-00380,74,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · Biópsia positiva em 02/10/2026 · Reavaliação com piora em 14/10/2026 · CID K57.3 no cadastro diverge do laudo · 165 dias de fila (1100% do prazo) · score 60
@@ -77,72 +77,72 @@ SOL-2026-00412,75,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progres
 SOL-2026-00004,76,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hidronefrose com obstrução por cálculo · 295 dias de fila (1967% do prazo) · score 59
 SOL-2026-00442,77,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Calculose da vesícula com colecistite aguda · 150 dias de fila (1000% do prazo) · score 59
 SOL-2026-00671,78,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal unilateral com obstrução · 92 dias de fila (613% do prazo) · score 59
-SOL-2026-00705,79,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Angina instável / em repouso · 88 dias de fila (587% do prazo) · score 59
-SOL-2026-00430,80,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Hidronefrose · Perda de função · 152 dias de fila (1013% do prazo) · score 58
-SOL-2026-00637,81,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Colangite · 101 dias de fila (673% do prazo) · score 58
+SOL-2026-00705,79,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Angina instável / em repouso · 88 dias de fila (587% do prazo) · score 59"
+SOL-2026-00430,80,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Hidronefrose · Perda de função · 152 dias de fila (1013% do prazo) · score 58"
+SOL-2026-00637,81,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Colangite · 101 dias de fila (673% do prazo) · score 58"
 SOL-2026-00699,82,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia ventral com obstrução · 89 dias de fila (593% do prazo) · score 58
-SOL-2026-00597,83,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Lesão de tronco de coronária · Síncope · 110 dias de fila (733% do prazo) · score 58
-SOL-2026-00843,84,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C50.9 — Neoplasia maligna da mama, nao especificada · Biópsia positiva em 12/08/2026 · Linfonodo palpável/fixo · 55 dias de fila (367% do prazo) · score 58"
+SOL-2026-00597,83,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Lesão de tronco de coronária · Síncope · 110 dias de fila (733% do prazo) · score 58"
+SOL-2026-00843,84,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C50.9 — Neoplasia maligna da mama, nao especificada · Biópsia positiva em 12/08/2026 · Linfonodo palpável/fixo · 55 dias de fila (367% do prazo) · score 58"
 SOL-2026-00232,85,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · Biópsia positiva em 10/10/2026 · Reavaliação com piora em 08/10/2026 · CID D22.9 no cadastro diverge do laudo · 217 dias de fila (1447% do prazo) · score 57
 SOL-2026-00387,86,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal unilateral com obstrução · 161 dias de fila (1073% do prazo) · score 57
-SOL-2026-00420,87,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Insuficiência respiratória · 152 dias de fila (1013% do prazo) · score 57
+SOL-2026-00420,87,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Insuficiência respiratória · 152 dias de fila (1013% do prazo) · score 57"
 SOL-2025-00198,88,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal bilateral com obstrução · 459 dias de fila (3060% do prazo) · score 56
 SOL-2025-00315,89,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C44.9 — Neoplasia maligna da pele, nao especificada · Biópsia positiva em 08/09/2025 · Reavaliação com piora em 11/09/2026 · 385 dias de fila (2567% do prazo) · score 56"
-SOL-2026-00032,90,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Icterícia · 285 dias de fila (1900% do prazo) · score 55
-SOL-2026-00508,91,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Hérnia encarcerada · Estrangulamento · 134 dias de fila (893% do prazo) · score 55
+SOL-2026-00032,90,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Icterícia · 285 dias de fila (1900% do prazo) · score 55"
+SOL-2026-00508,91,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Hérnia encarcerada · Estrangulamento (menção hipotética) · 134 dias de fila (893% do prazo) · score 55"
 SOL-2026-00647,92,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · Biópsia positiva em 19/09/2026 · Reavaliação com piora em 17/10/2026 · CID D44.0 no cadastro diverge do laudo · 98 dias de fila (653% do prazo) · score 55
 SOL-2026-00359,93,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · Biópsia positiva em 12/10/2026 · Reavaliação com piora em 23/09/2026 · CID N60.1 no cadastro diverge do laudo · 175 dias de fila (1167% do prazo) · score 55
 SOL-2026-00560,94,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Varizes com úlcera e inflamação · 120 dias de fila (800% do prazo) · score 54 · saída sugerida aguardando o regulador (Informou cirurgia em outro serviço em 17/08/2026)
-SOL-2024-00079,95,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Lesão de tronco de coronária · 852 dias de fila (5680% do prazo) · score 54
-SOL-2026-00972,96,A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · CID C50.8 — Neoplasia maligna da mama com lesao invasiva · Biópsia positiva em 03/08/2026 · Linfonodo palpável/fixo · 33 dias de fila (220% do prazo) · score 54
-SOL-2024-00107,97,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Perda de função · Risco de dano neurológico · 790 dias de fila (5267% do prazo) · score 53
-SOL-2025-00409,98,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Perda de função · Risco de dano neurológico · 338 dias de fila (2253% do prazo) · score 53
+SOL-2024-00079,95,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: C) · Lesão de tronco de coronária · 852 dias de fila (5680% do prazo) · score 54"
+SOL-2026-00972,96,"A1 (prazo 15 dias) · Neoplasia maligna com sinais de progressão · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: A2) · CID C50.8 — Neoplasia maligna da mama com lesao invasiva · Biópsia positiva em 03/08/2026 · Linfonodo palpável/fixo · 33 dias de fila (220% do prazo) · score 54"
+SOL-2024-00107,97,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Perda de função · Risco de dano neurológico (menção hipotética) · 790 dias de fila (5267% do prazo) · score 53"
+SOL-2025-00409,98,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Perda de função · Risco de dano neurológico (menção hipotética) · 338 dias de fila (2253% do prazo) · score 53"
 SOL-2026-00305,99,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Hérnia inguinal bilateral com obstrução · 195 dias de fila (1300% do prazo) · score 53 · saída sugerida aguardando o regulador (Cirurgia em outro serviço)
 SOL-2024-00061,100,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Calculose da vesícula com colecistite aguda · 871 dias de fila (5807% do prazo) · score 53 · saída sugerida aguardando o regulador (Desistência)
-SOL-2026-00957,101,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Colangite · 36 dias de fila (240% do prazo) · score 53
-SOL-2026-00337,102,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Glaucoma facomórfico · 187 dias de fila (1247% do prazo) · score 52
-SOL-2026-00457,103,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Glaucoma facomórfico · 145 dias de fila (967% do prazo) · score 52
+SOL-2026-00957,101,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Colangite · 36 dias de fila (240% do prazo) · score 53"
+SOL-2026-00337,102,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Glaucoma facomórfico (menção hipotética) · 187 dias de fila (1247% do prazo) · score 52"
+SOL-2026-00457,103,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Glaucoma facomórfico (menção hipotética) · 145 dias de fila (967% do prazo) · score 52"
 SOL-2024-00189,104,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Calculose da vesícula com colecistite aguda · 661 dias de fila (4407% do prazo) · score 51
 SOL-2026-00280,105,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Varizes com úlcera e inflamação · 200 dias de fila (1333% do prazo) · score 51
-SOL-2025-00506,106,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Glaucoma facomórfico · 300 dias de fila (2000% do prazo) · score 50
+SOL-2025-00506,106,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Glaucoma facomórfico (menção hipotética) · 300 dias de fila (2000% do prazo) · score 50"
 SOL-2024-00138,107,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Calculose da vesícula com colecistite aguda · 739 dias de fila (4927% do prazo) · score 50
 SOL-2025-00056,108,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Varizes com úlcera e inflamação · 602 dias de fila (4013% do prazo) · score 50
 SOL-2026-00178,109,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Varizes com úlcera e inflamação · 236 dias de fila (1573% do prazo) · score 50
 SOL-2026-00221,110,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Varizes com úlcera e inflamação · 218 dias de fila (1453% do prazo) · score 50
-SOL-2026-00392,111,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Glaucoma facomórfico · 161 dias de fila (1073% do prazo) · score 50
+SOL-2026-00392,111,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Glaucoma facomórfico (menção hipotética) · 161 dias de fila (1073% do prazo) · score 50"
 SOL-2026-00473,112,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Varizes com úlcera e inflamação · 140 dias de fila (933% do prazo) · score 50
 SOL-2026-00633,113,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Varizes com úlcera e inflamação · 101 dias de fila (673% do prazo) · score 50
-SOL-2026-00046,114,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Icterícia · 278 dias de fila (1853% do prazo) · score 49
+SOL-2026-00046,114,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Icterícia · 278 dias de fila (1853% do prazo) · score 49"
 SOL-2025-00101,115,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Varizes com úlcera e inflamação · 564 dias de fila (3760% do prazo) · score 48
-SOL-2026-00291,116,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Insuficiência respiratória · 198 dias de fila (1320% do prazo) · score 48
+SOL-2026-00291,116,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Insuficiência respiratória · 198 dias de fila (1320% do prazo) · score 48"
 SOL-2022-00047,117,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Varizes com úlcera e inflamação · 1469 dias de fila (9793% do prazo) · score 47
-SOL-2025-00206,118,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Hemoptise · 448 dias de fila (2987% do prazo) · score 47
+SOL-2025-00206,118,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Hemoptise · 448 dias de fila (2987% do prazo) · score 47"
 SOL-2026-00544,119,A1 (prazo 15 dias) · Diagnóstico de urgência pelo CID · Varizes com úlcera e inflamação · 123 dias de fila (820% do prazo) · score 47
-SOL-2026-00288,120,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Glaucoma facomórfico · 199 dias de fila (1327% do prazo) · score 47
-SOL-2025-00463,121,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Sepse · Retenção urinária aguda · 314 dias de fila (2093% do prazo) · score 46
-SOL-2025-00482,122,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Hérnia encarcerada · Estrangulamento · 309 dias de fila (2060% do prazo) · score 46
-SOL-2026-00025,123,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Sepse · Retenção urinária aguda · 288 dias de fila (1920% do prazo) · score 46
-SOL-2026-00195,124,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Sepse · Retenção urinária aguda · 229 dias de fila (1527% do prazo) · score 46
-SOL-2026-00389,125,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Sepse · Retenção urinária aguda · 161 dias de fila (1073% do prazo) · score 46
-SOL-2023-00013,126,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Glaucoma facomórfico · 1312 dias de fila (8747% do prazo) · score 46
-SOL-2024-00063,127,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Insuficiência respiratória · 871 dias de fila (5807% do prazo) · score 46
-SOL-2026-00099,128,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Glaucoma facomórfico · 263 dias de fila (1753% do prazo) · score 46
-SOL-2025-00520,129,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Hérnia encarcerada · Estrangulamento · 297 dias de fila (1980% do prazo) · score 45
-SOL-2026-00406,130,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Hérnia encarcerada · Estrangulamento · 157 dias de fila (1047% do prazo) · score 45
-SOL-2026-00061,131,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Perda de função · Risco de dano neurológico · 274 dias de fila (1827% do prazo) · score 44
-SOL-2026-00110,132,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Perda de função · Risco de dano neurológico · 257 dias de fila (1713% do prazo) · score 44
-SOL-2025-00363,133,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Hérnia encarcerada · Estrangulamento · 360 dias de fila (2400% do prazo) · score 43
-SOL-2023-00045,134,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Obstrução intestinal · Sangramento digestivo · 1196 dias de fila (7973% do prazo) · score 43
-SOL-2026-00172,135,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Glaucoma facomórfico · 237 dias de fila (1580% do prazo) · score 43
-SOL-2026-00361,136,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Perda de função · Risco de dano neurológico · 173 dias de fila (1153% do prazo) · score 43
-SOL-2024-00166,137,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Glaucoma facomórfico · 701 dias de fila (4673% do prazo) · score 42
-SOL-2025-00044,138,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Insuficiência respiratória · 617 dias de fila (4113% do prazo) · score 42
-SOL-2025-00296,139,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Glaucoma facomórfico · 398 dias de fila (2653% do prazo) · score 42
-SOL-2026-00255,140,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Sepse · Retenção urinária aguda · 210 dias de fila (1400% do prazo) · score 42
-SOL-2026-00539,141,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Insuficiência respiratória · 126 dias de fila (840% do prazo) · score 41
-SOL-2026-00202,142,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Pancreatite · 226 dias de fila (1507% do prazo) · score 39
-SOL-2024-00149,143,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Sepse · 731 dias de fila (4873% do prazo) · score 38
-SOL-2023-00079,144,A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Colangite · 1056 dias de fila (7040% do prazo) · score 35
+SOL-2026-00288,120,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Glaucoma facomórfico (menção hipotética) · 199 dias de fila (1327% do prazo) · score 47"
+SOL-2025-00463,121,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Sepse · Retenção urinária aguda · 314 dias de fila (2093% do prazo) · score 46"
+SOL-2025-00482,122,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Hérnia encarcerada · Estrangulamento (menção hipotética) · 309 dias de fila (2060% do prazo) · score 46"
+SOL-2026-00025,123,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Sepse · Retenção urinária aguda · 288 dias de fila (1920% do prazo) · score 46"
+SOL-2026-00195,124,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Sepse · Retenção urinária aguda · 229 dias de fila (1527% do prazo) · score 46"
+SOL-2026-00389,125,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Sepse · Retenção urinária aguda · 161 dias de fila (1073% do prazo) · score 46"
+SOL-2023-00013,126,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Glaucoma facomórfico (menção hipotética) · 1312 dias de fila (8747% do prazo) · score 46"
+SOL-2024-00063,127,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Insuficiência respiratória · 871 dias de fila (5807% do prazo) · score 46"
+SOL-2026-00099,128,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Glaucoma facomórfico (menção hipotética) · 263 dias de fila (1753% do prazo) · score 46"
+SOL-2025-00520,129,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Hérnia encarcerada · Estrangulamento (menção hipotética) · 297 dias de fila (1980% do prazo) · score 45"
+SOL-2026-00406,130,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Hérnia encarcerada · Estrangulamento (menção hipotética) · 157 dias de fila (1047% do prazo) · score 45"
+SOL-2026-00061,131,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Perda de função · Risco de dano neurológico (menção hipotética) · 274 dias de fila (1827% do prazo) · score 44"
+SOL-2026-00110,132,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Perda de função · Risco de dano neurológico (menção hipotética) · 257 dias de fila (1713% do prazo) · score 44"
+SOL-2025-00363,133,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Hérnia encarcerada · Estrangulamento (menção hipotética) · 360 dias de fila (2400% do prazo) · score 43"
+SOL-2023-00045,134,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Obstrução intestinal · Sangramento digestivo · 1196 dias de fila (7973% do prazo) · score 43"
+SOL-2026-00172,135,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Glaucoma facomórfico (menção hipotética) · 237 dias de fila (1580% do prazo) · score 43"
+SOL-2026-00361,136,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Perda de função · Risco de dano neurológico (menção hipotética) · 173 dias de fila (1153% do prazo) · score 43"
+SOL-2024-00166,137,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Glaucoma facomórfico (menção hipotética) · 701 dias de fila (4673% do prazo) · score 42"
+SOL-2025-00044,138,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Insuficiência respiratória · 617 dias de fila (4113% do prazo) · score 42"
+SOL-2025-00296,139,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Glaucoma facomórfico (menção hipotética) · 398 dias de fila (2653% do prazo) · score 42"
+SOL-2026-00255,140,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Sepse · Retenção urinária aguda · 210 dias de fila (1400% do prazo) · score 42"
+SOL-2026-00539,141,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: B) · Insuficiência respiratória · 126 dias de fila (840% do prazo) · score 41"
+SOL-2026-00202,142,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Pancreatite · 226 dias de fila (1507% do prazo) · score 39"
+SOL-2024-00149,143,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Sepse · 731 dias de fila (4873% do prazo) · score 38"
+SOL-2023-00079,144,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Colangite · 1056 dias de fila (7040% do prazo) · score 35"
 SOL-2025-00095,145,"A2 (prazo 21 dias) · Neoplasia maligna confirmada (piso para todo oncológico) · CID C53.9 — Neoplasia maligna do colo do utero, nao especificado · 573 dias de fila (2729% do prazo) · score 66"
 SOL-2024-00155,146,A2 (prazo 21 dias) · Neoplasia maligna confirmada (piso para todo oncológico) · CID C18.7 — Neoplasia maligna do colon sigmoide · Biópsia positiva em 29/09/2024 · 720 dias de fila (3429% do prazo) · score 65
 SOL-2025-00307,147,A2 (prazo 21 dias) · Neoplasia maligna confirmada (piso para todo oncológico) · CID C54.1 — Neoplasia maligna do endometrio · Biópsia positiva em 30/08/2025 · 389 dias de fila (1852% do prazo) · score 64
@@ -285,8 +285,8 @@ SOL-2026-00971,283,"A2 (prazo 21 dias) · Neoplasia maligna confirmada (piso par
 SOL-2026-00990,284,"A2 (prazo 21 dias) · Neoplasia maligna confirmada (piso para todo oncológico) · CID C44.9 — Neoplasia maligna da pele, nao especificada · Biópsia positiva em 14/09/2026 · 27 dias de fila (129% do prazo) · score 40"
 SOL-2026-01011,285,A2 (prazo 21 dias) · Neoplasia maligna confirmada (piso para todo oncológico) · CID C73 — Neoplasia maligna da glandula tireoide · 18 dias de fila (86% do prazo) · score 37
 SOL-2026-01012,286,"A2 (prazo 21 dias) · Neoplasia maligna confirmada (piso para todo oncológico) · CID C34.9 — Neoplasia maligna dos bronquios ou pulmoes, nao especificado · Biópsia positiva em 17/09/2026 · 14 dias de fila (67% do prazo) · score 37"
-SOL-2026-00960,287,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Lesão de tronco de coronária · 36 dias de fila (240% do prazo) · score 45 · posição limitada pela regra de ouro: sem urgência pela definição oficial, fica abaixo de todos os oncológicos"
-SOL-2026-00765,288,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · Lesão de tronco de coronária · 70 dias de fila (467% do prazo) · score 42 · posição limitada pela regra de ouro: sem urgência pela definição oficial, fica abaixo de todos os oncológicos"
+SOL-2026-00960,287,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Lesão de tronco de coronária · 36 dias de fila (240% do prazo) · score 45 · posição limitada pela regra de ouro: sem urgência pela definição oficial, fica abaixo de todos os oncológicos"
+SOL-2026-00765,288,"A1 (prazo 15 dias) · Sinal de alarme grave descrito pelo médico · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Lesão de tronco de coronária · 70 dias de fila (467% do prazo) · score 42 · posição limitada pela regra de ouro: sem urgência pela definição oficial, fica abaixo de todos os oncológicos"
 SOL-2026-00134,289,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 22/06/2026 · Internação em 05/10/2026 (3 dias) · Reavaliação com piora em 08/10/2026 · 249 dias de fila (415% do prazo) · score 61"
 SOL-2025-00504,290,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Internação em 04/08/2026 (5 dias) · Pronto-socorro em 02/09/2026 · Pronto-socorro em 06/09/2026 · 301 dias de fila (502% do prazo) · score 61"
 SOL-2025-00280,291,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 15/06/2026 · Pronto-socorro em 26/06/2026 · Internação em 01/10/2026 (4 dias) · 402 dias de fila (670% do prazo) · score 60"
@@ -309,7 +309,7 @@ SOL-2026-00235,307,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2026-00243,308,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 14/09/2026 · Internação em 03/10/2026 (4 dias) · Internação recente · 215 dias de fila (358% do prazo) · score 51"
 SOL-2025-00476,309,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 13/07/2026 · Pronto-socorro em 31/08/2026 · Pronto-socorro em 10/10/2026 · 310 dias de fila (517% do prazo) · score 50"
 SOL-2025-00238,310,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 04/06/2026 · Internação em 19/10/2026 (6 dias) · Idas ao PS · 426 dias de fila (710% do prazo) · score 49"
-SOL-2025-00237,311,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Doença coronária triarterial / multiarterial · Angina limitante (CCS III/IV) · Fração de ejeção abaixo de 40% · 427 dias de fila (712% do prazo) · score 49"
+SOL-2025-00237,311,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Doença coronária triarterial / multiarterial · Angina limitante (CCS III/IV) · Fração de ejeção abaixo de 40% · 427 dias de fila (712% do prazo) · score 49"
 SOL-2026-00192,312,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 11/10/2026 · Limitação funcional grave · 229 dias de fila (382% do prazo) · score 49"
 SOL-2025-00093,313,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · Limitação funcional grave · Doença coronária triarterial / multiarterial · 574 dias de fila (957% do prazo) · score 49"
 SOL-2026-00138,314,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 06/09/2026 · Pronto-socorro em 21/09/2026 · Pronto-socorro em 18/10/2026 · 248 dias de fila (413% do prazo) · score 48"
@@ -328,7 +328,7 @@ SOL-2026-00272,326,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2024-00168,327,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Relatou piora por telefone em 13/08/2026 · Dor 7/10 · Quedas · 700 dias de fila (1167% do prazo) · score 45"
 SOL-2025-00264,328,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 25/06/2026 · Pronto-socorro em 16/09/2026 · Perda de peso · 417 dias de fila (695% do prazo) · score 45"
 SOL-2025-00286,329,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 23/06/2026 · Pronto-socorro em 02/09/2026 · Reavaliação com piora em 01/10/2026 · 401 dias de fila (668% do prazo) · score 45"
-SOL-2025-00357,330,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Crescimento rápido · Linfonodo palpável/fixo · Sangramento espontâneo da lesão · 365 dias de fila (608% do prazo) · score 45"
+SOL-2025-00357,330,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Crescimento rápido · Linfonodo palpável/fixo · Sangramento espontâneo da lesão · 365 dias de fila (608% do prazo) · score 45"
 SOL-2025-00381,331,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Relatou piora por telefone em 09/07/2026 · Dor 8/10 · Limitação funcional grave · 355 dias de fila (592% do prazo) · score 45"
 SOL-2025-00412,332,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Lesão incerta ou achado suspeito (D48.6) · 337 dias de fila (562% do prazo) · score 45"
 SOL-2025-00508,333,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Reavaliação com piora em 03/10/2026 · Crescimento rápido · Linfonodo palpável/fixo · 299 dias de fila (498% do prazo) · score 45"
@@ -339,7 +339,7 @@ SOL-2026-00297,337,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2026-00428,338,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 22/06/2026 · Pronto-socorro em 24/08/2026 · Reavaliação com piora em 01/10/2026 · 152 dias de fila (253% do prazo) · score 44"
 SOL-2024-00032,339,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 9/10 · Quedas · 927 dias de fila (1545% do prazo) · score 43"
 SOL-2025-00304,340,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Lesão incerta ou achado suspeito (D37.1) · 392 dias de fila (653% do prazo) · score 43"
-SOL-2026-00198,341,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Crescimento rápido · Linfonodo palpável/fixo · Sangramento espontâneo da lesão · 227 dias de fila (378% do prazo) · score 43"
+SOL-2026-00198,341,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Crescimento rápido · Linfonodo palpável/fixo · Sangramento espontâneo da lesão · 227 dias de fila (378% do prazo) · score 43"
 SOL-2025-00384,342,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 05/06/2026 · Pronto-socorro em 20/08/2026 · Pronto-socorro em 17/10/2026 · 352 dias de fila (587% do prazo) · score 43"
 SOL-2026-00336,343,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · 188 dias de fila (313% do prazo) · score 43"
 SOL-2026-00720,344,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 03/08/2026 · Pronto-socorro em 18/08/2026 · Reavaliação com piora em 19/09/2026 · 82 dias de fila (137% do prazo) · score 42"
@@ -351,17 +351,17 @@ SOL-2025-00418,349,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2025-00502,350,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 9/10 · Limitação funcional grave · 302 dias de fila (503% do prazo) · score 42"
 SOL-2024-00162,351,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 20/08/2026 · Pronto-socorro em 04/09/2026 · Internação recente · 710 dias de fila (1183% do prazo) · score 41"
 SOL-2025-00134,352,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 9/10 · Limitação funcional grave · 523 dias de fila (872% do prazo) · score 41"
-SOL-2026-00158,353,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Crescimento rápido · Linfonodo palpável/fixo · Sangramento espontâneo da lesão · 243 dias de fila (405% do prazo) · score 41"
+SOL-2026-00158,353,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Crescimento rápido · Linfonodo palpável/fixo · Sangramento espontâneo da lesão · 243 dias de fila (405% do prazo) · score 41"
 SOL-2022-00032,354,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 9/10 · Limitação funcional grave · 1550 dias de fila (2583% do prazo) · score 41"
 SOL-2025-00374,355,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Relatou piora por telefone em 05/09/2026 · Limitação funcional grave · 357 dias de fila (595% do prazo) · score 41"
-SOL-2026-00325,356,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Crescimento rápido · Disfagia · Rouquidão · 190 dias de fila (317% do prazo) · score 41"
+SOL-2026-00325,356,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Crescimento rápido · Disfagia · Rouquidão · 190 dias de fila (317% do prazo) · score 41"
 SOL-2026-00838,357,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 15/10/2026 · Dor 7/10 · Limitação funcional grave · 56 dias de fila (93% do prazo) · score 40"
 SOL-2022-00002,358,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Relatou piora por telefone em 15/07/2026 · Limitação funcional grave · 1550 dias de fila (2583% do prazo) · score 40"
 SOL-2024-00083,359,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Relatou piora por telefone em 07/08/2026 · Dor 8/10 · 838 dias de fila (1397% do prazo) · score 40"
 SOL-2025-00322,360,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 9/10 · Limitação funcional grave · 377 dias de fila (628% do prazo) · score 40"
 SOL-2026-00270,361,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 9/10 · 204 dias de fila (340% do prazo) · score 40"
 SOL-2025-00485,362,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Reavaliação com piora em 15/10/2026 · Acamado · Úlcera de pressão · 309 dias de fila (515% do prazo) · score 40"
-SOL-2025-00109,363,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Idas ao PS · 551 dias de fila (918% do prazo) · score 39"
+SOL-2025-00109,363,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: C) · Idas ao PS · 551 dias de fila (918% do prazo) · score 39"
 SOL-2023-00087,364,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · Limitação funcional grave · 1038 dias de fila (1730% do prazo) · score 39"
 SOL-2025-00015,365,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 18/06/2026 · Reavaliação com piora em 30/09/2026 · Pronto-socorro em 14/10/2026 · 644 dias de fila (1073% do prazo) · score 39"
 SOL-2025-00059,366,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Lesão incerta ou achado suspeito (D37.1) · 599 dias de fila (998% do prazo) · score 39"
@@ -385,7 +385,7 @@ SOL-2024-00028,383,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2025-00271,384,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Lesão incerta ou achado suspeito (R91) · 409 dias de fila (682% do prazo) · score 37"
 SOL-2025-00464,385,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 18/06/2026 · 314 dias de fila (523% do prazo) · score 37"
 SOL-2026-00194,386,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Reavaliação com piora em 20/09/2026 · Perda de peso · 229 dias de fila (382% do prazo) · score 37"
-SOL-2026-00260,387,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Fração de ejeção abaixo de 40% · 209 dias de fila (348% do prazo) · score 37"
+SOL-2026-00260,387,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: C) · Fração de ejeção abaixo de 40% · 209 dias de fila (348% do prazo) · score 37"
 SOL-2026-00536,388,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Relatou piora por telefone em 05/07/2026 · Pronto-socorro em 13/08/2026 · Internação recente · 126 dias de fila (210% do prazo) · score 37"
 SOL-2022-00026,389,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 9/10 · 1550 dias de fila (2583% do prazo) · score 37"
 SOL-2025-00030,390,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Reavaliação com piora em 08/10/2026 · Quedas · 628 dias de fila (1047% do prazo) · score 37"
@@ -398,11 +398,11 @@ SOL-2023-00046,396,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2026-00069,397,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · 272 dias de fila (453% do prazo) · score 36"
 SOL-2026-00167,398,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Relatou piora por telefone em 11/06/2026 · Limitação funcional grave · 240 dias de fila (400% do prazo) · score 36 · saída sugerida aguardando o regulador (Desistiu em contato de 13/10/2026)"
 SOL-2026-00244,399,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · 214 dias de fila (357% do prazo) · score 36"
-SOL-2026-00450,400,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Doença coronária triarterial / multiarterial · 146 dias de fila (243% do prazo) · score 36"
-SOL-2026-00486,401,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor em repouso · Marcha com apoio · 139 dias de fila (232% do prazo) · score 36"
+SOL-2026-00450,400,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: C) · Doença coronária triarterial / multiarterial · 146 dias de fila (243% do prazo) · score 36"
+SOL-2026-00486,401,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: C) · Dor em repouso · Marcha com apoio · 139 dias de fila (232% do prazo) · score 36"
 SOL-2024-00003,402,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 1013 dias de fila (1688% do prazo) · score 36"
 SOL-2024-00066,403,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 9/10 · 865 dias de fila (1442% do prazo) · score 36"
-SOL-2024-00158,404,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Acamado · Úlcera de pressão · 714 dias de fila (1190% do prazo) · score 36"
+SOL-2024-00158,404,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Acamado · Úlcera de pressão · 714 dias de fila (1190% do prazo) · score 36"
 SOL-2025-00080,405,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 09/10/2026 · 578 dias de fila (963% do prazo) · score 36"
 SOL-2025-00272,406,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 21/06/2026 · Reavaliação com piora em 06/10/2026 · 409 dias de fila (682% do prazo) · score 36"
 SOL-2023-00039,407,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 1218 dias de fila (2030% do prazo) · score 35"
@@ -423,7 +423,7 @@ SOL-2026-00142,421,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2026-00257,422,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · 209 dias de fila (348% do prazo) · score 35"
 SOL-2026-00642,423,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 14/08/2026 · Pronto-socorro em 30/08/2026 · Internação em 17/09/2026 (4 dias) · 99 dias de fila (165% do prazo) · score 34"
 SOL-2026-00674,424,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Lesão incerta ou achado suspeito (D48.6) · 91 dias de fila (152% do prazo) · score 34"
-SOL-2026-00410,425,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Doença coronária triarterial / multiarterial · 156 dias de fila (260% do prazo) · score 34"
+SOL-2026-00410,425,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: C) · Doença coronária triarterial / multiarterial · 156 dias de fila (260% do prazo) · score 34"
 SOL-2026-00707,426,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 17/08/2026 · Pronto-socorro em 20/08/2026 · Pronto-socorro em 19/09/2026 · 87 dias de fila (145% do prazo) · score 34"
 SOL-2023-00028,427,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 1254 dias de fila (2090% do prazo) · score 34"
 SOL-2023-00034,428,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 1236 dias de fila (2060% do prazo) · score 34 · saída sugerida aguardando o regulador (Informou cirurgia em outro serviço em 19/10/2026)"
@@ -432,7 +432,7 @@ SOL-2025-00210,430,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2025-00447,431,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 318 dias de fila (530% do prazo) · score 34"
 SOL-2026-00012,432,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 292 dias de fila (487% do prazo) · score 34"
 SOL-2026-00339,433,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 184 dias de fila (307% do prazo) · score 34"
-SOL-2025-00335,434,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Idas ao PS · 374 dias de fila (623% do prazo) · score 33"
+SOL-2025-00335,434,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: C) · Idas ao PS · 374 dias de fila (623% do prazo) · score 33"
 SOL-2022-00057,435,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 1427 dias de fila (2378% do prazo) · score 33"
 SOL-2023-00021,436,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 1280 dias de fila (2133% do prazo) · score 33"
 SOL-2024-00047,437,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 892 dias de fila (1487% do prazo) · score 33"
@@ -441,7 +441,7 @@ SOL-2025-00107,439,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2025-00371,440,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 358 dias de fila (597% do prazo) · score 33"
 SOL-2025-00045,441,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 31/08/2026 · 615 dias de fila (1025% do prazo) · score 33"
 SOL-2026-00444,442,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 150 dias de fila (250% do prazo) · score 33"
-SOL-2024-00059,443,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Idas ao PS · 872 dias de fila (1453% do prazo) · score 32"
+SOL-2024-00059,443,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: C) · Idas ao PS · 872 dias de fila (1453% do prazo) · score 32"
 SOL-2026-00566,444,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 118 dias de fila (197% do prazo) · score 32"
 SOL-2025-00066,445,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Lesão incerta ou achado suspeito (D44.0) · 589 dias de fila (982% do prazo) · score 32"
 SOL-2025-00141,446,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 516 dias de fila (860% do prazo) · score 32"
@@ -449,8 +449,8 @@ SOL-2025-00189,447,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2026-00531,448,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 22/09/2026 · 127 dias de fila (212% do prazo) · score 31"
 SOL-2025-00494,449,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · 303 dias de fila (505% do prazo) · score 31"
 SOL-2026-00023,450,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Relatou piora por telefone em 23/05/2026 · 289 dias de fila (482% do prazo) · score 31"
-SOL-2026-00212,451,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Perda de peso · 223 dias de fila (372% do prazo) · score 31"
-SOL-2026-00682,452,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Fração de ejeção abaixo de 40% · 90 dias de fila (150% do prazo) · score 31"
+SOL-2026-00212,451,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Perda de peso · 223 dias de fila (372% do prazo) · score 31"
+SOL-2026-00682,452,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: C) · Fração de ejeção abaixo de 40% · 90 dias de fila (150% do prazo) · score 31"
 SOL-2026-00494,453,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · 137 dias de fila (228% do prazo) · score 31"
 SOL-2026-00522,454,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · 131 dias de fila (218% do prazo) · score 31"
 SOL-2026-00623,455,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · 105 dias de fila (175% do prazo) · score 31"
@@ -467,12 +467,12 @@ SOL-2026-00415,465,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2025-00104,466,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 19/06/2026 · Idas ao PS · 561 dias de fila (935% do prazo) · score 30"
 SOL-2023-00016,467,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 1312 dias de fila (2187% do prazo) · score 30"
 SOL-2023-00041,468,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Reavaliação com piora em 08/09/2026 · 1206 dias de fila (2010% do prazo) · score 30"
-SOL-2023-00076,469,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Disfagia · 1059 dias de fila (1765% do prazo) · score 30 · saída sugerida aguardando o regulador (Informou cirurgia em outro serviço em 08/05/2026)"
+SOL-2023-00076,469,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Disfagia · 1059 dias de fila (1765% do prazo) · score 30 · saída sugerida aguardando o regulador (Informou cirurgia em outro serviço em 08/05/2026)"
 SOL-2024-00014,470,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Reavaliação com piora em 22/10/2026 · 985 dias de fila (1642% do prazo) · score 30"
 SOL-2024-00092,471,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 821 dias de fila (1368% do prazo) · score 30"
 SOL-2024-00027,472,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 939 dias de fila (1565% do prazo) · score 30"
 SOL-2024-00036,473,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 917 dias de fila (1528% do prazo) · score 29"
-SOL-2024-00095,474,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Quedas · 818 dias de fila (1363% do prazo) · score 29"
+SOL-2024-00095,474,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Quedas · 818 dias de fila (1363% do prazo) · score 29"
 SOL-2025-00084,475,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 577 dias de fila (962% do prazo) · score 29"
 SOL-2026-00059,476,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 275 dias de fila (458% do prazo) · score 29"
 SOL-2026-00589,477,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 8/10 · 113 dias de fila (188% do prazo) · score 29"
@@ -481,10 +481,10 @@ SOL-2026-00104,479,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2026-00710,480,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 87 dias de fila (145% do prazo) · score 28"
 SOL-2026-00535,481,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 127 dias de fila (212% do prazo) · score 28"
 SOL-2023-00086,482,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 1041 dias de fila (1735% do prazo) · score 28"
-SOL-2025-00081,483,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Quedas · 578 dias de fila (963% do prazo) · score 28"
+SOL-2025-00081,483,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Quedas · 578 dias de fila (963% do prazo) · score 28"
 SOL-2025-00473,484,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 12/09/2026 · 312 dias de fila (520% do prazo) · score 28"
 SOL-2025-00510,485,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 299 dias de fila (498% do prazo) · score 28"
-SOL-2026-00317,486,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Quedas · 191 dias de fila (318% do prazo) · score 28"
+SOL-2026-00317,486,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Quedas · 191 dias de fila (318% do prazo) · score 28"
 SOL-2025-00240,487,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 426 dias de fila (710% do prazo) · score 28"
 SOL-2026-00148,488,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 246 dias de fila (410% do prazo) · score 28"
 SOL-2026-00736,489,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 28/09/2026 · Idas ao PS · 77 dias de fila (128% do prazo) · score 27"
@@ -493,10 +493,10 @@ SOL-2024-00170,491,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2024-00133,492,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 746 dias de fila (1243% do prazo) · score 27"
 SOL-2026-00163,493,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 242 dias de fila (403% do prazo) · score 27"
 SOL-2026-00165,494,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 241 dias de fila (402% do prazo) · score 27"
-SOL-2023-00060,495,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Idas ao PS · 1109 dias de fila (1848% do prazo) · score 26"
+SOL-2023-00060,495,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Idas ao PS · 1109 dias de fila (1848% do prazo) · score 26"
 SOL-2022-00045,496,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 1497 dias de fila (2495% do prazo) · score 26"
 SOL-2023-00085,497,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 1045 dias de fila (1742% do prazo) · score 26"
-SOL-2024-00022,498,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Disfagia · 946 dias de fila (1577% do prazo) · score 26"
+SOL-2024-00022,498,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Disfagia · 946 dias de fila (1577% do prazo) · score 26"
 SOL-2024-00040,499,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 911 dias de fila (1518% do prazo) · score 26"
 SOL-2025-00359,500,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 362 dias de fila (603% do prazo) · score 26"
 SOL-2025-00453,501,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Limitação funcional grave · 317 dias de fila (528% do prazo) · score 26 · saída sugerida aguardando o regulador (Desistiu em contato de 27/08/2026)"
@@ -504,13 +504,13 @@ SOL-2026-00553,502,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes 
 SOL-2026-00755,503,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 72 dias de fila (120% do prazo) · score 25"
 SOL-2026-00716,504,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 83 dias de fila (138% do prazo) · score 25"
 SOL-2026-00372,505,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Pronto-socorro em 22/10/2026 · 171 dias de fila (285% do prazo) · score 25"
-SOL-2022-00009,506,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Quedas · 1550 dias de fila (2583% do prazo) · score 25"
-SOL-2026-00286,507,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Disfagia · 200 dias de fila (333% do prazo) · score 24"
+SOL-2022-00009,506,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Quedas · 1550 dias de fila (2583% do prazo) · score 25"
+SOL-2026-00286,507,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Disfagia · 200 dias de fila (333% do prazo) · score 24"
 SOL-2026-00468,508,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 143 dias de fila (238% do prazo) · score 24"
-SOL-2026-00403,509,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Quedas · 160 dias de fila (267% do prazo) · score 23"
+SOL-2026-00403,509,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Quedas · 160 dias de fila (267% do prazo) · score 23"
 SOL-2026-00749,510,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Dor 7/10 · 73 dias de fila (122% do prazo) · score 23"
-SOL-2026-00773,511,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Doença coronária triarterial / multiarterial · 68 dias de fila (113% do prazo) · score 22"
-SOL-2026-00686,512,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · Quedas · 90 dias de fila (150% do prazo) · score 19"
+SOL-2026-00773,511,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Doença coronária triarterial / multiarterial · 68 dias de fila (113% do prazo) · score 22"
+SOL-2026-00686,512,"B (prazo 60 dias) · Dor, incapacidade ou piora importantes · classe provisória: urgência descrita só no texto, pendente de revisão clínica (dados estruturados: D) · Quedas · 90 dias de fila (150% do prazo) · score 19"
 SOL-2025-00173,513,C (prazo 180 dias) · Dor ou limitação moderadas · Dor 6/10 · 474 dias de fila (263% do prazo) · score 34
 SOL-2024-00157,514,C (prazo 180 dias) · Dor ou limitação moderadas · Dor 6/10 · 715 dias de fila (397% do prazo) · score 34
 SOL-2023-00023,515,C (prazo 180 dias) · Dor ou limitação moderadas · Dor 6/10 · Limitação funcional moderada · 1278 dias de fila (710% do prazo) · score 32

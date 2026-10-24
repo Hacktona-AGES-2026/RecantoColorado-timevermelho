@@ -11,6 +11,20 @@ public final class Conversor {
 
     private Conversor() {}
 
+    public static Dtos.SnapshotDto snapshot(com.hackatona.timevermelho.servico.FilaService.Info i) {
+        String descricao = switch (i.tipo()) {
+            case com.hackatona.timevermelho.servico.FilaService.OFICIAL ->
+                    "Fila de referência — entrega oficial: só o dataset oficial, com a interpretação do verificador. "
+                            + "Gera o fila_priorizada.csv.";
+            case com.hackatona.timevermelho.servico.FilaService.OPERACIONAL ->
+                    "Fila operacional: dataset + eventos e decisões registrados. As prioridades são propostas, "
+                            + "sujeitas à decisão do regulador.";
+            default -> "Simulação: nada foi gravado.";
+        };
+        return new Dtos.SnapshotDto(i.tipo(), i.versao(), i.calculadoEm(), i.eventosRegistrados(),
+                i.decisoesRegulador(), descricao);
+    }
+
     public static Dtos.ItemFila item(ResultadoPaciente r) {
         var c = r.getCaso();
         var cl = r.getClassificacao();

@@ -12,6 +12,7 @@ public enum TipoSinal {
     ALARME_GRAVE("Sinal de alarme grave no texto", PIORA),
     ALARME_FUNCIONAL("Perda funcional importante no texto", PIORA),
     GRAVIDADE_CLINICA("Doença grave descrita pelo médico", PIORA),
+    ALARME_A_CONFIRMAR("Possível agravamento grave relatado, a confirmar", PIORA),
     PROGRESSAO_IMAGEM("Progressão em exame de imagem", PIORA),
     PS_RECENTE("Pronto-socorro nos últimos 180 dias", PIORA),
     INTERNACAO_RECENTE("Internação nos últimos 180 dias", PIORA),

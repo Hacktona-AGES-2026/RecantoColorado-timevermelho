@@ -42,6 +42,15 @@ final class ImpactoCalculadora {
             sb.append(", classe ").append(antes.classe()).append(" → ").append(depois.classe());
         }
         if (motivo != null && !motivo.isBlank()) sb.append(": ").append(motivo);
+        if (depois.isMovidoPelaRegraDeOuro()) {
+            sb.append(depois.isPromocaoSemEvidencia() && !depois.isSemUrgencia()
+                    ? " — posição limitada pela regra de ouro: sem evidência de agravamento registrada, não ultrapassa oncológicos"
+                    : " — posição limitada pela regra de ouro: não ultrapassa oncológicos");
+        }
+        if (depois.temSinal(com.hackatona.timevermelho.motor.TipoSinal.ALARME_A_CONFIRMAR)
+                && !antes.temSinal(com.hackatona.timevermelho.motor.TipoSinal.ALARME_A_CONFIRMAR)) {
+            sb.append(" — possível agravamento grave relatado: revisão urgente");
+        }
         return sb.toString();
     }
 }

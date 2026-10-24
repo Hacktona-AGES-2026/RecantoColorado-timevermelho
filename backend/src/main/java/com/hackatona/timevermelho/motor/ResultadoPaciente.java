@@ -21,8 +21,22 @@ public class ResultadoPaciente {
     private Sinal sinalSaida;
     private Integer posicao;
     private Integer posicaoManual;
-    /** "Sem urgência clínica" pela definição conservadora do verificador oficial. */
+    /** Sob qual referência a regra de ouro foi aplicada (fila operacional ou fila de referência). */
+    private Referencia referencia = Referencia.ATUAL;
+    /** "Sem urgência clínica" segundo a referência usada (ver GuardRegraDeOuro). */
     private boolean semUrgencia;
+    /** Protegido pela regra de ouro: nunca abaixo de um paciente sem urgência. */
+    private boolean protegido;
+    /** Urgência reconhecida pelo FilaVIVA que a definição do verificador oficial não reconhece. */
+    private boolean divergenteDoVerificador;
+    /** Classe que só os dados estruturados (CID, eventos, dor, limitação) dariam, sem o texto livre. */
+    private ClasseSwalis classeEstruturada;
+    /** A classe calculada é mais urgente que a estruturada só por causa do texto livre: provisória, pendente de revisão. */
+    private boolean classePorTexto;
+    /** Regulador subiu a classe sem evidência de agravamento registrada: não pode passar à frente de protegidos. */
+    private boolean promocaoSemEvidencia;
+    /** Sinal que sustenta a urgência numa promoção (rastreabilidade), quando existe. */
+    private Sinal evidenciaDaPromocao;
     private boolean movidoPelaRegraDeOuro;
     private String justificativa;
     private final List<Reavaliacao> reavaliacoes = new ArrayList<>();

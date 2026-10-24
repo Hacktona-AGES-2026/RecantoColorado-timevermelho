@@ -10,6 +10,11 @@ public final class Erros {
         public RegraNegocio(String mensagem) { super(mensagem); }
     }
 
+    /** O estado mudou desde que o cliente o leu. Vira HTTP 409. */
+    public static class Conflito extends RuntimeException {
+        public Conflito(String mensagem) { super(mensagem); }
+    }
+
     /** Vira HTTP 404. */
     public static class NaoEncontrado extends RuntimeException {
         public NaoEncontrado(String mensagem) { super(mensagem); }

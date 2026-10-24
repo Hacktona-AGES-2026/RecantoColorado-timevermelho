@@ -36,7 +36,9 @@ Abra cada paciente em `http://localhost:3000/paciente/<id>`.
 8. **Paciente com câncer que diz que desistiu**: manter na fila até confirmação é o certo?
 9. **Dor ou limitação não informadas** ficam em C (13 pacientes). Melhor C, B ou "aguardando dados"?
 10. **HbA1c > 8,5%** hoje só gera alerta de "descompensação: encaminhar para controle", sem mudar a urgência. Está certo?
-11. **Regra de ouro na prática**: 2 pacientes com lesão de tronco (`SOL-2026-00960` e `SOL-2026-00765`) têm dor baixa e nenhum evento, então a definição oficial os trata como "sem urgência" e eles ficam logo abaixo de todos os oncológicos (posições 287 e 288), apesar de A1. É aceitável?
+11. **Regra de ouro na prática**: 2 pacientes com lesão de tronco (`SOL-2026-00960` e `SOL-2026-00765`) têm dor baixa e nenhum evento. A definição do verificador oficial os trata como "sem urgência". Por isso, na **fila de referência da entrega** eles ficam logo abaixo de todos os oncológicos (posições 287 e 288). Na **fila operacional** (a da tela), seguem a ordem clínica (A1, por volta da posição 131) e aparecem na revisão como "Urgência que o verificador oficial não reconhece". A leitura "TRONCO 80% = A1" está certa? Na operacional, eles devem mesmo passar à frente de cânceres estáveis?
+12. **Promoção sem evidência**: quando o regulador promove para A1 um paciente sem evidência de agravamento registrada (inclusive com dor moderada ou dado faltando), ele não passa à frente de quem tem câncer e o sistema pede que se registre o atendimento. Está certo? A lista do que conta como evidência está no `DECISOES.md`.
+13. **Texto livre**: o texto (do médico ou de um evento) nunca muda a classe sozinho daqui para a frente: só gera REVISÃO CLÍNICA URGENTE. Os 85 pacientes cuja classe atual vem só do texto do cadastro foram mantidos como "classe provisória", entre eles os 12 que cairiam de A1 para D: `SOL-2025-00482`, `SOL-2026-00025`, `SOL-2026-00195`, `SOL-2025-00520`, `SOL-2026-00061`, `SOL-2026-00110`, `SOL-2026-00361`, `SOL-2026-00202`, `SOL-2024-00149`, `SOL-2023-00079`, `SOL-2026-00960`, `SOL-2026-00765`. Para cada um: confirmar A1, ou qual classe?
 
 ## 3. Onde mudar, se o mentor discordar
 
@@ -65,5 +67,7 @@ Depois de qualquer mudança: `./mvnw test`, `python scripts/teste_integracao.py`
 | 9 | | |
 | 10 | | |
 | 11 | | |
+| 12 | | |
+| 13 | | |
 
 Mentor: ____________________ · Horário: ______

@@ -16,7 +16,12 @@ Por que decidimos assim: [DECISOES.md](DECISOES.md) · plano e divisão do time:
 | **Simulador** (`/simulador`) | "E se?" para um paciente (dor, limitação, evento hipotético) e para os pesos do score, sem salvar nada |
 | **Antes × depois** (`/indicadores`) | A ordem de hoje comparada com a do FilaVIVA |
 
-Garantias: a regra de ouro é checada a cada recálculo com a mesma definição do verificador oficial, e o regulador não consegue rebaixar um paciente com câncer abaixo de A2.
+Garantias:
+- A regra de ouro é uma restrição explícita, checada a cada recálculo nas duas filas.
+- Na **fila operacional** (a da tela), ela vale sobre a situação clínica atual, inclusive eventos novos. Uma promoção manual sem evidência não passa à frente de quem tem câncer.
+- Na **fila de referência** (o `fila_priorizada.csv`), ela vale com exatamente a definição do verificador oficial.
+- O regulador não consegue rebaixar um paciente com câncer abaixo de A2.
+- As prioridades são propostas, e a decisão é do regulador.
 
 **Demo ao vivo:** na tela de Alertas, "Simular chegada de novos eventos" registra eventos sintéticos em pacientes reais e mostra a fila reagindo. "Reiniciar demo" volta ao dataset original (reiniciar o backend também volta).
 
@@ -75,7 +80,7 @@ cd backend
 
 Os testes usam banco H2 em memória: não precisam do Docker.
 
-Com banco, backend e frontend no ar, o teste de integração percorre os fluxos da demo (37 verificações) e termina reiniciando a demo:
+Com banco, backend e frontend no ar, o teste de integração percorre os fluxos da demo e as duas filas (42 verificações) e termina reiniciando a demo:
 
 ```bash
 python scripts/teste_integracao.py
@@ -85,7 +90,9 @@ Antes da demo ao vivo, siga [docs/ROTEIRO-DEMO.md](docs/ROTEIRO-DEMO.md). Para v
 
 ## Verificar a fila priorizada
 
-O backend grava `fila_priorizada.csv` na raiz do repositório toda vez que sobe. Também dá para baixar em <http://localhost:8080/api/fila/export.csv>. Para conferir (precisa de `pip install pandas`):
+O backend grava `fila_priorizada.csv` na raiz do repositório toda vez que sobe. É a **fila de referência — entrega oficial**: só o dataset, sem eventos nem decisões registrados depois, igual a cada execução. Também dá para baixar em <http://localhost:8080/api/fila/export.csv>.
+
+A tela mostra a **fila operacional**, que inclui o que foi registrado na hora. Para baixar exatamente essa fila: `http://localhost:8080/api/fila/export.csv?snapshot=operacional`. O arquivo vem com o nome `fila_operacional_op-N_<horário>.csv`. Ela não é o entregável e pode reprovar no verificador oficial, porque reconhece urgências que ele não vê. Detalhes em "Duas filas" no [DECISOES.md](DECISOES.md). Para conferir (precisa de `pip install pandas`):
 
 ```bash
 python data/verificar_fila_priorizada.py fila_priorizada.csv --dataset data
