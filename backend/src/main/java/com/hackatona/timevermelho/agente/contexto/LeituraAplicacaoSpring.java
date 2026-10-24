@@ -3,10 +3,12 @@ package com.hackatona.timevermelho.agente.contexto;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IntSummaryStatistics;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -35,11 +37,14 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
     private final FilaService fila;
     private final IndicadoresService indicadores;
     private final AlertaService alertas;
+    private final CsvOriginal csv;
 
-    public LeituraAplicacaoSpring(FilaService fila, IndicadoresService indicadores, AlertaService alertas) {
+    public LeituraAplicacaoSpring(FilaService fila, IndicadoresService indicadores, AlertaService alertas,
+                                  CsvOriginal csv) {
         this.fila = fila;
         this.indicadores = indicadores;
         this.alertas = alertas;
+        this.csv = csv;
     }
 
     @Override
@@ -108,7 +113,9 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
     public ResultadoConsulta consultar(ConsultaFila c) {
         var snap = fila.atual();
         List<ResultadoPaciente> base = c.status() == ConsultaFila.Status.ATIVA ? snap.ativos() : snap.todos();
-        List<ResultadoPaciente> achados = base.stream().filter(r -> combina(r, c)).collect(Collectors.toCollection(ArrayList::new));
+        Set<String> ids = solicitacoesPedidas(c);
+        List<ResultadoPaciente> achados = base.stream().filter(r -> combina(r, c, ids))
+                .collect(Collectors.toCollection(ArrayList::new));
         Comparator<ResultadoPaciente> ordem = switch (c.ordem()) {
             case ESPERA -> Comparator.comparingInt((ResultadoPaciente r) -> r.getCaso().diasEmFila()).reversed();
             case SCORE -> Comparator.comparingDouble(ResultadoPaciente::getScore).reversed();
@@ -121,7 +128,27 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
         return new ResultadoConsulta(achados.size(), resumir(c, achados), linhas);
     }
 
-    private static boolean combina(ResultadoPaciente r, ConsultaFila c) {
+    /**
+     * As solicitações que ficaram na fila para os números e IDs pedidos, pelo CSV original: uma duplicada vira a
+     * principal em que foi mesclada, e um ID de paciente vira todas as solicitações dele. {@code null} sem esse filtro.
+     */
+    private Set<String> solicitacoesPedidas(ConsultaFila c) {
+        if (c.solicitacoes().isEmpty() && c.pacientes().isEmpty()) return null;
+        Set<String> ids = new HashSet<>();
+        for (String sol : c.solicitacoes()) {
+            String principal = csv.principal(sol);
+            ids.add(principal != null ? principal : sol);
+        }
+        for (String pac : c.pacientes()) {
+            for (CsvOriginal.Registro reg : csv.doPaciente(pac)) {
+                String principal = csv.principal(reg.solicitacaoId());
+                ids.add(principal != null ? principal : reg.solicitacaoId());
+            }
+        }
+        return ids;
+    }
+
+    private static boolean combina(ResultadoPaciente r, ConsultaFila c, Set<String> ids) {
         Caso caso = r.getCaso();
         if (c.status() == ConsultaFila.Status.SAIDA_SUGERIDA && r.getStatus() != StatusFila.SAIDA_SUGERIDA) return false;
         if (c.status() == ConsultaFila.Status.SAIDA_CONFIRMADA && r.getStatus() != StatusFila.SAIDA_CONFIRMADA) return false;
@@ -138,7 +165,9 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
         if (c.idadeMax() != null && (caso.idade() == null || caso.idade() > c.idadeMax())) return false;
         if (c.acimaDoPrazo() != null && (r.percentualPrazo() > 100) != c.acimaDoPrazo()) return false;
         if (c.comReavaliacao() != null && r.getReavaliacoes().isEmpty() == c.comReavaliacao()) return false;
-        if (!c.solicitacoes().isEmpty() && !c.solicitacoes().contains(caso.solicitacaoId())) return false;
+        // número de solicitação ou ID de paciente: vale a solicitação pedida (ou a principal dela) e, sem o CSV,
+        // ainda o ID de paciente da própria fila
+        if (ids != null && !ids.contains(caso.solicitacaoId()) && !c.pacientes().contains(caso.pacienteId())) return false;
         if (!c.nomes().isEmpty() && c.nomes().stream().noneMatch(n -> nomeContem(caso.nome(), n))) return false;
         return true;
     }
@@ -159,7 +188,7 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
     }
 
     /** Os números da consulta, em texto, para a IA: nada de nome, identificador ou CID de alguém. */
-    private static String resumir(ConsultaFila c, List<ResultadoPaciente> achados) {
+    private String resumir(ConsultaFila c, List<ResultadoPaciente> achados) {
         StringBuilder sb = new StringBuilder();
         sb.append("Filtros aplicados: ").append(ContextoDados.rotulo(c.descricaoParaIA())).append(".\n");
         if (!c.naoEncontrados().isEmpty()) {
@@ -167,13 +196,25 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
                     .append(c.naoEncontrados().stream().map(ContextoDados::rotulo).collect(Collectors.joining(", "))).append(".\n");
         }
         if (!c.solicitacoes().isEmpty()) {
-            long faltam = c.solicitacoes().stream()
+            long faltam = c.solicitacoes().stream().filter(id -> csv.principal(id) == null)
                     .filter(id -> achados.stream().noneMatch(r -> id.equals(r.getCaso().solicitacaoId()))).count();
             if (faltam > 0) sb.append("Números de solicitação informados que NÃO existem no dataset: ").append(faltam).append(".\n");
+            long duplicadas = c.solicitacoes().stream().filter(id -> csv.principal(id) != null && !id.equals(csv.principal(id))).count();
+            if (duplicadas > 0) {
+                sb.append("Números de solicitação informados que são DUPLICADAS no CSV original (mesmo paciente e mesmo ")
+                        .append("procedimento), já mescladas na solicitação principal, que é a que aparece na tabela: ")
+                        .append(duplicadas).append(".\n");
+            }
+        }
+        if (!c.pacientes().isEmpty()) {
+            long faltam = c.pacientes().stream().filter(p -> csv.doPaciente(p).isEmpty())
+                    .filter(p -> achados.stream().noneMatch(r -> p.equals(r.getCaso().pacienteId()))).count();
+            if (faltam > 0) sb.append("IDs de paciente informados que NÃO existem no dataset: ").append(faltam).append(".\n");
         }
         sb.append("Pacientes encontrados: ").append(achados.size()).append(".\n");
         if (achados.isEmpty()) return sb.toString().strip();
-        if (achados.size() <= DETALHE_ATE) sb.append(detalhes(achados));
+        if (c.porPaciente()) sb.append(pessoas(achados));
+        if (achados.size() <= DETALHE_ATE) sb.append(detalhes(achados, csv));
 
         Map<String, Long> porClasse = new LinkedHashMap<>();
         for (ClasseSwalis cl : ClasseSwalis.values()) porClasse.put(cl.name() + " (prazo " + cl.prazoDias() + " d)", 0L);
@@ -213,7 +254,32 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
      * Para resultados pequenos (um paciente procurado pelo nome, por exemplo), os dados de cada um, na ordem da tabela,
      * SEM nome, número de solicitação nem CID: a IA consegue responder "qual a classe e a posição" sem identificar ninguém.
      */
-    private static String detalhes(List<ResultadoPaciente> achados) {
+    /**
+     * Cada linha da tabela é uma solicitação, e uma pessoa pode ter mais de uma (procedimentos diferentes). Diz quantas
+     * pessoas são de fato e, pelo CSV original, quantas solicitações elas têm lá e quantas eram duplicadas.
+     */
+    private String pessoas(List<ResultadoPaciente> achados) {
+        List<String> pacientes = achados.stream().map(r -> r.getCaso().pacienteId()).filter(p -> p != null).distinct().toList();
+        int noCsv = 0;
+        int duplicadas = 0;
+        for (String p : pacientes) {
+            for (CsvOriginal.Registro reg : csv.doPaciente(p)) {
+                noCsv++;
+                if (!reg.solicitacaoId().equals(csv.principal(reg.solicitacaoId()))) duplicadas++;
+            }
+        }
+        StringBuilder sb = new StringBuilder("Pessoas distintas entre os encontrados (pelo ID do paciente): ")
+                .append(pacientes.size()).append(". Cada linha da tabela é uma solicitação; a mesma pessoa pode ter mais ")
+                .append("de uma, para procedimentos diferentes.\n");
+        if (noCsv > 0) {
+            sb.append("No CSV original, essas pessoas têm ").append(noCsv).append(" solicitação(ões), das quais ")
+                    .append(duplicadas).append(" duplicada(s) (mesmo paciente e mesmo procedimento), mesclada(s) na ")
+                    .append("principal e fora da contagem da fila.\n");
+        }
+        return sb.toString();
+    }
+
+    private static String detalhes(List<ResultadoPaciente> achados, CsvOriginal csv) {
         StringBuilder sb = new StringBuilder("Detalhe de cada paciente encontrado, na ordem da tabela (sem identificação):\n");
         for (int i = 0; i < achados.size(); i++) {
             ResultadoPaciente r = achados.get(i);
@@ -228,7 +294,9 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
                     .append(r.oncologico() ? ", oncológico" : ", não oncológico")
                     .append(", ").append(c.diasEmFila()).append(" dias em fila (").append(r.percentualPrazo()).append("% do prazo)")
                     .append(", score ").append(Math.round(r.getScore() * 10) / 10.0)
-                    .append(", motivos de reavaliação: ").append(r.getReavaliacoes().size()).append(".\n");
+                    .append(", motivos de reavaliação: ").append(r.getReavaliacoes().size())
+                    .append(", solicitações duplicadas mescladas nesta: ").append(csv.duplicadasDe(c.solicitacaoId()))
+                    .append(".\n");
         }
         return sb.toString();
     }

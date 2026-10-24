@@ -102,4 +102,49 @@ class LeituraAplicacaoConsultaTest {
         assertThat(ninguem.total()).isZero();
         assertThat(ninguem.resumo()).contains("Pacientes encontrados: 0");
     }
+
+    // ---------- ID do paciente e duplicadas (pelo CSV original, só leitura) ----------
+
+    @Test
+    void acharPeloIdDoPacienteTrazTodasAsSolicitacoesDeleSemIdentificacaoParaAIA() {
+        // PAC-00492 tem duas solicitações, de procedimentos diferentes
+        var r = leitura.consultar(pedido("{\"pacientes\":[\"pac 492\"]}"));
+
+        assertThat(r.linhas()).extracting(LeituraAplicacao.LinhaPaciente::solicitacaoId)
+                .containsExactlyInAnyOrder("SOL-2025-00326", "SOL-2026-00448");
+        assertThat(r.resumo()).contains("Pessoas distintas entre os encontrados (pelo ID do paciente): 1")
+                .contains("No CSV original, essas pessoas têm 2 solicitação(ões), das quais 0 duplicada(s)")
+                .doesNotContain("PAC-00492").doesNotContain("SOL-2025-00326").doesNotContain("SOL-2026-00448");
+        for (var l : r.linhas()) assertThat(r.resumo()).doesNotContain(l.nome());
+    }
+
+    @Test
+    void numeroDeUmaDuplicadaAchaAPrincipalEmVezDeDizerQueNaoExiste() {
+        // SOL-2024-00044 é duplicada de SOL-2024-00003 (PAC-00087, mesmo procedimento): só a principal está na fila
+        assertThat(fila.atual().get("SOL-2024-00044")).isNull();
+
+        var r = leitura.consultar(pedido("{\"solicitacoes\":[\"SOL-2024-00044\"]}"));
+
+        assertThat(r.linhas()).extracting(LeituraAplicacao.LinhaPaciente::solicitacaoId).containsExactly("SOL-2024-00003");
+        assertThat(r.resumo()).doesNotContain("NÃO existem no dataset")
+                .contains("são DUPLICADAS no CSV original").contains("já mescladas na solicitação principal")
+                .contains("solicitações duplicadas mescladas nesta: 1").doesNotContain("SOL-2024-00003");
+    }
+
+    @Test
+    void pacienteComDuplicadaApareceUmaVezSoEOResumoContaADuplicada() {
+        var r = leitura.consultar(pedido("{\"pacientes\":[\"PAC-00087\"]}"));
+
+        assertThat(r.linhas()).extracting(LeituraAplicacao.LinhaPaciente::solicitacaoId).containsExactly("SOL-2024-00003");
+        assertThat(r.resumo()).contains("Pessoas distintas entre os encontrados (pelo ID do paciente): 1")
+                .contains("No CSV original, essas pessoas têm 2 solicitação(ões), das quais 1 duplicada(s)");
+    }
+
+    @Test
+    void idDePacienteInexistenteAvisaSemInventar() {
+        var r = leitura.consultar(pedido("{\"pacientes\":[\"PAC-99999\"]}"));
+
+        assertThat(r.total()).isZero();
+        assertThat(r.resumo()).contains("IDs de paciente informados que NÃO existem no dataset: 1").doesNotContain("PAC-99999");
+    }
 }
