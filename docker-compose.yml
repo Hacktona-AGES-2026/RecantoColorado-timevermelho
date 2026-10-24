@@ -1,0 +1,21 @@
+# Banco de dados do FilaVIVA. Uso: docker compose up -d db
+services:
+  db:
+    image: postgres:16.10
+    container_name: filaviva-db
+    environment:
+      POSTGRES_DB: filaviva
+      POSTGRES_USER: filaviva
+      POSTGRES_PASSWORD: filaviva
+    ports:
+      - "5432:5432"
+    volumes:
+      - filaviva-pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U filaviva -d filaviva"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  filaviva-pgdata:

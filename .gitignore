@@ -1,0 +1,17 @@
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Editores
+.idea/
+.vscode/
+*.iml
+
+# Segredos locais
+.env
+.env.local
+
+# Python (protótipo)
+__pycache__/
+.venv/
+*.pyc
