@@ -1,0 +1,71 @@
+{
+  "_comentario": "Regras clínicas lidas do texto livre (justificativa_clinica e observacoes). Padrões são expressões regulares aplicadas ao texto em minúsculas e sem acento. Editável sem mexer no código.",
+  "alarmesGraves": [
+    { "padrao": "encarcer", "rotulo": "hérnia encarcerada" },
+    { "padrao": "estrangul", "rotulo": "estrangulamento" },
+    { "padrao": "colangite", "rotulo": "colangite" },
+    { "padrao": "icteri", "rotulo": "icterícia" },
+    { "padrao": "pancreatite", "rotulo": "pancreatite" },
+    { "padrao": "sepse|septic", "rotulo": "sepse" },
+    { "padrao": "angina instavel|angina em repouso", "rotulo": "angina instável / em repouso" },
+    { "padrao": "sincope", "rotulo": "síncope" },
+    { "padrao": "suboclus|obstrucao intestinal|semi-?oclus", "rotulo": "obstrução intestinal" },
+    { "padrao": "enterorragia|melena|hematemese", "rotulo": "sangramento digestivo" },
+    { "padrao": "hidronefrose", "rotulo": "hidronefrose" },
+    { "padrao": "retencao urinaria aguda", "rotulo": "retenção urinária aguda" },
+    { "padrao": "perda de funcao", "rotulo": "perda de função" },
+    { "padrao": "dano neurologico", "rotulo": "risco de dano neurológico" },
+    { "padrao": "glaucoma facomorfico", "rotulo": "glaucoma facomórfico" },
+    { "padrao": "dessaturacao|retencao de co2", "rotulo": "insuficiência respiratória" },
+    { "padrao": "hemoptise", "rotulo": "hemoptise" }
+  ],
+  "suspeitaMalignidade": [
+    { "padrao": "crescimento rapido", "rotulo": "crescimento rápido" },
+    { "padrao": "linfonodo[^.;]*(fixo|palpavel)", "rotulo": "linfonodo palpável/fixo" },
+    { "padrao": "perda ponderal|perda de peso", "rotulo": "perda de peso" },
+    { "padrao": "disfagia", "rotulo": "disfagia" },
+    { "padrao": "rouquidao", "rotulo": "rouquidão" },
+    { "padrao": "psa em elevacao", "rotulo": "PSA em elevação" },
+    { "padrao": "massa anexial|ca-?125", "rotulo": "massa anexial / CA-125" },
+    { "padrao": "sangramento espontaneo", "rotulo": "sangramento espontâneo da lesão" },
+    { "padrao": "metasta", "rotulo": "metástase" }
+  ],
+  "alarmesFuncionais": [
+    { "padrao": "acamad", "rotulo": "acamado" },
+    { "padrao": "ulcera de pressao", "rotulo": "úlcera de pressão" },
+    { "padrao": "quedas? de repeticao|ja teve \\d+ quedas?", "rotulo": "quedas" },
+    { "padrao": "transfu", "rotulo": "necessidade de transfusão" },
+    { "padrao": "dor em repouso", "rotulo": "dor em repouso" },
+    { "padrao": "uso de muletas|cadeira de rodas", "rotulo": "marcha com apoio" }
+  ],
+  "psNoTexto": [
+    { "padrao": "\\d+\\s*idas? ao ps", "rotulo": "idas ao PS" },
+    { "padrao": "foi ao ps \\d+ ?x", "rotulo": "idas ao PS" },
+    { "padrao": "internacao recente", "rotulo": "internação recente" },
+    { "padrao": "colecistites? de repeticao", "rotulo": "crises de repetição" }
+  ],
+  "piora": [
+    { "padrao": "refere piora|relata piora|piora importante|piorou|piora de sintomas", "rotulo": "relato de piora" }
+  ],
+  "melhora": [
+    { "padrao": "melhorou|refere melhora|relata melhora", "rotulo": "relato de melhora" }
+  ],
+  "saidaDesistencia": [
+    { "padrao": "desist|nao deseja mais operar|solicita retirada da fila", "rotulo": "desistência" }
+  ],
+  "saidaOutroServico": [
+    { "padrao": "operou pelo convenio|operou em outro|realizou a cirurgia em outro|cirurgia realizada em outro", "rotulo": "cirurgia em outro serviço" }
+  ],
+  "negacoes": ["sem", "nega", "negou", "nao ha", "nao apresenta", "ausencia de", "afastad[oa]", "descartad[oa]"],
+  "cidsUrgentes": {
+    "I200": "Angina instável",
+    "K400": "Hérnia inguinal bilateral com obstrução",
+    "K403": "Hérnia inguinal unilateral com obstrução",
+    "K420": "Hérnia umbilical com obstrução",
+    "K430": "Hérnia ventral com obstrução",
+    "K800": "Calculose da vesícula com colecistite aguda",
+    "N132": "Hidronefrose com obstrução por cálculo",
+    "I832": "Varizes com úlcera e inflamação"
+  },
+  "cidsIncertos": "^(D3[7-9]|D4[0-8]|R91)"
+}
