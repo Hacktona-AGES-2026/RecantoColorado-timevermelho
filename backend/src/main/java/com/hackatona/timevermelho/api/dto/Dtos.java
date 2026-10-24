@@ -122,8 +122,15 @@ public final class Dtos {
 
     // ---------- eventos e ajustes ----------
 
+    /** autor: quem registrou (vai para a auditoria; vazio = regulador). */
     public record NovoEvento(@NotBlank String solicitacaoId, @NotBlank String tipo, String resultado,
-                             Double valorNumerico, @Size(max = 2000) String descricao, LocalDate data) {}
+                             Double valorNumerico, @Size(max = 2000) String descricao, LocalDate data,
+                             @Size(max = 120) String autor) {
+        public NovoEvento(String solicitacaoId, String tipo, String resultado, Double valorNumerico, String descricao,
+                          LocalDate data) {
+            this(solicitacaoId, tipo, resultado, valorNumerico, descricao, data, null);
+        }
+    }
 
     public record Impacto(String solicitacaoId, String nome, Integer posicaoAntes, Integer posicaoDepois,
                           String classeAntes, String classeDepois, String statusAntes, String statusDepois,

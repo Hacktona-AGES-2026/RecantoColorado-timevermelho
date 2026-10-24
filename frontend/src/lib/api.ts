@@ -16,7 +16,8 @@ export type TipoAjuste =
   | "REJEITAR_REBAIXAMENTO"
   | "REBAIXAMENTO_BLOQUEADO" // só o sistema registra
   | "FIXAR_POSICAO" // coloca o paciente numa posição escolhida (só para cima; a regra de ouro continua valendo)
-  | "LIBERAR_POSICAO"; // volta para a posição calculada
+  | "LIBERAR_POSICAO" // volta para a posição calculada
+  | "REGISTRAR_EVENTO"; // exame ou evento registrado (só auditoria: quem registrou e o impacto)
 
 /** Situação de rebaixamento de um paciente na fila operacional. */
 export type EstadoRebaixamento = "PENDENTE" | "CONFIRMADO" | "REJEITADO" | "BLOQUEADO";
@@ -351,6 +352,7 @@ export interface NovoEvento {
   valorNumerico?: number;
   descricao?: string;
   data?: string;
+  autor?: string; // quem registrou (vai para a auditoria; vazio = regulador)
 }
 
 export interface Impacto {
@@ -713,6 +715,8 @@ export const api = {
   registrarDesejo: (solicitacaoId: string, req: DesejoCirurgiaRequest) =>
     post<DesejoCirurgia>(`/api/pacientes/${solicitacaoId}/desejo-cirurgia`, req),
   ajustarComoMedico: (id: number | string, ajuste: AjusteMedico) => post<Impacto>(`/api/medicos/${id}/ajustes`, ajuste),
+  registrarEventoComoMedico: (id: number | string, evento: NovoEvento) =>
+    post<Impacto>(`/api/medicos/${id}/eventos`, evento),
   ajustesMedico: (id: number | string) => get<AjusteDto[]>(`/api/medicos/${id}/ajustes`),
   filaMedico: (id: number | string, filtros: FiltrosFilaMedico = {}) =>
     get<FilaMedico>(`/api/medicos/${id}/fila?${query(filtros)}`),

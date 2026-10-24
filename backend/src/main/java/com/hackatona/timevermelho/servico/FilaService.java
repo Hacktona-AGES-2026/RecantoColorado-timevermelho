@@ -133,8 +133,18 @@ public class FilaService {
         return oficial;
     }
 
+    /** Data de referência do dataset (23/10/2026): base dos dias de fila e da fila oficial. */
     public LocalDate referencia() {
         return referencia;
+    }
+
+    /**
+     * Data de hoje para eventos novos (registrados ou simulados): o relógio do servidor, nunca antes da data de
+     * referência do dataset. A referência continua sendo a base dos dias de fila e da fila oficial.
+     */
+    public LocalDate hoje() {
+        LocalDate h = LocalDate.now();
+        return h.isBefore(referencia) ? referencia : h;
     }
 
     @Transactional
@@ -345,6 +355,7 @@ public class FilaService {
                         + a.getClasseAnterior() + " mantida: " + a.getJustificativa());
                 case FIXAR_POSICAO -> d.comPosicao(a.getPosicaoFixada(), a.getAutor() + ": " + a.getJustificativa());
                 case LIBERAR_POSICAO -> d.comPosicao(null, null);
+                case REGISTRAR_EVENTO -> d; // só auditoria: o evento em si já entra no recálculo
                 case REBAIXAMENTO_BLOQUEADO -> d.comPiso(a.getClasseAnterior(), "paciente oncológico: rebaixamento bloqueado, classe "
                         + a.getClasseAnterior() + " mantida");
             };

@@ -70,7 +70,13 @@ public class DecisaoService {
     }
 
     public synchronized Dtos.Impacto registrarEvento(Dtos.NovoEvento req) {
+        return registrarEvento(req, Origem.REGULADOR);
+    }
+
+    /** Registra o evento, recalcula a fila e grava na auditoria quem registrou (regulador ou médico). */
+    public synchronized Dtos.Impacto registrarEvento(Dtos.NovoEvento req, Origem origem) {
         String id = resolverId(req.solicitacaoId());
+        String autor = req.autor() == null || req.autor().isBlank() ? "regulador" : req.autor().trim();
         if (!TIPOS_EVENTO.contains(req.tipo())) {
             throw new Erros.RegraNegocio("Tipo de evento desconhecido: " + req.tipo());
         }
@@ -81,13 +87,19 @@ public class DecisaoService {
         e.setSolicitacaoId(id);
         e.setSolicitacaoOriginal(id);
         e.setPacienteId(antes.getCaso().pacienteId());
-        LocalDate data = req.data() == null ? fila.referencia() : req.data();
+        // sem data informada: hoje (não a data de referência do dataset); data futura não é aceita
+        LocalDate hoje = fila.hoje();
+        LocalDate data = req.data() == null ? hoje : req.data();
+        if (data.isAfter(hoje)) {
+            throw new Erros.RegraNegocio("A data do evento (" + data.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                    + ") está no futuro. Hoje é " + hoje.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")) + ".");
+        }
         e.setData(data);
         e.setTipo(req.tipo());
         e.setResultado(req.resultado());
         e.setValor(req.valorNumerico());
         e.setDescricao(req.descricao());
-        e.setOrigem("FilaVIVA (registrado pelo regulador)");
+        e.setOrigem("FilaVIVA (registrado por " + autor + ")");
         e.setSintetico(true);
         e.setCriadoEm(LocalDateTime.now());
         eventos.save(e);
@@ -99,6 +111,18 @@ public class DecisaoService {
                 : novos.getFirst().descricao();
         Dtos.Impacto impacto = ImpactoCalculadora.impacto(antes, depois, motivo);
         alertar(antes, depois, Alerta.Tipo.EVENTO_NOVO, "Evento novo — " + impacto.mensagem());
+
+        // auditoria: quem registrou o exame/evento e o que ele causou (não é decisão: não muda a fila)
+        StringBuilder texto = new StringBuilder(req.tipo().replace('_', ' '));
+        if (req.resultado() != null && !req.resultado().isBlank()) texto.append(" (").append(req.resultado().replace('_', ' ')).append(")");
+        if (req.valorNumerico() != null) texto.append(" ").append(String.format(java.util.Locale.forLanguageTag("pt-BR"), "%.1f", req.valorNumerico()));
+        texto.append(" em ").append(data.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        if (req.descricao() != null && !req.descricao().isBlank()) texto.append(": ").append(req.descricao().trim());
+        texto.append(" [").append(e.getId()).append("]. Impacto: ").append(impacto.mensagem());
+        String justificativa = texto.length() > 2000 ? texto.substring(0, 1997) + "..." : texto.toString();
+        AjusteRegulador a = novoAjuste(id, TipoAjuste.REGISTRAR_EVENTO, antes.classe(), depois.classe(), justificativa, autor);
+        marcarOrigem(a, origem);
+        ajustes.save(a);
         return impacto;
     }
 
@@ -144,6 +168,8 @@ public class DecisaoService {
                 return decidirRebaixamento(antes, req.tipo(), justificativa, autor);
             }
             case REBAIXAMENTO_BLOQUEADO -> throw new Erros.RegraNegocio("Esse registro é feito só pelo sistema");
+            case REGISTRAR_EVENTO -> throw new Erros.RegraNegocio("Exames e eventos são registrados em \"Registrar evento "
+                    + "clínico\" (POST /api/eventos), que já grava na auditoria quem registrou");
             case CONFIRMAR_SAIDA, RECUSAR_SAIDA -> {
                 if (antes.getSinalSaida() == null && req.tipo() == TipoAjuste.RECUSAR_SAIDA) {
                     throw new Erros.RegraNegocio("Não há sugestão de saída para recusar");

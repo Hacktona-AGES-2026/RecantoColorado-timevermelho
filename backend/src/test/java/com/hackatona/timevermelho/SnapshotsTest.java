@@ -43,6 +43,11 @@ class SnapshotsTest {
     @Autowired ConsultaService consulta;
     @Autowired SimulacaoService simulacao;
 
+    /** Eventos novos ficam com a data de hoje (não a data de referência do dataset). */
+    private String hoje() {
+        return fila.hoje().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
     @AfterEach
     void voltarAoDataset() {
         decisao.resetar();
@@ -70,7 +75,7 @@ class SnapshotsTest {
         assertThat(r.isProtegido()).isTrue();
         assertThat(r.isMovidoPelaRegraDeOuro()).isFalse();   // sem limitação artificial
         assertThat(r.getPosicao()).isLessThan(antes.getPosicao());
-        assertThat(r.getJustificativa()).contains("Biópsia positiva em 23/10/2026");
+        assertThat(r.getJustificativa()).contains("Biópsia positiva em " + hoje());
         assertThat(GuardRegraDeOuro.respeitada(snap.ativos())).isTrue();
         // a fila de referência não muda com evento registrado depois
         assertThat(oficialCsv()).isEqualTo(oficialAntes);
@@ -138,7 +143,7 @@ class SnapshotsTest {
                 "revisão clínica: sepse confirmada na internação", "regulador"));
         var depois = fila.atual();
         assertThat(depois.get(CATARATA).getPosicao()).isLessThan(ultimaPosicaoCidC(depois.ativos()));
-        assertThat(depois.get(CATARATA).getJustificativa()).contains("evidência da promoção: Internação em 23/10/2026");
+        assertThat(depois.get(CATARATA).getJustificativa()).contains("evidência da promoção: Internação em " + hoje());
         assertThat(GuardRegraDeOuro.respeitada(depois.ativos())).isTrue();
     }
 

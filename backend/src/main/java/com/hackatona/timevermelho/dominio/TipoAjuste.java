@@ -21,7 +21,12 @@ public enum TipoAjuste {
     /** Coloca o paciente numa posição escolhida (só para cima). A regra de ouro continua valendo. */
     FIXAR_POSICAO,
     /** Desfaz a posição escolhida: o paciente volta para a posição calculada. */
-    LIBERAR_POSICAO;
+    LIBERAR_POSICAO,
+    /**
+     * Exame ou evento clínico registrado por uma pessoa (regulador ou médico). Só auditoria: quem registrou, quando e
+     * o impacto. Não é decisão de prioridade; o efeito na fila vem do próprio evento, recalculado pelo motor.
+     */
+    REGISTRAR_EVENTO;
 
     public boolean ehRebaixamento() {
         return this == SUGERIR_REBAIXAMENTO || this == CONFIRMAR_REBAIXAMENTO || this == REJEITAR_REBAIXAMENTO

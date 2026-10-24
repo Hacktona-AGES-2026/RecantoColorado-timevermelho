@@ -138,17 +138,38 @@ public class MedicoService {
                     + "rebaixamento e decidir saída da fila continuam com o regulador.");
         }
         Especialidade e = especialidade(m);
-        String id = decisoes.resolverId(req.solicitacaoId());
-        ResultadoPaciente r = fila.atual().get(id);
-        if (r == null || !r.getStatus().naFila()) throw new Erros.NaoEncontrado("Solicitação " + req.solicitacaoId() + " não está na fila");
-        if (!e.avaliar(r.getCaso(), r.oncologico()).existe()) {
-            throw new Erros.RegraNegocio("Este paciente não está nas listas de " + e.nome() + " (procedimento de "
-                    + r.getCaso().especialidade() + "). Peça ao regulador ou a um médico da especialidade.");
-        }
+        String id = pacienteDasListas(e, req.solicitacaoId());
         String autor = m.getNome() + " (" + m.getCrm() + ", " + e.nome() + ")";
         return decisoes.ajustar(new com.hackatona.timevermelho.api.dto.Dtos.AjusteRequest(id, req.tipo(), req.classeNova(),
                         req.justificativa(), autor, req.posicao()),
                 new com.hackatona.timevermelho.servico.DecisaoService.Origem(m.getId(), req.informacaoForaDoSistema()));
+    }
+
+    /**
+     * O médico registra um exame ou evento clínico de um paciente das listas dele. A fila é recalculada pelo motor,
+     * como quando o regulador registra, e fica na auditoria com o nome, o CRM e o id do médico.
+     */
+    public com.hackatona.timevermelho.api.dto.Dtos.Impacto registrarEvento(Long medicoId,
+                                                                          com.hackatona.timevermelho.api.dto.Dtos.NovoEvento req) {
+        Medico m = medico(medicoId);
+        Especialidade e = especialidade(m);
+        String id = pacienteDasListas(e, req.solicitacaoId());
+        String autor = m.getNome() + " (" + m.getCrm() + ", " + e.nome() + ")";
+        return decisoes.registrarEvento(new com.hackatona.timevermelho.api.dto.Dtos.NovoEvento(id, req.tipo(), req.resultado(),
+                        req.valorNumerico(), req.descricao(), req.data(), autor),
+                new com.hackatona.timevermelho.servico.DecisaoService.Origem(m.getId(), false));
+    }
+
+    /** O paciente precisa estar na fila e nas listas da especialidade do médico (cirúrgicos ou possível avaliação). */
+    private String pacienteDasListas(Especialidade e, String solicitacaoId) {
+        String id = decisoes.resolverId(solicitacaoId);
+        ResultadoPaciente r = fila.atual().get(id);
+        if (r == null || !r.getStatus().naFila()) throw new Erros.NaoEncontrado("Solicitação " + solicitacaoId + " não está na fila");
+        if (!e.avaliar(r.getCaso(), r.oncologico()).existe()) {
+            throw new Erros.RegraNegocio("Este paciente não está nas listas de " + e.nome() + " (procedimento de "
+                    + r.getCaso().especialidade() + "). Peça ao regulador ou a um médico da especialidade.");
+        }
+        return id;
     }
 
     /** Auditoria: tudo o que o médico alterou, do mais recente para o mais antigo. */

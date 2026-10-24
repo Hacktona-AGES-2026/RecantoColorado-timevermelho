@@ -39,7 +39,7 @@ public class SimulacaoService {
         int n = 0;
         if (req.eventos() != null) {
             for (var h : req.eventos()) {
-                eventos.add(new Evento("SIMULADO-" + (++n), id, fila.referencia(), h.tipo(), h.resultado(),
+                eventos.add(new Evento("SIMULADO-" + (++n), id, fila.hoje(), h.tipo(), h.resultado(),
                         h.valorNumerico(), h.descricao() == null ? "Evento hipotético" : h.descricao(), "simulação", true));
             }
         }

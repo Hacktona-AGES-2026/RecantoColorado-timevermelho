@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { api, TIPOS_EVENTO, type Impacto } from "@/lib/api";
+import { api, TIPOS_EVENTO, type Impacto, type Medico } from "@/lib/api";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,8 +17,20 @@ export function rotuloTipoEvento(tipo: string): string {
   return TIPOS_EVENTO.find((t) => t.tipo === tipo)?.rotulo.replace(/ \(.*\)$/, "") ?? rotuloResultado(tipo);
 }
 
-/** Registra um evento clínico novo; a fila é recalculada e mostramos o impacto. */
-export function FormEvento({ solicitacaoId, aoRegistrar }: { solicitacaoId: string; aoRegistrar: () => void }) {
+/**
+ * Registra um evento clínico novo; a fila é recalculada e mostramos o impacto. Fica na auditoria com quem registrou:
+ * o médico (quando a tela foi aberta pela lista dele) ou o nome informado (regulador).
+ */
+export function FormEvento({
+  solicitacaoId,
+  medico = null,
+  aoRegistrar,
+}: {
+  solicitacaoId: string;
+  medico?: Medico | null;
+  aoRegistrar: () => void;
+}) {
+  const [autor, setAutor] = useState("regulador");
   const [tipo, setTipo] = useState(TIPOS_EVENTO[0].tipo);
   const [resultado, setResultado] = useState(TIPOS_EVENTO[0].resultados[0]);
   const [valor, setValor] = useState("");
@@ -38,13 +50,16 @@ export function FormEvento({ solicitacaoId, aoRegistrar }: { solicitacaoId: stri
     setErro(null);
     setImpacto(null);
     try {
-      const r = await api.registrarEvento({
+      const evento = {
         solicitacaoId,
         tipo,
         resultado: resultado || undefined,
         valorNumerico: valorNum,
         descricao: descricao.trim() || undefined,
-      });
+      };
+      const r = medico
+        ? await api.registrarEventoComoMedico(medico.id, evento)
+        : await api.registrarEvento({ ...evento, autor: autor.trim() || "regulador" });
       setImpacto(r);
       setValor("");
       setDescricao("");
@@ -108,6 +123,17 @@ export function FormEvento({ solicitacaoId, aoRegistrar }: { solicitacaoId: stri
               rows={2}
             />
           </label>
+          {medico ? (
+            <p className="bg-muted rounded-lg p-2 text-xs">
+              Registrando como <span className="font-medium">{medico.nome}</span> ({medico.crm}). Fica no histórico de
+              decisões do paciente e em &quot;Minhas alterações&quot; do médico.
+            </p>
+          ) : (
+            <label className="flex flex-col gap-1">
+              <span className="text-xs font-medium">Quem registra</span>
+              <Input value={autor} onChange={(e) => setAutor(e.target.value)} maxLength={120} />
+            </label>
+          )}
           {erro && (
             <p className="bg-destructive/10 text-destructive rounded-lg p-2 text-sm" role="alert">
               {erro}

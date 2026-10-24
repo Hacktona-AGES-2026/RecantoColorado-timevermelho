@@ -62,6 +62,13 @@ public class MedicoController {
         return servico.ajustar(id, req);
     }
 
+    /** O médico registra um exame ou evento clínico de um paciente das listas dele (fica na auditoria). */
+    @PostMapping("/medicos/{id}/eventos")
+    public com.hackatona.timevermelho.api.dto.Dtos.Impacto registrarEvento(@PathVariable Long id,
+            @Valid @RequestBody com.hackatona.timevermelho.api.dto.Dtos.NovoEvento req) {
+        return servico.registrarEvento(id, req);
+    }
+
     /** Auditoria: o que este médico alterou. */
     @GetMapping("/medicos/{id}/ajustes")
     public List<com.hackatona.timevermelho.api.dto.Dtos.AjusteDto> ajustes(@PathVariable Long id) {

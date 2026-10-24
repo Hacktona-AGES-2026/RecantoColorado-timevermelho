@@ -2,9 +2,9 @@
 
 import { useEffect, useId, useState } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { ArrowLeftIcon, AlertTriangleIcon, ChevronDownIcon, RefreshCwIcon } from "lucide-react";
-import { api, type PacienteDetalhe, type SinalDto } from "@/lib/api";
+import { api, type Medico, type PacienteDetalhe, type SinalDto } from "@/lib/api";
 import { BarraPrazo, Delta, formatarData, SeloClasse } from "@/components/fila-ui";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +22,20 @@ type Resultado = { chave: string; dados: PacienteDetalhe | null; erro: string | 
 export function TelaPaciente() {
   const params = useParams<{ id: string }>();
   const id = decodeURIComponent(params.id);
+  // aberto pela lista de um médico (?medico=ID): o que for registrado aqui fica no nome dele
+  const medicoId = useSearchParams().get("medico");
+  const [medico, setMedico] = useState<Medico | null>(null);
+  useEffect(() => {
+    if (!medicoId) return;
+    let ativo = true;
+    api
+      .medico(medicoId)
+      .then((m) => ativo && setMedico(m))
+      .catch(() => ativo && setMedico(null));
+    return () => {
+      ativo = false;
+    };
+  }, [medicoId]);
   const [recarga, setRecarga] = useState(0);
   const [resultado, setResultado] = useState<Resultado | null>(null);
 
@@ -44,8 +58,11 @@ export function TelaPaciente() {
   const recarregar = () => setRecarga((r) => r + 1);
 
   const voltar = (
-    <Link href="/" className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm">
-      <ArrowLeftIcon className="size-4" /> Voltar para a fila
+    <Link
+      href={medicoId && medico ? `/medicos/${medico.id}` : "/"}
+      className="text-muted-foreground hover:text-foreground inline-flex items-center gap-1 text-sm"
+    >
+      <ArrowLeftIcon className="size-4" /> {medicoId && medico ? `Voltar para ${medico.nome}` : "Voltar para a fila"}
     </Link>
   );
 
@@ -124,7 +141,12 @@ export function TelaPaciente() {
             aoRegistrar={recarregar}
           />
           <PainelDecisao key={detalhe.item.solicitacaoId} detalhe={detalhe} aoDecidir={recarregar} />
-          <FormEvento key={`ev-${detalhe.item.solicitacaoId}`} solicitacaoId={detalhe.item.solicitacaoId} aoRegistrar={recarregar} />
+          <FormEvento
+            key={`ev-${detalhe.item.solicitacaoId}-${medico?.id ?? "reg"}`}
+            solicitacaoId={detalhe.item.solicitacaoId}
+            medico={medicoId ? medico : null}
+            aoRegistrar={recarregar}
+          />
         </div>
       </div>
     </div>
@@ -491,6 +513,7 @@ const ROTULO_AJUSTE: Record<string, string> = {
   REBAIXAMENTO_BLOQUEADO: "Rebaixamento bloqueado (oncológico)",
   FIXAR_POSICAO: "Escolheu a posição na fila",
   LIBERAR_POSICAO: "Liberou a posição escolhida",
+  REGISTRAR_EVENTO: "Registrou exame/evento",
 };
 
 function formatarDataHora(iso: string): string {
@@ -503,7 +526,7 @@ function Auditoria({ d }: { d: PacienteDetalhe }) {
   return (
     <CardRecolhivel
       titulo="Histórico de decisões"
-      descricao="Auditoria de tudo que o regulador e os médicos decidiram neste paciente: quem, quando e por quê."
+      descricao="Auditoria de tudo que o regulador e os médicos decidiram ou registraram neste paciente: quem, quando e por quê."
       className="flex flex-col gap-4"
     >
       {d.ajustes.length === 0 ? (

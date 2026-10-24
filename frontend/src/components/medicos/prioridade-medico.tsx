@@ -23,6 +23,7 @@ const ROTULO_TIPO: Record<string, string> = {
   SUGERIR_REBAIXAMENTO: "Sugeriu rebaixamento (aguarda o regulador)",
   FIXAR_POSICAO: "Escolheu a posição na fila",
   LIBERAR_POSICAO: "Liberou a posição escolhida",
+  REGISTRAR_EVENTO: "Registrou exame/evento",
   CONFIRMAR_REBAIXAMENTO: "Confirmou o rebaixamento",
   REJEITAR_REBAIXAMENTO: "Rejeitou o rebaixamento",
 };
@@ -304,7 +305,7 @@ export function MinhasAlteracoes({ medico, versao }: { medico: Medico; versao: n
           <History className="size-4" /> Minhas alterações
         </CardTitle>
         <CardDescription>
-          Tudo o que {medico.nome} mudou na prioridade, com justificativa e horário. É a mesma trilha de auditoria que o
+          Tudo o que {medico.nome} mudou na prioridade e os exames/eventos que registrou, com justificativa e horário. É a mesma trilha de auditoria que o
           regulador vê no histórico de cada paciente.
         </CardDescription>
       </CardHeader>
@@ -316,7 +317,7 @@ export function MinhasAlteracoes({ medico, versao }: { medico: Medico; versao: n
             {itens.map((a) => (
               <li key={a.id} className="flex flex-col gap-0.5 py-2">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Link href={`/paciente/${a.solicitacaoId}`} className="font-mono text-xs hover:underline">
+                  <Link href={`/paciente/${a.solicitacaoId}?medico=${medico.id}`} className="font-mono text-xs hover:underline">
                     {a.solicitacaoId}
                   </Link>
                   <span className="font-medium">{ROTULO_TIPO[a.tipo] ?? a.tipo}</span>

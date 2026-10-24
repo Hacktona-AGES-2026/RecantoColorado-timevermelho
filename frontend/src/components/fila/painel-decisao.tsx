@@ -21,6 +21,7 @@ const ROTULO_ACAO: Record<TipoAjuste, string> = {
   REBAIXAMENTO_BLOQUEADO: "Rebaixamento bloqueado",
   FIXAR_POSICAO: "Escolher posição",
   LIBERAR_POSICAO: "Liberar posição",
+  REGISTRAR_EVENTO: "Registrar evento",
 };
 
 const ROTULO_ESTADO: Record<string, string> = {

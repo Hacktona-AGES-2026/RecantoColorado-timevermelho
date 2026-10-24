@@ -65,17 +65,18 @@ export function TelaMedico() {
       </div>
 
       <Tabs defaultValue="CIRURGICO" className="gap-4">
-        <TabsList className="h-auto flex-wrap">
-          <TabsTrigger value="CIRURGICO" className="px-3">
+        {/* no celular as abas quebram linha; a altura fixa do componente base faria elas cobrirem o texto */}
+        <TabsList className="h-auto! w-full flex-wrap justify-start sm:w-fit">
+          <TabsTrigger value="CIRURGICO" className="h-auto! min-h-8 basis-[45%] px-3 py-1 whitespace-normal sm:basis-auto sm:whitespace-nowrap">
             Pacientes cirúrgicos ({especialidade.pacientesCirurgicos})
           </TabsTrigger>
-          <TabsTrigger value="POSSIVEL_AVALIACAO" className="px-3">
+          <TabsTrigger value="POSSIVEL_AVALIACAO" className="h-auto! min-h-8 basis-[45%] px-3 py-1 whitespace-normal sm:basis-auto sm:whitespace-nowrap">
             Possível avaliação da especialidade ({especialidade.pacientesPossivelAvaliacao})
           </TabsTrigger>
-          <TabsTrigger value="geral" className="px-3">
+          <TabsTrigger value="geral" className="h-auto! min-h-8 basis-[45%] px-3 py-1 whitespace-normal sm:basis-auto sm:whitespace-nowrap">
             Fila completa ({cabecalho.totalFilaGeral})
           </TabsTrigger>
-          <TabsTrigger value="alteracoes" className="px-3">
+          <TabsTrigger value="alteracoes" className="h-auto! min-h-8 basis-[45%] px-3 py-1 whitespace-normal sm:basis-auto sm:whitespace-nowrap">
             Minhas alterações
           </TabsTrigger>
         </TabsList>
@@ -296,7 +297,7 @@ function TabelaMedico({
       </TableHeader>
       <TableBody>
         {dados.itens.map(({ posicaoNaLista, motivosEspecialidade, item: it }) => {
-          const href = `/paciente/${encodeURIComponent(it.solicitacaoId)}`;
+          const href = `/paciente/${encodeURIComponent(it.solicitacaoId)}?medico=${dados.medico.id}`;
           return (
             <TableRow key={it.solicitacaoId} className="cursor-pointer" onClick={() => router.push(href)}>
               <TableCell className="text-right font-semibold tabular-nums">{posicaoNaLista}</TableCell>
