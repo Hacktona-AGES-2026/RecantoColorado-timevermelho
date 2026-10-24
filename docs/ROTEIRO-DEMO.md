@@ -8,7 +8,7 @@ Paciente principal: **`SOL-2026-00351`**. Tireoide, CID D44.0 (comportamento inc
 docker compose up -d db
 cd backend && ./mvnw spring-boot:run          # Windows: .\mvnw.cmd spring-boot:run
 cd frontend && npm run dev
-python scripts/teste_integracao.py            # 35 verificações; termina reiniciando a demo
+python scripts/teste_integracao.py            # 37 verificações; termina reiniciando a demo
 ```
 
 - O teste tem que terminar com "Tudo certo. A demo foi reiniciada e está limpa."

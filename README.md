@@ -75,7 +75,7 @@ cd backend
 
 Os testes usam banco H2 em memória: não precisam do Docker.
 
-Com banco, backend e frontend no ar, o teste de integração percorre os fluxos da demo (35 verificações) e termina reiniciando a demo:
+Com banco, backend e frontend no ar, o teste de integração percorre os fluxos da demo (37 verificações) e termina reiniciando a demo:
 
 ```bash
 python scripts/teste_integracao.py

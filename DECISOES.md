@@ -24,7 +24,7 @@ Um **framework clínico explícito (SWALIS adaptado)** decide a urgência; um **
 | D | 360 dias | O resto |
 
 4. **Dentro da classe**, o score de 0–100 ordena. Ele tem 6 componentes, cada um explicado na tela: diagnóstico 30, piora 25, dor 15, limitação 10, tempo de espera relativo ao prazo 15, ASA/risco cirúrgico 5. O regulador pode testar outros pesos no simulador.
-5. **Trava da regra de ouro**: depois de ordenar, nenhum CID C* pode ficar abaixo de um paciente sem urgência clínica. Usamos **exatamente a mesma definição conservadora do verificador oficial**. A trava faz o menor ajuste possível: quem é "sem urgência" pela definição oficial e estava acima de algum oncológico desce para logo depois do último oncológico, e quem tem urgência não sai do lugar. Hoje isso afeta 2 pacientes (com lesão de tronco de coronária, dor baixa e nenhum evento), marcados na tela e na lista de reavaliação. A checagem roda a cada recálculo; se falhar, o sistema para em vez de mostrar uma fila insegura.
+5. **Trava da regra de ouro**: depois de ordenar, nenhum CID C* pode ficar abaixo de um paciente sem urgência clínica. Usamos **exatamente a mesma definição conservadora do verificador oficial**, inclusive olhando só os eventos do dataset (veja "Decisões difíceis"). A trava faz o menor ajuste possível: quem é "sem urgência" pela definição oficial e estava acima de algum oncológico desce para logo depois do último oncológico, e quem tem urgência não sai do lugar. Hoje isso afeta 2 pacientes (com lesão de tronco de coronária, dor baixa e nenhum evento), marcados na tela e na lista de reavaliação. A checagem roda a cada recálculo; se falhar, o sistema para em vez de mostrar uma fila insegura.
 
 ## Decisões difíceis
 
@@ -33,6 +33,7 @@ Um **framework clínico explícito (SWALIS adaptado)** decide a urgência; um **
 - **Usamos o CID, não a flag.** 44 flags oncológicas não batem com o CID. A flag não entra em nenhuma regra; só gera aviso de "cadastro com flag errada".
 - **Dado faltando não rebaixa.** Sem dor ou limitação informadas, o paciente fica no mínimo em C e vai para a lista de reavaliação. Não colocamos ninguém no fim da fila por falta de informação.
 - **Oncológico nunca é rebaixado, nem pelo regulador.** O regulador pode promover qualquer um e rebaixar quem não tem câncer, sempre com justificativa. Tentar colocar um câncer abaixo de A2 é recusado com mensagem clara: se o diagnóstico mudou, registre a nova biópsia.
+- **A regra de ouro só aceita a evidência do dataset oficial.** Testamos piorar ao vivo um paciente sem urgência (PS, internação, reavaliação com piora, imagem com progressão) e depois promovê-lo para A1. Ele passou à frente de 126 pacientes com câncer, e o verificador oficial reprovou o CSV exportado naquele momento: o verificador só lê o `eventos_clinicos.csv` original, então para ele o paciente continuava "sem urgência". Corrigimos de forma conservadora. A trava usa só os eventos do dataset, como o verificador. Um evento novo ou uma promoção continuam subindo o paciente acima dos que não têm câncer, mas não à frente de quem tem câncer; o paciente fica logo abaixo do último oncológico, com o selo "posição limitada pela regra de ouro". Isso vale em qualquer momento da demo, inclusive para a biópsia positiva registrada pelo botão de demo. Em produção, com o hospital alimentando os mesmos dados que o auditor lê, essa restrição deixaria de ser necessária.
 - **Ninguém sai da fila sem decisão humana.** Desistência, cirurgia em outro serviço ou "operou pelo convênio" (em eventos ou observações) viram **saída sugerida**: o paciente **continua na posição calculada**, com um selo na tela e o aviso na justificativa, e entra na lista "Confirmar saída" para o regulador. Só sai quando o regulador confirma; se recusar, o aviso some. Isso vale também para quem tem câncer. O custo é que um paciente que talvez já tenha operado pode ocupar uma vaga alta (3 dos 24 estão em A1); por isso a confirmação aparece em destaque na revisão diária. Decisão a validar com o mentor.
 - **Texto livre com cuidado clínico.** Revisando todos os alarmes caso a caso, achamos dois erros e corrigimos, cada um com teste:
   - "septic" casava dentro de "asséptica" (necrose asséptica é justamente sem infecção) e colocava 7 pacientes em A1 por "sepse";
@@ -50,8 +51,8 @@ O arquivo passa no `verificar_fila_priorizada.py`: regra de ouro respeitada, 100
 
 ## Como validamos
 
-- `backend`: 18 testes automáticos (motor e dataset completo).
-- `scripts/teste_integracao.py`: 35 verificações contra o sistema real (Postgres, backend e frontend no ar), passando pelos fluxos da demo, e reinicia a demo no fim.
+- `backend`: 19 testes automáticos (motor e dataset completo).
+- `scripts/teste_integracao.py`: 37 verificações contra o sistema real (Postgres, backend e frontend no ar), passando pelos fluxos da demo, e reinicia a demo no fim.
 - `scripts/conferir_csv.py` e o verificador oficial sobre o CSV final.
 - Classificação a revisar com o mentor clínico usando [docs/VALIDACAO-MENTOR.md](docs/VALIDACAO-MENTOR.md) (regras, contagens, casos reais e perguntas).
 - Demo ensaiada com [docs/ROTEIRO-DEMO.md](docs/ROTEIRO-DEMO.md).

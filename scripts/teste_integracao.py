@@ -118,6 +118,26 @@ def main():
     st, f2 = pedir("GET", f"{api}/fila?tamanho=1")
     checar("fila diminui em 1 depois da confirmação", f2["total"] == 918, f"total={f2['total']}")
 
+    print("\n6b. Regra de ouro com piora registrada ao vivo + promoção pelo regulador")
+    # o verificador oficial só vê o dataset: piora registrada agora não pode pôr ninguém à frente de um câncer
+    st, d = pedir("GET", f"{api}/fila?classe=D&tamanho=50")
+    calmo_d = next(i for i in d["itens"] if not i["oncologico"] and i["status"] == "ATIVA")["solicitacaoId"]
+    for ev in [{"tipo": "pronto_socorro", "resultado": "observacao"}, {"tipo": "internacao", "resultado": "alta",
+                                                                       "valorNumerico": 8}]:
+        pedir("POST", f"{api}/eventos", {"solicitacaoId": calmo_d, **ev})
+    pedir("POST", f"{api}/ajustes", {"solicitacaoId": calmo_d, "tipo": "ALTERAR_CLASSE", "classeNova": "A1",
+                                     "justificativa": "teste de promoção após piora ao vivo"})
+    todos = []
+    for pagina in range(2):
+        todos += pedir("GET", f"{api}/fila?tamanho=500&pagina={pagina}")[1]["itens"]
+    pos_calmo = next(i["posicao"] for i in todos if i["solicitacaoId"] == calmo_d)
+    oncos_abaixo = [i for i in todos if i["cid"].startswith("C") and i["posicao"] > pos_calmo]
+    checar("paciente promovido não passa à frente de nenhum câncer", not oncos_abaixo,
+           f"posição {pos_calmo}, oncológicos abaixo: {len(oncos_abaixo)}")
+    st, ind = pedir("GET", f"{api}/indicadores")
+    viol = next(c for c in ind["comparacoes"] if "abaixo de um paciente sem urgência" in c["indicador"])
+    checar("regra de ouro continua em zero depois da promoção", viol["depois"] == "0", viol["depois"])
+
     print("\n7. Simulações não gravam nada")
     st, d = pedir("GET", f"{api}/fila?classe=D&tamanho=50")
     calmo = next(i for i in d["itens"] if not i["oncologico"] and i["status"] == "ATIVA")

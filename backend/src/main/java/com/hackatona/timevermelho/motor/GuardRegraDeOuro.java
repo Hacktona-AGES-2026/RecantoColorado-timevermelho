@@ -10,7 +10,8 @@ import java.util.regex.Pattern;
  * Regra de ouro: nenhum paciente com CID C* abaixo de um paciente sem urgência clínica.
  *
  * Usa exatamente a definição conservadora do verificar_fila_priorizada.py (só os dados e eventos
- * da própria solicitação, palavras-chave sem tratar negação). Assim, o que passa aqui passa lá.
+ * da própria solicitação no dataset oficial, palavras-chave sem tratar negação). Assim, o que passa
+ * aqui passa lá, em qualquer momento da demo.
  */
 public class GuardRegraDeOuro {
 
@@ -28,7 +29,11 @@ public class GuardRegraDeOuro {
         String lim = c.limitacao() == null || c.limitacao().isBlank() ? "nenhuma" : c.limitacao();
         if (dor > 3 || !(lim.equals("nenhuma") || lim.equals("leve"))) return false;
         if (CID_URGENTE.contains(c.cid())) return false;
+        // Só vale a evidência do dataset oficial: o verificador da banca não enxerga eventos registrados
+        // depois. Assim, nem um evento novo nem um ajuste do regulador colocam alguém à frente de um câncer
+        // se o verificador ainda o considera "sem urgência".
         boolean eventoDePiora = c.eventos() != null && c.eventos().stream()
+                .filter(e -> !e.sintetico())
                 .filter(e -> c.solicitacaoId().equals(e.solicitacaoOriginal()))
                 .anyMatch(e -> switch (e.tipo()) {
                     case "pronto_socorro", "internacao" -> true;

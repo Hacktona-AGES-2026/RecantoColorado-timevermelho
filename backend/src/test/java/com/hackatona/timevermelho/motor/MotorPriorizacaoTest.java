@@ -146,6 +146,30 @@ class MotorPriorizacaoTest {
     }
 
     @Test
+    void eventoNovoMaisPromocaoNaoPassaNaFrenteDeCancer() {
+        // cenário que quebrava o verificador oficial: paciente calmo no dataset recebe piora registrada
+        // na hora (que o verificador não enxerga) e o regulador o promove para A1
+        var psNovo = new Evento("EVT-NOVO-1", "N0", REF, "pronto_socorro", "observacao", null, "PS agora", "FilaVIVA", true);
+        List<Caso> casos = new ArrayList<>();
+        casos.add(caso("N0", "H250").eventos(List.of(psNovo)).build());
+        for (int i = 0; i < 5; i++) casos.add(caso("C" + i, "C509").build());
+        var decisoes = Map.of("N0", new DecisaoRegulador(ClasseSwalis.A1, "cirurgiao pediu", null, null));
+        var fila = motor.priorizar(casos, Pesos.PADRAO, decisoes);
+        var n0 = fila.stream().filter(r -> r.getCaso().solicitacaoId().equals("N0")).findFirst().orElseThrow();
+        assertThat(n0.classe()).isEqualTo(ClasseSwalis.A1);
+        assertThat(n0.isSemUrgencia()).isTrue(); // pela definição oficial, que só vê o dataset
+        assertThat(n0.getPosicao()).isEqualTo(6); // abaixo dos 5 oncológicos
+        assertThat(GuardRegraDeOuro.respeitada(fila)).isTrue();
+
+        // com o mesmo PS vindo do dataset, o verificador também vê a urgência: aí ele pode passar na frente
+        var psDataset = new Evento("EVT-000001", "N0", REF, "pronto_socorro", "observacao", null, "PS", "UPA", false);
+        casos.set(0, caso("N0", "H250").eventos(List.of(psDataset)).build());
+        var fila2 = motor.priorizar(casos, Pesos.PADRAO, decisoes);
+        assertThat(fila2.getFirst().getCaso().solicitacaoId()).isEqualTo("N0");
+        assertThat(GuardRegraDeOuro.respeitada(fila2)).isTrue();
+    }
+
+    @Test
     void ordemTemPosicoesSequenciaisEJustificativa() {
         var fila = motor.priorizar(List.of(caso("A", "K409").build(), caso("B", "C509").build()), Pesos.PADRAO, Map.of());
         assertThat(fila).extracting(ResultadoPaciente::getPosicao).containsExactly(1, 2);
