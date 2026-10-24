@@ -112,12 +112,12 @@ class AlertaServiceTest {
     }
 
     @Test
-    void saidaSugeridaNuncaRemoveOncologicoDaFila() {
+    void saidaSugeridaDeOncologicoFicaPendenteNaFila() {
         var a = alertas(snapshot(List.of(desistente("S1", "C504"))));
         assertThat(a.saidas()).hasSize(1);
         var saida = a.saidas().getFirst();
         assertThat(saida.oncologico()).isTrue();
-        assertThat(saida.status()).isEqualTo(StatusFila.ATIVA.name()); // continua na fila até o regulador decidir
+        assertThat(saida.status()).isEqualTo(StatusFila.SAIDA_SUGERIDA.name()); // continua na fila até o regulador decidir
     }
 
     @Test

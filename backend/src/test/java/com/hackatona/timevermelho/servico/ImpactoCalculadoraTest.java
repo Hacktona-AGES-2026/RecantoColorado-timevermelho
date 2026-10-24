@@ -75,11 +75,19 @@ class ImpactoCalculadoraTest {
     }
 
     @Test
-    void mensagemQuandoSaiDaFilaAtiva() {
+    void mensagemQuandoReguladorConfirmaASaida() {
         var antes = resultado(caso("K409").build(), 12);
         var depois = resultado(caso("K409").build(), null);
         depois.setStatus(StatusFila.SAIDA_CONFIRMADA);
-        assertThat(ImpactoCalculadora.mensagem(antes, depois, "confirmou")).startsWith("Saiu da fila ativa (estava na posição 12)");
+        assertThat(ImpactoCalculadora.mensagem(antes, depois, "confirmou")).startsWith("Saiu da fila (estava na posição 12)");
+    }
+
+    @Test
+    void saidaSugeridaNaoTiraONumeroDaFila() {
+        var antes = resultado(caso("K409").build(), 12);
+        var depois = resultado(caso("K409").build(), 12);
+        depois.setStatus(StatusFila.SAIDA_SUGERIDA);
+        assertThat(ImpactoCalculadora.mensagem(antes, depois, null)).startsWith("Posição mantida (12)");
     }
 
     @Test

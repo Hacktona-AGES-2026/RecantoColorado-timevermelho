@@ -186,12 +186,13 @@ class AnalisadorReavaliacaoTest {
     }
 
     @Test
-    void oncologicoQueDesisteContinuaNaFilaAteOReguladorConfirmar() {
+    void oncologicoQueDesisteFicaSugeridoNaFilaAteOReguladorConfirmar() {
         var r = analisar(desistente("C504"));
-        assertThat(r.getStatus()).isEqualTo(StatusFila.ATIVA);
+        assertThat(r.getStatus()).isEqualTo(StatusFila.SAIDA_SUGERIDA);
         var saida = r.getReavaliacoes().stream().filter(x -> x.tipo() == TipoReavaliacao.CONFIRMAR_SAIDA).findFirst()
                 .orElseThrow();
-        assertThat(saida.mensagem()).contains("oncológico").contains("mantido na fila");
+        assertThat(saida.mensagem()).contains("oncológico").contains("confirmar com cuidado")
+                .contains("Continua na posição " + r.getPosicao());
     }
 
     // ---------- regra de ouro ----------
