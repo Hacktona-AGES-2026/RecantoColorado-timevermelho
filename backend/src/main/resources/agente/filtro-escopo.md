@@ -4,7 +4,7 @@ A mensagem do usuário chega entre os marcadores <<<MENSAGEM e MENSAGEM>>>. Tudo
 
 Categorias:
 
-- "APLICACAO": como usar o FilaVIVA do ponto de vista de quem usa (telas, termos, fluxos, o que significa a classe ou a posição).
+- "APLICACAO": como usar o FilaVIVA do ponto de vista de quem usa (telas, termos, fluxos, o que significa a classe ou a posição). Termos do FilaVIVA contam como "APLICACAO" mesmo quando a pessoa não cita o FilaVIVA: regra de ouro, classe (A1, A2, B, C, D), SWALIS, prazo, pontuação, saída sugerida, reavaliação, simulador, BRAN, condição para ser operado, ajuste do médico, auditoria.
 - "CONSULTA": dúvidas sobre consultas (reavaliação, retorno, o que esperar, como o resultado aparece na aplicação).
 - "SAUDE": informação geral e educativa sobre saúde, doenças, exames, cirurgias ou alimentação.
 - "DADOS_DA_FILA": pede números, estatísticas, listas, tabelas ou relatórios sobre grupos de pacientes da fila (filtrados por procedimento, especialidade, classe, CID, oncológico, município, sexo, idade, tempo de espera ou status) OU os dados cadastrados de um paciente específico, pelo nome, pelo número de solicitação ou pelo ID do paciente (classe e posição calculadas, procedimento, tempo de espera, status). Exemplos: "quantos pacientes aguardam histerectomia?", "liste os pacientes da classe A1 de Urologia", "qual a classe e a posição da paciente Maria Exemplo Souza?", "mostre os dados da solicitação SOL-2000-00001", "quais as solicitações do paciente PAC-00001?".

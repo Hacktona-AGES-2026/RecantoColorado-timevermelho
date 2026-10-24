@@ -5,6 +5,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -101,6 +103,38 @@ class LeituraAplicacaoConsultaTest {
         var ninguem = leitura.consultar(pedido("{\"nomes\":[\"Fulano Inexistente da Silva\"]}"));
         assertThat(ninguem.total()).isZero();
         assertThat(ninguem.resumo()).contains("Pacientes encontrados: 0");
+    }
+
+    // ---------- nome não exatamente igual (caixa, título, erro de digitação) ----------
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ELIANE LOPES RAMOS", "eliane lopes ramos", "eLiAnE lOpEs RaMoS", "Eliane Lópes Ramos",
+            "dona ELIANE LOPES RAMOS", "Sra. Eliane Lopes Ramos"})
+    void caixaAcentoETituloNaoAtrapalhamONomeExato(String nome) {
+        var r = leitura.consultar(pedido("{\"nomes\":[\"" + nome + "\"]}"));
+
+        assertThat(r.linhas()).extracting(LeituraAplicacao.LinhaPaciente::solicitacaoId).containsExactly("SOL-2026-00489");
+        assertThat(r.resumo()).doesNotContain("MAIS PARECIDOS");
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"ELIANE LOPEZ RAMOS", "Eliane Lopes Ramoss", "elaine lopes ramos", "ELIANE LOPES RAMUS"})
+    void erroDeDigitacaoPequenoAchaONomeMaisParecidoEAvisaAIA(String nome) {
+        var r = leitura.consultar(pedido("{\"nomes\":[\"" + nome + "\"]}"));
+
+        assertThat(r.linhas()).extracting(LeituraAplicacao.LinhaPaciente::solicitacaoId).contains("SOL-2026-00489");
+        assertThat(r.linhas()).hasSizeLessThanOrEqualTo(3);
+        assertThat(r.resumo()).contains("Nenhum nome exatamente igual").contains("MAIS PARECIDOS")
+                .doesNotContainIgnoringCase("eliane");
+    }
+
+    @Test
+    void comNomeExatoNaoMisturaOsParecidos() {
+        // "eliane ramos" bate exato com duas pessoas: os "parecidos" não entram junto
+        var r = leitura.consultar(pedido("{\"nomes\":[\"eliane ramos\"]}"));
+
+        assertThat(r.linhas()).isNotEmpty().allSatisfy(l -> assertThat(l.nome().toLowerCase()).contains("eliane").contains("ramos"));
+        assertThat(r.resumo()).doesNotContain("MAIS PARECIDOS");
     }
 
     // ---------- ID do paciente e duplicadas (pelo CSV original, só leitura) ----------
