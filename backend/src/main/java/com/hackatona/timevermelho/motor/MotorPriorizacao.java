@@ -164,6 +164,9 @@ public class MotorPriorizacao {
             boolean urgenteParaOFilaViva = cl.classeCalculada() == ClasseSwalis.A1 || cl.classeCalculada() == ClasseSwalis.A2;
             r.setDivergenteDoVerificador(urgenteParaOFilaViva && !r.isProtegido()
                     && GuardRegraDeOuro.verificadorNaoVeUrgencia(c));
+            // regra de ouro sem exceção: urgência que os critérios oficiais não reconhecem (sobre todos os eventos,
+            // inclusive os novos) não passa à frente de oncológico, nem na fila da tela, até um dado estruturado confirmar
+            r.setUrgenciaNaoReconhecida(!r.isProtegido() && !r.isSemUrgencia() && GuardRegraDeOuro.verificadorNaoVeUrgencia(c));
             r.setPosicaoFixada(d.posicaoFixada());
             r.setJustificativaPosicao(d.justificativaPosicao());
             // promoção manual acima da classe calculada: só passa protegidos com evidência de agravamento registrada

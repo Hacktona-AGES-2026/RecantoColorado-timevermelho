@@ -35,6 +35,12 @@ public class ResultadoPaciente {
     private boolean classePorTexto;
     /** Regulador subiu a classe sem evidência de agravamento registrada: não pode passar à frente de protegidos. */
     private boolean promocaoSemEvidencia;
+    /**
+     * Fila operacional: o FilaVIVA vê urgência (ex.: lida no texto livre), mas os critérios do verificador oficial
+     * não reconhecem nenhuma (dor, limitação, CID de urgência, evento de piora, palavra de alarme). Até um dado
+     * estruturado confirmar, não passa à frente de oncológico.
+     */
+    private boolean urgenciaNaoReconhecida;
     /** Sinal que sustenta a urgência numa promoção (rastreabilidade), quando existe. */
     private Sinal evidenciaDaPromocao;
     private boolean movidoPelaRegraDeOuro;

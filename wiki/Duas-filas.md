@@ -10,7 +10,7 @@ identificadas.
 | Dados | Dataset + eventos e decisões registrados | Só o dataset, sem eventos novos nem decisões |
 | Recalcula | A cada evento ou decisão | Uma vez, depois de importar o dataset; reproduzível |
 | Versão | `op-N` | `ref-<hash dos CSVs e do regras.json>` |
-| Passa no verificador? | Não necessariamente | **Sim** |
+| Passa no verificador? | Sim sobre o dataset. Com eventos novos, o verificador não os enxerga; a regra de ouro vale pelos mesmos critérios sobre todos os eventos | **Sim** |
 
 ## Como saber de qual fila é um dado
 

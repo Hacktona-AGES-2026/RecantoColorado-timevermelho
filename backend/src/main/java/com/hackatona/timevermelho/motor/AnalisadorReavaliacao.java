@@ -57,9 +57,13 @@ public class AnalisadorReavaliacao {
             add(r, TipoReavaliacao.REGRA_DE_OURO, r.getReferencia() == Referencia.OFICIAL
                     ? "Classe " + r.classe() + ", mas sem urgência pela definição oficial (dor e limitação baixas, "
                             + "sem evento de piora no dataset): ficou abaixo de todos os oncológicos"
-                    : "Classe " + r.classe() + " por decisão do regulador, mas sem evidência de agravamento registrada "
+                    : r.isPromocaoSemEvidencia()
+                    ? "Classe " + r.classe() + " por decisão do regulador, mas sem evidência de agravamento registrada "
                             + "(classe pelas regras clínicas: " + r.getClassificacao().classeCalculada() + "): ficou abaixo de "
-                            + "todos os oncológicos. Registre o atendimento ou exame que justifica a urgência para ultrapassá-los");
+                            + "todos os oncológicos. Registre o atendimento ou exame que justifica a urgência para ultrapassá-los"
+                    : "Classe " + r.classe() + ", mas essa urgência não tem dado estruturado que a confirme (os critérios "
+                            + "oficiais não a reconhecem): ficou abaixo de todos os oncológicos. Se a urgência for real, registre "
+                            + "a reavaliação com piora, o atendimento ou o exame para ele ultrapassá-los");
         }
         ClasseSwalis calculada = r.getClassificacao().classeCalculada();
         if (r.isClassePorTexto() && (calculada == ClasseSwalis.A1 || calculada == ClasseSwalis.A2)) {
@@ -73,8 +77,9 @@ public class AnalisadorReavaliacao {
         if (r.isDivergenteDoVerificador()) {
             add(r, TipoReavaliacao.DIVERGENCIA_VERIFICADOR, "Classe " + r.getClassificacao().classeCalculada()
                     + " pela leitura do FilaVIVA (" + r.getClassificacao().regra() + "), mas a definição do verificador "
-                    + "oficial não reconhece essa urgência. Na fila operacional ele segue a ordem clínica; na fila de "
-                    + "referência da entrega fica abaixo dos oncológicos. Confirmar com o regulador");
+                    + "oficial não reconhece essa urgência. Nas duas filas ele fica abaixo dos oncológicos até a "
+                    + "urgência ser confirmada por um dado estruturado (reavaliação com piora, atendimento ou exame). "
+                    + "Confirmar com o regulador");
         }
     }
 

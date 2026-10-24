@@ -101,11 +101,12 @@ public class GuardRegraDeOuro {
     }
 
     /**
-     * Quem a trava desce para baixo do último protegido: o paciente sem urgência e o que só subiu por
-     * uma promoção manual sem evidência de agravamento registrada.
+     * Quem a trava desce para baixo do último protegido: o paciente sem urgência, o que só subiu por uma promoção
+     * manual sem evidência de agravamento registrada e, na fila operacional, quem tem urgência que os critérios
+     * oficiais não reconhecem (ex.: só no texto livre) até um dado estruturado confirmar.
      */
     public static boolean naoPodeFicarAcimaDeProtegido(ResultadoPaciente r) {
-        return r.isSemUrgencia() || r.isPromocaoSemEvidencia();
+        return r.isSemUrgencia() || r.isPromocaoSemEvidencia() || r.isUrgenciaNaoReconhecida();
     }
 
     /** Confere se uma ordem respeita a regra. Usado nos testes e antes de exportar. */

@@ -98,14 +98,18 @@ class SnapshotsTest {
     }
 
     @Test
-    void testeE_troncoCoronarioSegueAOrdemClinicaNaOperacionalEFicaLimitadoNaReferencia() {
+    void testeE_troncoCoronarioFicaAbaixoDosOncologicosNasDuasFilasAteSerConfirmado() {
+        // regra de ouro sem exceção: a urgência lida só no texto ("tronco 80%") não passa à frente de câncer nem na tela
         var operacional = fila.atual();
         var oficial = fila.oficial();
         int ultimoCOficial = ultimaPosicaoCidC(oficial.ativos());
+        int ultimoCOperacional = ultimaPosicaoCidC(operacional.ativos());
         for (String id : TRONCO) {
             var op = operacional.get(id);
             assertThat(op.classe()).as(id).isEqualTo(ClasseSwalis.A1);
-            assertThat(op.isMovidoPelaRegraDeOuro()).as(id).isFalse();
+            assertThat(op.isUrgenciaNaoReconhecida()).as(id).isTrue();
+            assertThat(op.isMovidoPelaRegraDeOuro()).as(id).isTrue();
+            assertThat(op.getPosicao()).as(id).isGreaterThan(ultimoCOperacional);
             assertThat(op.isDivergenteDoVerificador()).as(id).isTrue();
             assertThat(op.getReavaliacoes()).extracting(Reavaliacao::tipo).contains(TipoReavaliacao.DIVERGENCIA_VERIFICADOR);
             var of = oficial.get(id);

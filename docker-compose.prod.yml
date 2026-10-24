@@ -1,0 +1,27 @@
+# FilaVIVA em produção (uma máquina, ex.: EC2). Uso, na raiz do repositório:
+#   docker compose -f docker-compose.prod.yml up -d --build
+# Abre em http://<endereço da máquina>/ . Só o frontend fica exposto (porta 80); ele repassa /api para o backend.
+# A chave da IA vem de backend/.env (copie backend/.env.example). Sem o arquivo, o agente fica desligado e o resto funciona.
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    image: filaviva-backend
+    env_file:
+      - path: backend/.env
+        required: false
+    restart: unless-stopped
+    # banco H2 em memória: o dataset é reimportado a cada subida (igual ao modo local da demo)
+
+  frontend:
+    build:
+      context: frontend
+      args:
+        BACKEND_URL: http://backend:8080
+    image: filaviva-frontend
+    depends_on:
+      - backend
+    ports:
+      - "${PORTA:-80}:3000"
+    restart: unless-stopped

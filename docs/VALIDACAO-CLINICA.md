@@ -1,8 +1,13 @@
-# Validação da classificação com o mentor clínico
+# Validação clínica pendente
 
-> Levar impresso ou no celular. São 10 minutos de conversa com um mentor do Hospital São Lucas ou da Fin-x.
-> Objetivo: confirmar as classes A1/A2, os prazos e as decisões sensíveis, **com casos reais do dataset**.
-> Anotem as respostas na última seção e citem a validação no pitch.
+> **Não realizada.** O time não teve acesso a um profissional de saúde durante a hackatona. As regras clínicas do
+> FilaVIVA foram escritas pelo time, a partir do SWALIS e do dataset, e **nenhuma foi validada por médico ou regulador**.
+> Este documento lista o que um profissional precisa conferir antes de qualquer uso real, com casos do próprio dataset.
+>
+> Enquanto isso não acontece, o sistema já se protege nos pontos sensíveis:
+> - o regulador tem a última palavra, sempre com justificativa;
+> - a classe que vem só do texto é marcada como provisória e vai para revisão;
+> - a regra de ouro vale nas duas filas, inclusive contra urgência lida só no texto.
 
 ## 1. As regras, em uma página
 
@@ -22,7 +27,7 @@ Dentro da classe, desempata um score de 0 a 100: diagnóstico 30, piora 25, dor 
 
 **Alarmes graves que levam a A1** (quantos pacientes): glaucoma facomórfico (10), lesão de tronco de coronária (6), sepse (6), insuficiência respiratória ou dessaturação (5), hérnia encarcerada (5), perda de função (5), colangite (3), icterícia (2), angina instável ou em repouso (1), hidronefrose (1), hemoptise (1), obstrução intestinal (1), pancreatite (1).
 
-## 2. Perguntas, com casos para abrir na tela
+## 2. Perguntas em aberto, com casos para abrir na tela
 
 Abra cada paciente em `http://localhost:3000/paciente/<id>`.
 
@@ -32,15 +37,15 @@ Abra cada paciente em `http://localhost:3000/paciente/<id>`.
 4. **"Risco de" deve contar como alarme?** Caso: catarata hipermadura com **risco** de glaucoma facomórfico, PIO 28 mmHg (10 pacientes em A1). Ex.: `SOL-2026-00337`.
 5. **Apneia grave com retenção de CO2 ou dessaturação a 78% (septoplastia) é A1?** 5 pacientes. Ex.: `SOL-2026-00420`.
 6. **Doença coronária**: lesão de tronco ≥ 50% → A1 (6 pacientes, ex. `SOL-2026-00072`, posição 39); triarterial, CCS III/IV ou fração de ejeção < 40% → B (8 pacientes, ex. `SOL-2025-00237`: "DAC triarterial, angina CCS III, FE 36%"). Antes da revisão, este último estava em D (hoje: posição 29 na prioridade manual, 311 no FilaVIVA). Os cortes estão certos?
-7. **Saídas sugeridas**: hoje quem "desistiu" ou "operou em outro serviço" **continua na fila**, na posição calculada, até o regulador confirmar. Mas 3 deles estão em A1 (ex.: `SOL-2026-00560`, posição ~93). O regulador prefere assim, ou prefere que fiquem no fim da fila até a confirmação?
+7. **Saídas sugeridas**: hoje quem "desistiu" ou "operou em outro serviço" **continua na fila**, na posição calculada, até o regulador confirmar. Mas 3 deles estão em A1 (ex.: `SOL-2026-00560`, posição ~94). O regulador prefere assim, ou prefere que fiquem no fim da fila até a confirmação?
 8. **Paciente com câncer que diz que desistiu**: manter na fila até confirmação é o certo?
 9. **Dor ou limitação não informadas** ficam em C (13 pacientes). Melhor C, B ou "aguardando dados"?
 10. **HbA1c > 8,5%** hoje só gera alerta de "descompensação: encaminhar para controle", sem mudar a urgência. Está certo?
-11. **Regra de ouro na prática**: 2 pacientes com lesão de tronco (`SOL-2026-00960` e `SOL-2026-00765`) têm dor baixa e nenhum evento. A definição do verificador oficial os trata como "sem urgência". Por isso, na **fila de referência da entrega** eles ficam logo abaixo de todos os oncológicos (posições 287 e 288). Na **fila operacional** (a da tela), seguem a ordem clínica (A1, por volta da posição 131) e aparecem na revisão como "Urgência que o verificador oficial não reconhece". A leitura "TRONCO 80% = A1" está certa? Na operacional, eles devem mesmo passar à frente de cânceres estáveis?
+11. **Regra de ouro na prática**: 2 pacientes com lesão de tronco (`SOL-2026-00960` e `SOL-2026-00765`) têm dor baixa e nenhum evento. A definição do verificador oficial os trata como "sem urgência". Por isso, **nas duas filas** eles continuam A1, mas ficam logo abaixo de todos os oncológicos (posições 287 e 288), marcados "Urgência que o verificador oficial não reconhece". Eles só sobem se alguém registrar uma reavaliação com piora, um atendimento ou um exame. A leitura "TRONCO 80% = A1" está certa? Uma lesão de tronco confirmada deveria passar à frente de cânceres estáveis?
 12. **Promoção sem evidência**: quando o regulador promove para A1 um paciente sem evidência de agravamento registrada (inclusive com dor moderada ou dado faltando), ele não passa à frente de quem tem câncer e o sistema pede que se registre o atendimento. Está certo? A lista do que conta como evidência está no `DECISOES.md`.
 13. **Texto livre**: o texto (do médico ou de um evento) nunca muda a classe sozinho daqui para a frente: só gera REVISÃO CLÍNICA URGENTE. Os 85 pacientes cuja classe atual vem só do texto do cadastro foram mantidos como "classe provisória", entre eles os 12 que cairiam de A1 para D: `SOL-2025-00482`, `SOL-2026-00025`, `SOL-2026-00195`, `SOL-2025-00520`, `SOL-2026-00061`, `SOL-2026-00110`, `SOL-2026-00361`, `SOL-2026-00202`, `SOL-2024-00149`, `SOL-2023-00079`, `SOL-2026-00960`, `SOL-2026-00765`. Para cada um: confirmar A1, ou qual classe?
 
-## 3. Onde mudar, se o mentor discordar
+## 3. Onde mudar, se um profissional discordar
 
 | O quê | Onde | Exige |
 |---|---|---|
@@ -52,22 +57,6 @@ Abra cada paciente em `http://localhost:3000/paciente/<id>`.
 
 Depois de qualquer mudança: `./mvnw test`, `python scripts/teste_integracao.py` e `python scripts/conferir_csv.py`.
 
-## 4. Respostas do mentor
+## 4. Como registrar a validação, quando acontecer
 
-| Pergunta | Resposta | Mudamos? |
-|---|---|---|
-| 1 | | |
-| 2 | | |
-| 3 | | |
-| 4 | | |
-| 5 | | |
-| 6 | | |
-| 7 | | |
-| 8 | | |
-| 9 | | |
-| 10 | | |
-| 11 | | |
-| 12 | | |
-| 13 | | |
-
-Mentor: ____________________ · Horário: ______
+Anote, para cada pergunta, a resposta, quem respondeu (nome e função) e se a regra mudou. Registre também a data. Mude a regra no lugar indicado na seção 3, rode os testes e atualize o [DECISOES.md](../DECISOES.md) e este documento.

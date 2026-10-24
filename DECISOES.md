@@ -7,6 +7,7 @@ Um **framework clínico explícito (SWALIS adaptado)** decide a urgência; um **
 ## Para quem e quando
 
 - **Usuário principal: o regulador da fila cirúrgica.** É quem já decide hoje e quem responde pela decisão. Desenhamos para ajudá-lo a decidir melhor, não para decidir por ele.
+- **Também os médicos, nas listas da especialidade deles.** Cada médico vê os pacientes da especialidade (cirúrgicos e "possível avaliação") e pode mudar a classe ou a posição de um paciente dessas listas, sabendo de algo que ainda não está no sistema. Passa pelas mesmas regras do regulador: subir vale na hora, descer vira sugestão que o regulador confirma, oncológico nunca perde classe, a regra de ouro continua valendo e tudo fica na auditoria com nome, CRM e id do médico. O regulador continua sendo quem fecha a fila.
 - **Momento: a cada evento novo e na revisão diária.** Uma biópsia, uma ida ao PS ou uma reavaliação recalcula a fila inteira na hora (cerca de 0,4 s para os 919 pacientes) e gera um alerta com o impacto: "subiu da posição 412 para 18, classe C → A2, por causa da biópsia positiva de hoje". A tela de alertas é a revisão do dia.
 
 ## Como a ordem é decidida
@@ -28,7 +29,7 @@ Um **framework clínico explícito (SWALIS adaptado)** decide a urgência; um **
 
 ## Duas filas: operacional e de referência
 
-O verificador oficial (`verificar_fila_priorizada.py`) decide quem é "sem urgência" lendo **só o dataset de referência**. Ele não enxerga eventos registrados depois, nem urgências que só aparecem na nossa leitura do texto do médico. Testamos: com os critérios de urgência atualizados, a fila da tela passa a divergir do que o verificador aceita. Por isso existem **duas filas, sempre identificadas**:
+O verificador oficial (`verificar_fila_priorizada.py`) decide quem é "sem urgência" lendo **só o dataset de referência**. Ele não enxerga eventos registrados depois, nem urgências que só aparecem na nossa leitura do texto do médico. A tela precisa reagir a esses eventos novos, e o arquivo de entrega precisa ser reproduzível e julgado só pelo dataset. Por isso existem **duas filas, sempre identificadas**:
 
 | | **Fila operacional** | **Fila de referência — entrega oficial** |
 |---|---|---|
@@ -38,7 +39,7 @@ O verificador oficial (`verificar_fila_priorizada.py`) decide quem é "sem urgê
 | Quem é protegido | CID C* **ou biópsia positiva** | CID C* (a regra oficial) |
 | Recalcula | A cada evento ou decisão | Uma vez; é reproduzível (versão = hash dos CSVs do dataset e do `regras.json`) |
 | Identificação | `operacional`, versão `op-N`, horário | `oficial`, versão `ref-<hash>`, horário |
-| Passa no verificador? | Não necessariamente (ver abaixo) | **Sim** |
+| Passa no verificador? | Sim sobre o dataset. Com eventos novos, o verificador não os enxerga; a regra vale pelos mesmos critérios sobre todos os eventos (ver abaixo) | **Sim** |
 
 - **Uma promoção manual só passa à frente de protegidos com evidência de agravamento registrada.** A classe calculada vem das regras clínicas, não do ajuste do regulador.
   - Promover um paciente acima da classe calculada registra a decisão, com justificativa e autor na auditoria. Mas, se não houver evidência de agravamento, ele fica logo abaixo de todos os protegidos, com o selo "posição limitada pela regra de ouro" e o pedido para registrar o atendimento ou exame que justifica a urgência. Isso vale também para quem tem dor moderada ou dado faltando.
@@ -63,11 +64,11 @@ Política conservadora, adotada ao estabilizar o motor:
     - colangite, pielonefrite obstrutiva, colelitíase;
     - 2 com "TRONCO 80%".
   - Menções hipotéticas ou históricas nesse texto são marcadas como tal (20 justificativas); ainda contam para a classe provisória, pela mesma razão.
-- **Limitação assumida:** para esses 85, o texto do dataset continua definindo a classe até a revisão humana. Não há como manter a posição sem usar a classe que o texto indica; inventar uma faixa intermediária seria uma regra clínica nova. Preferimos manter, marcar e pedir revisão. A lista está em [docs/VALIDACAO-MENTOR.md](docs/VALIDACAO-MENTOR.md).
+- **Limitação assumida:** para esses 85, o texto do dataset continua definindo a classe até a revisão humana. Não há como manter a posição sem usar a classe que o texto indica; inventar uma faixa intermediária seria uma regra clínica nova. Preferimos manter, marcar e pedir revisão. A lista está em [docs/VALIDACAO-CLINICA.md](docs/VALIDACAO-CLINICA.md).
 - **Ainda é leitura por palavras-chave:** só negação, hipótese e histórico são tratados, e nada disso foi validado por profissional de saúde.
 - **Toda resposta da API diz de qual fila é**: cabeçalho `X-FilaViva-Snapshot` (ex.: `operacional; versao=op-12; calculado=…`), campo `snapshot` na resposta da fila e os dois snapshots em `/api/status`.
 - **Downloads**: `GET /api/fila/export.csv` entrega por padrão a fila de referência, com o nome `fila_priorizada.csv`. `?snapshot=operacional` entrega a fila da tela, com o nome `fila_operacional_op-N_<horário>.csv`. Com `&versao=op-N`, a API recusa (HTTP 409) se a fila mudou desde que a tela foi carregada; assim o arquivo e a tela nunca divergem em silêncio.
-- **A fila operacional não é um entregável.** Ela pode reprovar no verificador oficial, mesmo sem nenhum evento novo, porque reconhece urgências que ele não vê. Hoje são 2 pacientes com "CATE: TRONCO 80%" (`SOL-2026-00960` e `SOL-2026-00765`): na fila operacional seguem a ordem clínica (A1); na de referência ficam abaixo de todos os oncológicos. Os dois aparecem na revisão como "Urgência que o verificador oficial não reconhece", para o regulador confirmar. Essa leitura do texto ainda **não foi validada por um profissional de saúde** (ver [docs/VALIDACAO-MENTOR.md](docs/VALIDACAO-MENTOR.md)).
+- **A regra de ouro vale sem exceção também na fila da tela.** Uma urgência que só o FilaVIVA lê e que os critérios do verificador oficial não reconhecem não passa à frente de quem tem câncer em nenhuma das duas filas. Os critérios são dor, limitação, CID de urgência, evento de piora e palavra de alarme, olhando todos os eventos, inclusive os novos. Hoje são 2 pacientes com "CATE: TRONCO 80%" (`SOL-2026-00960` e `SOL-2026-00765`): continuam A1, mas ficam logo abaixo do último oncológico, marcados "Urgência que o verificador oficial não reconhece". Se a urgência for real, basta registrar a reavaliação com piora, o atendimento ou o exame, e eles sobem. Antes, na tela, eles seguiam a ordem clínica e ficavam acima de oncológicos. Trocamos isso porque uma leitura de texto ainda não validada não deve passar à frente de câncer. Conferido com o próprio verificador oficial sobre a fila da tela exportada: na fila inicial e depois de 600 ações aleatórias, com os eventos novos acrescentados ao dataset que ele lê. Essa leitura do texto ainda **não foi validada por um profissional de saúde** (ver [docs/VALIDACAO-CLINICA.md](docs/VALIDACAO-CLINICA.md)).
 - **Simulações não mexem em nenhuma das duas filas.**
 
 ## Decisões difíceis
@@ -91,6 +92,20 @@ Política conservadora, adotada ao estabilizar o motor:
 - **Negação no texto.** "Sem sinais de encarceramento" não é encarceramento. O leitor de texto ignora termos negados na mesma frase. A trava da regra de ouro, de propósito, **não** trata negação (é mais conservadora, como o verificador).
 - **Sem LLM no caminho da decisão.** As regras ficam em `backend/src/main/resources/regras.json`, legíveis e auditáveis por um médico. Uma decisão sobre quem opera primeiro precisa ser reproduzível: a mesma entrada dá sempre a mesma fila.
 
+## O que ajuda a decidir sem mexer na ordem
+
+Estas funções informam o regulador e o médico, mas **nunca mudam a classe, o score nem a posição**. Mexer na ordem por saúde geral, vontade ou recursos penalizaria justamente quem é mais doente ou tem menos acesso. Elas marcam, avisam e pedem decisão humana.
+
+| Função | O que faz | Por que não mexe na ordem |
+|---|---|---|
+| **Desejo do paciente** | Registra se ele quer ser operado (quer, não quer, em dúvida), com quem perguntou e quando | "Não quer" e "em dúvida" viram pendência do regulador. Tirar da fila é uma saída, decidida por pessoa |
+| **Conversa BRAN** | Rascunho de Benefícios, Riscos, Alternativas e o que acontece se Nada for feito, por procedimento e com os fatores do próprio paciente; registro da conversa e versão para o paciente | É comunicação, não critério de prioridade |
+| **Aptidão cirúrgica** | Parecer (apto, apto com ressalvas, otimizar antes) a partir da HbA1c, ASA, idade, comorbidades e fatores que o médico informa; estimativa de tempo de sala, internação e UTI | Otimizar a saúde antes não é perder o lugar: marca "não agendar" e o próximo é chamado. A equipe decide |
+| **Coluna Saúde** | Diabetes, última HbA1c e comorbidades na fila e na lista do médico | Só mostra o que o CSV registra. Diabetes só quando o cadastro diz (comorbidades, `flag_diabetico` ou CID E10–E14): HbA1c alta sozinha aparece como exame, sem diagnóstico |
+| **Assistente de IA** | Chat sobre a fila e o uso do sistema, categorização de textos e relatórios para médicos ([docs/AGENTE-IA.md](docs/AGENTE-IA.md)) | **Nunca decide nem altera a fila**: lê números agregados e o que já está calculado; todo relatório sai com "Gerado por IA — revisar antes de usar" |
+
+Toda decisão humana (classe, posição, rebaixamento, saída, aptidão, BRAN, desejo) e todo exame ou evento registrado ficam na trilha de auditoria: quem, quando, por quê e o impacto na fila.
+
 ## Como o `fila_priorizada.csv` está montado (919 de 941)
 
 O arquivo é a **fila de referência**: só o dataset, gravado na raiz toda vez que o backend sobe e igual, byte a byte, a cada execução. Traz **todos os 919 pacientes da fila, na ordem do FilaVIVA**. As 24 **saídas sugeridas** (desistiu, operou em outro serviço ou pelo convênio) estão na posição calculada, com a justificativa terminando em "saída sugerida aguardando o regulador (motivo)". Distribuição: A1 146, A2 142, B 224, C 205, D 202.
@@ -101,12 +116,14 @@ O arquivo passa no `verificar_fila_priorizada.py`: regra de ouro respeitada, 100
 
 ## Como validamos
 
-- `backend`: 81 testes automáticos (17 deles sobre rebaixamentos: sugerir, confirmar, rejeitar, queda de posição, oncológico em A1/A2 por decisão e por recálculo, divergência e CSV oficial).
+- `backend`: 681 testes automáticos (`./mvnw test`), entre eles 17 sobre rebaixamentos (sugerir, confirmar, rejeitar, queda de posição, oncológico em A1/A2 por decisão e por recálculo, divergência e CSV oficial), os das decisões dos médicos, desejo, BRAN, aptidão, coluna Saúde (comorbidades conferidas contra o CSV nos 919 pacientes) e auditoria de eventos.
+- `frontend`: 122 testes de componentes (vitest) e 12 de ponta a ponta no navegador (Playwright), incluindo "o regulador não consegue rebaixar um oncológico abaixo de A2".
   - **Motor:** regra de ouro nas duas filas; promoção com e sem evidência; texto afirmativo, negado, hipotético e histórico (só alerta, nunca muda a classe); classe provisória por texto; dado ausente; biópsia nova; 300 cenários aleatórios.
-  - **Dataset completo:** os 12 pacientes com urgência só no texto (mantidos, em revisão urgente, nas duas filas); regressão do `SOL-2026-00351`; pacientes `SOL-2026-00738`, `SOL-2026-00950`, `SOL-2025-00173` e os de tronco coronário; 40 ações aleatórias sem nenhum paciente sem urgência acima de um CID C, nas duas filas; simulação; igualdade API = CSV operacional; fila de referência igual ao `fila_priorizada.csv`.
+  - **Regra de ouro sem exceção** (`RegraDeOuroSemExcecaoTest`): critérios do verificador reescritos no teste, independentes do motor, conferidos na fila da tela inicial e depois de 300 ações aleatórias (eventos, classes, rebaixamentos, posições); urgência só no texto fica abaixo dos oncológicos e sobe quando uma reavaliação com piora é registrada.
+  - **Dataset completo:** os 12 pacientes com urgência só no texto (classe mantida, em revisão urgente, nas duas filas); regressão do `SOL-2026-00351`; pacientes `SOL-2026-00738`, `SOL-2026-00950`, `SOL-2025-00173` e os de tronco coronário; 40 ações aleatórias sem nenhum paciente sem urgência acima de um CID C, nas duas filas; simulação; igualdade API = CSV operacional; fila de referência igual ao `fila_priorizada.csv`.
 - `scripts/teste_integracao.py`: 42 verificações contra o sistema real (Postgres, backend e frontend no ar), passando pelos fluxos da demo e pelas duas filas, e reinicia a demo no fim.
 - `scripts/conferir_csv.py` e o verificador oficial sobre o CSV final.
-- Classificação a revisar com o mentor clínico usando [docs/VALIDACAO-MENTOR.md](docs/VALIDACAO-MENTOR.md) (regras, contagens, casos reais e perguntas).
+- **Validação clínica: não realizada.** O time não teve acesso a profissional de saúde. As regras, as contagens, os casos reais e as perguntas que um médico ou regulador precisa responder antes de uso real estão em [docs/VALIDACAO-CLINICA.md](docs/VALIDACAO-CLINICA.md).
 - Demo ensaiada com [docs/ROTEIRO-DEMO.md](docs/ROTEIRO-DEMO.md).
 
 ## Tratamento dos defeitos dos dados
@@ -124,7 +141,7 @@ O arquivo passa no `verificar_fila_priorizada.py`: regra de ouro respeitada, 100
 
 ## O que deixamos de fora de propósito
 
-- **Agenda de sala, preparo pré-operatório e cancelamentos**: fora do escopo do desafio. A HbA1c acima de 8,5% aparece só como alerta de "descompensação: encaminhar para controle", sem mexer na urgência cirúrgica.
+- **Agenda de sala, preparo pré-operatório e cancelamentos**: fora do escopo do desafio. A HbA1c acima de 8,5% aparece só como alerta de "descompensação: encaminhar para controle", sem mexer na urgência cirúrgica. A aptidão cirúrgica (acima) é apoio para o preparo, sem entrar na ordem.
 - **Machine learning**: não há rótulo de "ordem certa" para treinar, e a banca pede decisões explicáveis. Regras explícitas são auditáveis.
 - **Login e perfis de usuário**: o campo "autor" registra quem decidiu. Em produção viria do login do hospital.
 - **Questionário do paciente ("voz do paciente")**: é o próximo passo natural. A arquitetura já recalcula a fila a cada evento, então uma resposta de questionário seria só mais um tipo de evento.

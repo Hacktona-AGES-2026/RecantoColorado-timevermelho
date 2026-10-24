@@ -19,8 +19,10 @@
 | Sem urgência | Classe calculada D, com dor e limitação **informadas**, e nenhum critério de urgência do verificador em todos os eventos (inclusive os novos). Dado ausente nunca conta como calmo | Exatamente o `verificar_fila_priorizada.py`: só eventos do dataset |
 | Protegido | CID C* **ou biópsia positiva** | CID C* |
 
-Também não passa à frente de protegidos quem foi **promovido pelo regulador sem evidência estruturada** de
-agravamento.
+Também não passam à frente de protegidos:
+
+- quem foi **promovido pelo regulador (ou médico) sem evidência estruturada** de agravamento;
+- na fila da tela, quem tem uma **urgência que os critérios do verificador oficial não reconhecem** (ex.: "tronco 80%", lida só no texto). A classe continua A1, mas o paciente fica logo abaixo do último oncológico até alguém registrar a reavaliação com piora, o atendimento ou o exame. Assim a fila da tela exportada também passa no verificador oficial, conferido na fila inicial e depois de 600 ações aleatórias.
 
 ## Listas por especialidade
 

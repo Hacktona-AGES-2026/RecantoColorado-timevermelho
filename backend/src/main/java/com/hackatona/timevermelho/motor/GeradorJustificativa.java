@@ -41,6 +41,8 @@ public class GeradorJustificativa {
                     ? "posição limitada pela regra de ouro: sem urgência pela definição oficial, fica abaixo de todos os oncológicos"
                     : r.isPromocaoSemEvidencia() && !r.isSemUrgencia()
                     ? "posição limitada pela regra de ouro: promoção do regulador sem evidência de agravamento registrada, fica abaixo de todos os oncológicos"
+                    : r.isUrgenciaNaoReconhecida() && !r.isSemUrgencia()
+                    ? "posição limitada pela regra de ouro: urgência lida só pelo FilaVIVA (ex.: texto livre), sem dado estruturado que a confirme; fica abaixo de todos os oncológicos até uma reavaliação, atendimento ou exame registrado"
                     : "posição limitada pela regra de ouro: sem evidência clínica de urgência registrada, fica abaixo de todos os oncológicos");
         }
         if (r.getStatus() == StatusFila.SAIDA_SUGERIDA) {

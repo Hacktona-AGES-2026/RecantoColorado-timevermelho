@@ -21,24 +21,24 @@ python scripts/teste_integracao.py            # 42 verificações; termina reini
 | # | Tela e ação | O que mostrar | O que falar |
 |---|---|---|---|
 | 1 | **Fila** | Faixa no topo: 919 pacientes, A1 146 · A2 142 · B 224 · C 205 · D 202. Coluna "Δ hoje" com setas verdes e vermelhas | "Esta é a fila inteira, ordenada pela urgência clínica. A seta mostra quanto cada um andou em relação à fila de hoje." |
-| 2 | Buscar `SOL-2026-00351` e abrir | Posição **243**, hoje **866**. Classe **A2** | "Pela fila de hoje, ela é a 866ª, com prioridade baixa. Para nós, é a 243ª." |
+| 2 | Buscar `SOL-2026-00351` e abrir | Posição **241**, hoje **866**. Classe **A2** | "Pela fila de hoje, ela é a 866ª, com prioridade baixa. Para nós, é a 241ª." |
 | 3 | Bloco **"Por que esta classe"** | Regra: *biópsia positiva, tratada como neoplasia mesmo com CID benigno*; evidência citada: o laudo; aviso **"Cadastro com flag errada"** | "Não é caixa-preta: cada posição tem o motivo e a prova. O cadastro ainda diz benigno; o laudo diz câncer." |
 | 4 | **Composição do score** | 6 barras, total 48 | "Dentro da mesma classe, desempata o score, e cada ponto tem explicação." |
-| 5 | **Registrar evento clínico**: Tipo *Exame de imagem*, Resultado *Progressão*, descrição "TC: aumento da lesão" → **Registrar evento** | Cartão de impacto: **243 → 57, A2 → A1** | "Chegou um exame agora. A fila recalcula na hora: a paciente sobe para a 57ª e vira A1. A fila é um fluxo, não uma foto." |
+| 5 | **Registrar evento clínico**: Tipo *Exame de imagem*, Resultado *Progressão*, descrição "TC: aumento da lesão" → **Registrar evento** | Cartão de impacto: **241 → 57, A2 → A1** | "Chegou um exame agora. A fila recalcula na hora: a paciente sobe para a 57ª e vira A1. A fila é um fluxo, não uma foto." |
 | 6 | **Alertas e reavaliação** | "O que mudou" com o evento; "Precisa de reavaliação" (prioridade divergente, esquecidos); **Saídas sugeridas** | "Todo dia o regulador vê o que mudou e quem está sendo esquecido. Quem disse que desistiu **não sai sozinho**: continua na fila até alguém confirmar." |
-| 7 | Volte ao paciente → **Decisão do regulador** → *Mudar classe* para **D**, com uma justificativa qualquer | Erro: *"Regra de ouro: paciente oncológico não pode ficar abaixo da classe A2…"* | "O sistema propõe, o regulador decide, com justificativa registrada. Mas ninguém consegue jogar um câncer para o fim da fila." |
+| 7 | Volte ao paciente → **Decisão do regulador** → *Mudar classe* para **D**, com uma justificativa qualquer | Erro: *"Regra de ouro e FAQ do desafio: paciente oncológico (CID C ou biópsia positiva) não pode ter a prioridade clínica reduzida…"* | "O sistema propõe, o regulador decide, com justificativa registrada. Mas ninguém consegue jogar um câncer para o fim da fila." |
 | 8 | **Antes × depois** | Oncológicos no 1º terço **53% → 100%**; abaixo de quem não tem urgência **172 → 0**; biópsia positiva com CID benigno **755 → 185** | "É isso que muda para quem espera." |
 | 9 | (se sobrar tempo) **Alertas → Reiniciar demo** | Fila volta ao estado do dataset | — |
 
-> Se o **Exame de imagem** não aparecer na lista de tipos, use **Internação**, Resultado *Alta*, Valor **10**. O resultado é parecido: **243 → 80, A2 → A1**.
+> Se o **Exame de imagem** não aparecer na lista de tipos, use **Internação**, Resultado *Alta*, Valor **10**. O resultado é parecido: **241 → 80, A2 → A1**.
 > Se a lista de opções abrir e fechar rápido demais, clique de novo e espere a animação terminar antes de escolher (vimos isso nos testes).
 
 ## Duas filas: o que mostrar e o que entregar
 
 - **A tela é a fila operacional**: reflete os eventos e as decisões registrados na hora. As posições são propostas para o regulador decidir.
 - **O botão "Baixar fila_priorizada.csv" entrega a fila de referência** (o arquivo oficial da banca: só o dataset, aprovado no verificador). Ele **não muda** com o que for registrado na demo.
-- O paciente da demo aparece na **243ª** posição na tela e na **241ª** no arquivo oficial. A diferença vem de 2 pacientes com lesão de tronco de coronária: na tela eles seguem a ordem clínica, e no arquivo ficam abaixo dos oncológicos, porque o verificador não reconhece essa urgência.
-- Se perguntarem: "a tela reconhece agravamentos que o verificador oficial não enxerga; por isso o arquivo de entrega é calculado à parte, só com o dataset, e cada resposta da API diz de qual fila é".
+- O paciente da demo aparece na **241ª** posição na tela e no arquivo oficial.
+- Se perguntarem sobre a regra de ouro na tela: "vale sem exceção nas duas filas. Uma urgência que só lemos no texto, como 'tronco 80%', continua A1, mas não passa à frente de quem tem câncer até alguém registrar a reavaliação, o atendimento ou o exame. A fila da tela exportada passa no verificador oficial".
 - **Não** entregue o CSV operacional (`?snapshot=operacional`) como arquivo oficial.
 
 ## Números de reserva (para perguntas da banca)

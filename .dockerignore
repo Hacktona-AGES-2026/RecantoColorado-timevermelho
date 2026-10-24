@@ -1,0 +1,14 @@
+# Contexto do build do backend (raiz do repositório): só backend/ e data/ interessam.
+.git
+frontend
+wiki
+docs
+entregas
+scripts
+**/node_modules
+backend/target
+# segredos nunca entram na imagem
+**/.env
+**/.env.*
+*.pem
+*.key

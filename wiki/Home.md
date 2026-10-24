@@ -14,6 +14,7 @@ recalcula a fila a cada evento clínico novo e deixa a decisão final com o prof
 | Quero… | Página |
 |---|---|
 | Rodar o sistema numa máquina limpa | [Como rodar](Como-rodar) |
+| Colocar no ar numa máquina da AWS | [Deploy na AWS](Deploy-na-AWS) |
 | Entender a abordagem, o usuário e o porquê | [Abordagem e usuário](Abordagem-e-usuario) |
 | Saber como a ordem é calculada | [Motor de priorização](Motor-de-priorizacao) |
 | Ver como a regra de ouro é garantida | [Regra de ouro](Regra-de-ouro) |

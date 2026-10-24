@@ -15,6 +15,11 @@ Por que decidimos assim: [DECISOES.md](DECISOES.md) · plano e divisão do time:
 | **Alertas e reavaliação** (`/alertas`) | O que mudou, quem precisa ser revisto (prioridade divergente, esquecidos, flags erradas, dados faltando) e saídas sugeridas |
 | **Simulador** (`/simulador`) | "E se?" para um paciente (dor, limitação, evento hipotético) e para os pesos do score, sem salvar nada |
 | **Antes × depois** (`/indicadores`) | A ordem de hoje comparada com a do FilaVIVA |
+| **Médicos** (`/medicos`, `/medicos/{id}`) | Médicos por especialidade: pacientes cirúrgicos, "possível avaliação", fila completa e "Minhas alterações". O médico muda a classe ou a posição de um paciente das listas dele e registra exames, com as mesmas regras e auditoria do regulador |
+| **Relatórios** (`/relatorios`) | Relatório da fila (geral ou por especialidade) escrito pelo assistente de IA, sempre marcado "Gerado por IA — revisar antes de usar" |
+| **Assistente** (`/assistente` e botão em todas as telas) | Chat sobre a fila e o uso do sistema. Nunca decide nem altera a fila ([docs/AGENTE-IA.md](docs/AGENTE-IA.md)) |
+
+No paciente também ficam o desejo de ser operado, a conversa BRAN e a aptidão cirúrgica. Na fila, a coluna Saúde mostra diabetes, última HbA1c e comorbidades do cadastro. Nada disso muda a ordem.
 
 Garantias:
 - A regra de ouro é uma restrição explícita, checada a cada recálculo nas duas filas.
@@ -31,8 +36,10 @@ Garantias:
 backend/             API Spring Boot 4.1.2 · Java 25 · Maven
 frontend/            Next.js 16 · TypeScript · Tailwind · shadcn/ui · Recharts
 data/                dataset do desafio (CSVs, dicionário, verificador)
-docs/                documento do desafio, DECISOES.md, material do pitch
-docker-compose.yml   PostgreSQL 16
+docs/                documento do desafio, agente de IA, roteiro da demo, validação clínica pendente, deploy
+wiki/                wiki do projeto (também publicável na aba Wiki: scripts/publicar_wiki.sh)
+docker-compose.yml   PostgreSQL 16 (opcional, desenvolvimento)
+docker-compose.prod.yml  backend + frontend em Docker (deploy numa máquina, ex.: AWS EC2)
 ```
 
 ## Pré-requisitos
@@ -86,7 +93,13 @@ cd backend
 ./mvnw test
 ```
 
-Os testes usam banco H2 em memória: não precisam do Docker.
+Os testes usam banco H2 em memória: não precisam do Docker (681 testes).
+
+```bash
+cd frontend
+npm test            # 122 testes de componentes (vitest)
+npx playwright test # 12 testes de ponta a ponta (com backend e frontend no ar)
+```
 
 Com banco, backend e frontend no ar, o teste de integração percorre os fluxos da demo e as duas filas (42 verificações) e termina reiniciando a demo:
 
@@ -94,13 +107,13 @@ Com banco, backend e frontend no ar, o teste de integração percorre os fluxos 
 python scripts/teste_integracao.py
 ```
 
-Antes da demo ao vivo, siga [docs/ROTEIRO-DEMO.md](docs/ROTEIRO-DEMO.md). Para validar a classificação com um mentor clínico, use [docs/VALIDACAO-MENTOR.md](docs/VALIDACAO-MENTOR.md).
+Antes da demo ao vivo, siga [docs/ROTEIRO-DEMO.md](docs/ROTEIRO-DEMO.md). As regras clínicas não foram validadas por profissional de saúde; o que precisa ser conferido antes de uso real está em [docs/VALIDACAO-CLINICA.md](docs/VALIDACAO-CLINICA.md).
 
 ## Verificar a fila priorizada
 
 O backend grava `fila_priorizada.csv` na raiz do repositório toda vez que sobe. É a **fila de referência — entrega oficial**: só o dataset, sem eventos nem decisões registrados depois, igual a cada execução. Também dá para baixar em <http://localhost:8080/api/fila/export.csv>.
 
-A tela mostra a **fila operacional**, que inclui o que foi registrado na hora. Para baixar exatamente essa fila: `http://localhost:8080/api/fila/export.csv?snapshot=operacional`. O arquivo vem com o nome `fila_operacional_op-N_<horário>.csv`. Ela não é o entregável e pode reprovar no verificador oficial, porque reconhece urgências que ele não vê. Detalhes em "Duas filas" no [DECISOES.md](DECISOES.md). Para conferir (precisa de `pip install pandas`):
+A tela mostra a **fila operacional**, que inclui o que foi registrado na hora. Para baixar exatamente essa fila: `http://localhost:8080/api/fila/export.csv?snapshot=operacional`. O arquivo vem com o nome `fila_operacional_op-N_<horário>.csv`. Ela não é o entregável. Sem eventos novos, ela também passa no verificador oficial: urgência que ele não reconhece (ex.: só no texto livre) não passa à frente de quem tem câncer nem na tela. Depois de eventos registrados na hora, o verificador não os enxerga (ele lê só o dataset original), mas a regra de ouro continua garantida pelos mesmos critérios aplicados a todos os eventos (`RegraDeOuroSemExcecaoTest` e o estresse com o verificador sobre o dataset acrescido dos eventos novos). Detalhes em "Duas filas" no [DECISOES.md](DECISOES.md). Para conferir (precisa de `pip install pandas`):
 
 ```bash
 python data/verificar_fila_priorizada.py fila_priorizada.csv --dataset data
@@ -126,6 +139,10 @@ Nenhuma é obrigatória.
 | `EXPORT_ARQUIVO` | `../fila_priorizada.csv` (vazio = não grava) |
 
 As regras clínicas do texto livre (palavras de alarme, negações, CIDs urgentes) ficam em `backend/src/main/resources/regras.json` e podem ser editadas sem mexer no código.
+
+## Deploy (AWS EC2)
+
+Uma máquina com Docker roda tudo: `docker compose -f docker-compose.prod.yml up -d --build` e o FilaVIVA abre na porta 80. Passo a passo completo, custos e como colocar a chave da IA: [docs/DEPLOY-AWS.md](docs/DEPLOY-AWS.md).
 
 ## Fluxo do time
 

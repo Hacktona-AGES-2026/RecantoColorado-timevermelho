@@ -46,5 +46,5 @@ quem "não quer" ou está "em dúvida" mostra se o BRAN já foi comunicado.
 
 ## Limitação
 
-O texto do catálogo é informação geral, escrita para o protótipo. Precisa ser validado com o mentor clínico antes de
+O texto do catálogo é informação geral, escrita para o protótipo. Não foi validado por profissional de saúde e precisa ser, antes de
 uso real.

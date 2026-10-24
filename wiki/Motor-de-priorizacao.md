@@ -50,7 +50,7 @@ Classe → score → % do prazo consumido → data de entrada → id. Depois, a 
 - **Texto do cadastro**: a classificação é mantida, mas marcada como **classe provisória** e enviada para revisão
   quando é A1/A2. São 85 pacientes; 12 deles cairiam de A1 para D se o texto fosse ignorado.
 - Os dicionários ficam em `regras.json`. Ainda é leitura por palavras-chave, **não validada por profissional de
-  saúde** (ver `docs/VALIDACAO-MENTOR.md`).
+  saúde** (ver `docs/VALIDACAO-CLINICA.md`).
 
 ## O regulador
 

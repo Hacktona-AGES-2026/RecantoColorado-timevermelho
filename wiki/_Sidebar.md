@@ -2,6 +2,7 @@
 
 - [Início](Home)
 - [Como rodar](Como-rodar)
+- [Deploy na AWS](Deploy-na-AWS)
 - [Abordagem e usuário](Abordagem-e-usuario)
 
 **Como funciona**
