@@ -7,17 +7,19 @@ import { ChevronLeftIcon, ChevronRightIcon, DownloadIcon, RefreshCwIcon, SearchI
 import {
   api,
   CLASSES,
+  FilaMudouErro,
   INFO_CLASSE,
   type ClasseSwalis,
   type FiltrosFila,
   type ItemFila,
   type Pagina,
+  type SnapshotInfo,
   type StatusFila,
 } from "@/lib/api";
 import { BarraPrazo, Delta, SeloClasse } from "@/components/fila-ui";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CampoSelect, Carregando, ErroApi, mensagemErro, rotuloStatus, Vazio } from "./comum";
@@ -71,6 +73,17 @@ function escreverFiltros(f: Filtros): string {
 
 type Resultado = { chave: string; dados: Pagina<ItemFila> | null; erro: string | null };
 
+function formatarHorario(iso: string): string {
+  return new Date(iso).toLocaleString("pt-BR", {
+    timeZone: "America/Sao_Paulo",
+    day: "2-digit",
+    month: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+}
+
 export function TelaFila() {
   const router = useRouter();
   const pathname = usePathname();
@@ -83,6 +96,8 @@ export function TelaFila() {
   const [recarga, setRecarga] = useState(0);
   // Último resultado bom, para a tabela não "piscar" enquanto a próxima página carrega.
   const [ultimo, setUltimo] = useState<Pagina<ItemFila> | null>(null);
+  const [baixando, setBaixando] = useState<"oficial" | "operacional" | null>(null);
+  const [avisoDownload, setAvisoDownload] = useState<{ tipo: "ok" | "conflito" | "erro"; texto: string } | null>(null);
 
   const mudar = useCallback(
     (parcial: Partial<Filtros>) => {
@@ -139,6 +154,44 @@ export function TelaFila() {
   ];
   const filtrosAtivos =
     !!filtros.busca || !!filtros.classe || !!filtros.especialidade || filtros.oncologico || filtros.status !== "ATIVA";
+  // a versão da fila que está na tela (vem do backend)
+  const snapshot: SnapshotInfo | undefined = pagina?.snapshot;
+
+  async function exportarOficial() {
+    setBaixando("oficial");
+    setAvisoDownload(null);
+    try {
+      const r = await api.exportarCsvOficial();
+      setAvisoDownload({ tipo: "ok", texto: `Baixado ${r.arquivo} — fila de referência (${r.snapshot.split(";")[1]?.trim()}). Este é o arquivo da banca.` });
+    } catch (e) {
+      setAvisoDownload({ tipo: "erro", texto: mensagemErro(e) });
+    } finally {
+      setBaixando(null);
+    }
+  }
+
+  async function exportarOperacional() {
+    setBaixando("operacional");
+    setAvisoDownload(null);
+    try {
+      const r = await api.exportarCsvOperacional(snapshot?.versao);
+      setAvisoDownload({
+        tipo: "ok",
+        texto: `Baixado ${r.arquivo} — fila operacional ${snapshot?.versao ?? ""}. Não é o CSV de entrega para o verificador oficial.`,
+      });
+    } catch (e) {
+      if (e instanceof FilaMudouErro) {
+        setAvisoDownload({
+          tipo: "conflito",
+          texto: `A fila mudou desde que esta tela foi carregada (versão ${snapshot?.versao ?? "?"}). Clique em "Atualizar" e exporte de novo. Detalhe: ${e.message}`,
+        });
+      } else {
+        setAvisoDownload({ tipo: "erro", texto: mensagemErro(e) });
+      }
+    } finally {
+      setBaixando(null);
+    }
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -149,17 +202,67 @@ export function TelaFila() {
             Ordenada por classe SWALIS e score. Clique num paciente para ver por que ele está nessa posição.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button variant="outline" size="sm" onClick={() => setRecarga((r) => r + 1)} disabled={carregando}>
             <RefreshCwIcon className={cn(carregando && "animate-spin")} />
             Atualizar
           </Button>
-          <a href={api.exportCsvUrl} className={buttonVariants({ size: "sm" })} download="fila_priorizada.csv">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={exportarOperacional}
+            disabled={!!baixando || carregando}
+            title="Contém eventos registrados após o dataset original. Não utilizar como CSV de entrega para o verificador oficial."
+          >
             <DownloadIcon />
-            Baixar fila_priorizada.csv
-          </a>
+            {baixando === "operacional" ? "Exportando…" : "Exportar CSV operacional"}
+          </Button>
+          <Button
+            size="sm"
+            onClick={exportarOficial}
+            disabled={!!baixando}
+            title="fila_priorizada.csv: fila de referência, só o dataset oficial, sem eventos registrados depois. É o arquivo da banca."
+          >
+            <DownloadIcon />
+            {baixando === "oficial" ? "Exportando…" : "Exportar CSV oficial — Banca"}
+          </Button>
         </div>
       </div>
+
+      {/* Qual fila está na tela */}
+      <div className="flex flex-col gap-1 rounded-xl border border-sky-200 bg-sky-50 px-4 py-3 text-sm dark:border-sky-900 dark:bg-sky-950/40">
+        <p className="font-medium">Fila operacional — atualizada com novos eventos clínicos</p>
+        {snapshot && (
+          <p className="text-muted-foreground text-xs">
+            Versão <span className="font-mono font-medium text-foreground">{snapshot.versao}</span>
+            {" · "}atualizada às {formatarHorario(snapshot.calculadoEm)}
+            {" · "}
+            {snapshot.eventosRegistrados} evento(s) e {snapshot.decisoesRegulador} decisão(ões) registrados nesta sessão
+          </p>
+        )}
+        <p className="text-xs text-amber-800 dark:text-amber-300">
+          As posições podem diferir da fila de referência utilizada na entrega oficial.
+        </p>
+        <p className="text-muted-foreground text-xs">
+          <strong>Exportar CSV operacional:</strong> contém eventos registrados após o dataset original. Não utilizar como
+          CSV de entrega para o verificador oficial. <strong>Exportar CSV oficial — Banca:</strong> fila_priorizada.csv,
+          só o dataset de referência.
+        </p>
+      </div>
+
+      {avisoDownload && (
+        <div
+          role="status"
+          className={cn(
+            "rounded-lg border px-3 py-2 text-sm",
+            avisoDownload.tipo === "ok" && "border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-200",
+            avisoDownload.tipo === "conflito" && "border-amber-300 bg-amber-50 text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200",
+            avisoDownload.tipo === "erro" && "border-red-200 bg-red-50 text-red-900 dark:border-red-900 dark:bg-red-950/40 dark:text-red-200",
+          )}
+        >
+          {avisoDownload.texto}
+        </div>
+      )}
 
       {/* Resumo por classe */}
       <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">

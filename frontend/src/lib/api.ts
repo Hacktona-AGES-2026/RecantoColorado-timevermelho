@@ -52,7 +52,21 @@ export interface Pagina<T> {
   tamanho: number;
   porClasse: Record<ClasseSwalis, number>; // contagem da fila ativa inteira
   especialidades: string[];
+  snapshot?: SnapshotInfo; // de qual fila são estes dados (sempre a operacional nesta rota)
 }
+
+/** Identidade de uma fila: a operacional (tela) ou a de referência (entrega oficial). */
+export interface SnapshotInfo {
+  tipo: "operacional" | "oficial" | "simulacao";
+  versao: string; // "op-12" ou "ref-3e37e2b31749"
+  calculadoEm: string; // ISO
+  eventosRegistrados: number;
+  decisoesRegulador: number;
+  descricao: string;
+}
+
+/** A fila mudou desde que a tela foi carregada (HTTP 409 no download operacional). */
+export class FilaMudouErro extends Error {}
 
 export interface SinalDto {
   tipo: string;
@@ -371,6 +385,34 @@ function query(filtros: FiltrosFila): string {
   return p.toString();
 }
 
+/**
+ * Baixa um CSV conferindo, antes de salvar, que a API devolveu a fila pedida (cabeçalho X-FilaViva-Snapshot).
+ * Assim o botão da banca nunca salva a fila operacional por engano. Devolve o nome do arquivo salvo.
+ */
+async function baixarCsv(url: string, tipoEsperado: "oficial" | "operacional"): Promise<{ arquivo: string; snapshot: string }> {
+  const resp = await fetch(url, { cache: "no-store" });
+  if (resp.status === 409) throw new FilaMudouErro(await lerErro(resp));
+  if (!resp.ok) throw new Error(await lerErro(resp));
+  const snapshot = resp.headers.get("X-FilaViva-Snapshot") ?? "";
+  if (!snapshot.startsWith(tipoEsperado)) {
+    throw new Error(`Download cancelado: a API devolveu "${snapshot || "fila sem identificação"}" em vez da fila ${tipoEsperado}.`);
+  }
+  const nome = /filename="([^"]+)"/.exec(resp.headers.get("Content-Disposition") ?? "")?.[1];
+  if (!nome || (tipoEsperado === "oficial" && nome !== "fila_priorizada.csv")) {
+    throw new Error(`Download cancelado: nome de arquivo inesperado (${nome ?? "ausente"}).`);
+  }
+  const blob = await resp.blob();
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = nome;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  setTimeout(() => URL.revokeObjectURL(href), 2000);
+  return { arquivo: nome, snapshot };
+}
+
 export const api = {
   status: () => get<Status>("/api/status"),
   fila: (filtros: FiltrosFila = {}) => get<Pagina<ItemFila>>(`/api/fila?${query(filtros)}`),
@@ -383,7 +425,15 @@ export const api = {
   indicadores: () => get<Indicadores>("/api/indicadores"),
   cenarioDemo: () => post<Impacto[]>("/api/demo/cenario"),
   resetDemo: () => post<{ ok: boolean }>("/api/demo/reset"),
-  exportCsvUrl: `${API_URL}/api/fila/export.csv`,
+  /** Fila de referência — entrega oficial (fila_priorizada.csv). Sempre explícito: nunca a operacional. */
+  exportCsvUrl: `${API_URL}/api/fila/export.csv?snapshot=oficial`,
+  exportarCsvOficial: () => baixarCsv(`${API_URL}/api/fila/export.csv?snapshot=oficial`, "oficial"),
+  /** A fila da tela. Com a versão, a API recusa (409) se a fila mudou depois que a tela foi carregada. */
+  exportarCsvOperacional: (versao?: string) =>
+    baixarCsv(
+      `${API_URL}/api/fila/export.csv?snapshot=operacional${versao ? `&versao=${encodeURIComponent(versao)}` : ""}`,
+      "operacional",
+    ),
 };
 
 /** Cores e textos das classes, para todas as telas usarem o mesmo padrão. */
