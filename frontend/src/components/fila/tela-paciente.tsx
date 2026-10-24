@@ -1,12 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { ArrowLeftIcon, AlertTriangleIcon, RefreshCwIcon } from "lucide-react";
+import { ArrowLeftIcon, AlertTriangleIcon, ChevronDownIcon, RefreshCwIcon } from "lucide-react";
 import { api, type PacienteDetalhe, type SinalDto } from "@/lib/api";
 import { BarraPrazo, Delta, formatarData, SeloClasse } from "@/components/fila-ui";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Carregando, ErroApi, mensagemErro, rotuloStatus, Vazio } from "./comum";
@@ -100,7 +100,7 @@ export function TelaPaciente() {
           <DadosClinicosCard d={detalhe} />
           <Auditoria d={detalhe} />
         </div>
-        <div className="flex flex-col gap-4 lg:sticky lg:top-4 lg:self-start">
+        <div className="flex flex-col gap-4 lg:sticky lg:top-[calc(var(--altura-cabecalho,0px)+1rem)] lg:self-start">
           <PainelDecisao key={detalhe.item.solicitacaoId} detalhe={detalhe} aoDecidir={recarregar} />
           <FormEvento key={`ev-${detalhe.item.solicitacaoId}`} solicitacaoId={detalhe.item.solicitacaoId} aoRegistrar={recarregar} />
         </div>
@@ -179,6 +179,47 @@ function Cabecalho({ d }: { d: PacienteDetalhe }) {
   );
 }
 
+/** Cartão que mostra só o título e o resumo; o conteúdo abre e fecha clicando no cabeçalho. Começa fechado. */
+function CardRecolhivel({
+  titulo,
+  descricao,
+  className,
+  children,
+}: {
+  titulo: React.ReactNode;
+  descricao?: React.ReactNode;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  const [aberto, setAberto] = useState(false);
+  const idConteudo = useId();
+  return (
+    <Card className="hover:ring-foreground transition-shadow">
+      <CardHeader>
+        <button
+          type="button"
+          aria-expanded={aberto}
+          aria-controls={idConteudo}
+          onClick={() => setAberto((a) => !a)}
+          className="focus-visible:ring-ring/50 -m-1 flex items-start justify-between gap-3 rounded-md p-1 text-left outline-none focus-visible:ring-2"
+        >
+          <span className="flex min-w-0 flex-col gap-1">
+            <span className="font-heading flex items-center gap-2 text-base leading-snug font-medium">{titulo}</span>
+            {descricao && <span className="text-muted-foreground text-sm">{descricao}</span>}
+          </span>
+          <ChevronDownIcon
+            aria-hidden
+            className={cn("text-muted-foreground mt-0.5 size-5 shrink-0 transition-transform", aberto && "rotate-180")}
+          />
+        </button>
+      </CardHeader>
+      <CardContent id={idConteudo} hidden={!aberto} className={className}>
+        {children}
+      </CardContent>
+    </Card>
+  );
+}
+
 function Citacao({ evidencia, fonte }: { evidencia: string | null; fonte: string | null }) {
   if (!evidencia && !fonte) return null;
   return (
@@ -196,44 +237,44 @@ function Citacao({ evidencia, fonte }: { evidencia: string | null; fonte: string
 function PorQueClasse({ d }: { d: PacienteDetalhe }) {
   const c = d.classificacao;
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+    <CardRecolhivel
+      titulo={
+        <>
           Por que a classe <SeloClasse classe={c.classe} />
-        </CardTitle>
-        <CardDescription>{c.regra}</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        {c.ajustada && (
-          <div className="rounded-lg border p-3 text-sm">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-muted-foreground">Calculada pelo sistema</span>
-              <SeloClasse classe={c.classeCalculada} />
-              <span>→</span>
-              <span className="text-muted-foreground">definida pelo regulador</span>
-              <SeloClasse classe={c.classe} />
-            </div>
-            {c.justificativaAjuste && <p className="mt-2 italic">“{c.justificativaAjuste}”</p>}
+        </>
+      }
+      descricao={c.regra}
+      className="flex flex-col gap-3"
+    >
+      {c.ajustada && (
+        <div className="rounded-lg border p-3 text-sm">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-muted-foreground">Calculada pelo sistema</span>
+            <SeloClasse classe={c.classeCalculada} />
+            <span>→</span>
+            <span className="text-muted-foreground">definida pelo regulador</span>
+            <SeloClasse classe={c.classe} />
           </div>
-        )}
-        {c.determinantes.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Nenhum sinal clínico determinante; classe definida pelo padrão do procedimento.</p>
-        ) : (
-          <ul className="flex flex-col gap-3">
-            {c.determinantes.map((s, i) => (
-              <li key={`${s.tipo}-${i}`} className="text-sm">
-                <div className="flex flex-wrap items-baseline gap-2">
-                  <span className="font-medium">{s.rotulo}</span>
-                  {s.data && <span className="text-muted-foreground text-xs">{formatarData(s.data)}</span>}
-                </div>
-                <p className="text-muted-foreground">{s.descricao}</p>
-                <Citacao evidencia={s.evidencia} fonte={s.fonte} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </CardContent>
-    </Card>
+          {c.justificativaAjuste && <p className="mt-2 italic">“{c.justificativaAjuste}”</p>}
+        </div>
+      )}
+      {c.determinantes.length === 0 ? (
+        <p className="text-muted-foreground text-sm">Nenhum sinal clínico determinante; classe definida pelo padrão do procedimento.</p>
+      ) : (
+        <ul className="flex flex-col gap-3">
+          {c.determinantes.map((s, i) => (
+            <li key={`${s.tipo}-${i}`} className="text-sm">
+              <div className="flex flex-wrap items-baseline gap-2">
+                <span className="font-medium">{s.rotulo}</span>
+                {s.data && <span className="text-muted-foreground text-xs">{formatarData(s.data)}</span>}
+              </div>
+              <p className="text-muted-foreground">{s.descricao}</p>
+              <Citacao evidencia={s.evidencia} fonte={s.fonte} />
+            </li>
+          ))}
+        </ul>
+      )}
+    </CardRecolhivel>
   );
 }
 
@@ -241,42 +282,42 @@ function ComposicaoScore({ d }: { d: PacienteDetalhe }) {
   const total = d.componentes.reduce((s, c) => s + c.pontos, 0);
   const max = d.componentes.reduce((s, c) => s + c.maximo, 0);
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Composição do score</CardTitle>
-        <CardDescription>
+    <CardRecolhivel
+      titulo="Composição do score"
+      descricao={
+        <>
           Dentro da mesma classe, quem tem score maior vem antes. Total{" "}
           <span className="text-foreground font-semibold tabular-nums">{d.item.score.toFixed(1)}</span> de 100.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-3">
-        {d.componentes.map((c) => {
-          const pct = c.maximo > 0 ? Math.min(100, (c.pontos / c.maximo) * 100) : 0;
-          return (
-            <div key={c.chave} className="text-sm">
-              <div className="flex items-baseline justify-between gap-2">
-                <span className="font-medium">{c.nome}</span>
-                <span className="tabular-nums">
-                  {c.pontos.toFixed(1)} <span className="text-muted-foreground">/ {c.maximo}</span>
-                </span>
-              </div>
-              <div className="bg-muted mt-1 h-2 overflow-hidden rounded-full">
-                <div className="bg-primary h-full rounded-full" style={{ width: `${pct}%` }} />
-              </div>
-              <p className="text-muted-foreground mt-1 text-xs">{c.explicacao}</p>
+        </>
+      }
+      className="flex flex-col gap-3"
+    >
+      {d.componentes.map((c) => {
+        const pct = c.maximo > 0 ? Math.min(100, (c.pontos / c.maximo) * 100) : 0;
+        return (
+          <div key={c.chave} className="text-sm">
+            <div className="flex items-baseline justify-between gap-2">
+              <span className="font-medium">{c.nome}</span>
+              <span className="tabular-nums">
+                {c.pontos.toFixed(1)} <span className="text-muted-foreground">/ {c.maximo}</span>
+              </span>
             </div>
-          );
-        })}
-        {d.componentes.length > 0 && (
-          <div className="flex justify-between border-t pt-2 text-sm font-medium">
-            <span>Total</span>
-            <span className="tabular-nums">
-              {total.toFixed(1)} <span className="text-muted-foreground font-normal">/ {max}</span>
-            </span>
+            <div className="bg-muted mt-1 h-2 overflow-hidden rounded-full">
+              <div className="bg-primary h-full rounded-full" style={{ width: `${pct}%` }} />
+            </div>
+            <p className="text-muted-foreground mt-1 text-xs">{c.explicacao}</p>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        );
+      })}
+      {d.componentes.length > 0 && (
+        <div className="flex justify-between border-t pt-2 text-sm font-medium">
+          <span>Total</span>
+          <span className="tabular-nums">
+            {total.toFixed(1)} <span className="text-muted-foreground font-normal">/ {max}</span>
+          </span>
+        </div>
+      )}
+    </CardRecolhivel>
   );
 }
 
@@ -293,79 +334,76 @@ function Sinais({ sinais }: { sinais: SinalDto[] }) {
     (g) => g.itens.length > 0,
   );
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Todos os sinais encontrados</CardTitle>
-        <CardDescription>O que o sistema leu no cadastro, no texto do médico e nos eventos.</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {grupos.length === 0 && <p className="text-muted-foreground text-sm">Nenhum sinal encontrado.</p>}
-        {grupos.map((g) => (
-          <div key={g.chave}>
-            <h3 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
-              {g.rotulo} ({g.itens.length})
-            </h3>
-            <ul className="flex flex-col gap-2.5">
-              {g.itens.map((s, i) => (
-                <li key={`${s.tipo}-${i}`} className="text-sm">
-                  <div className="flex flex-wrap items-baseline gap-2">
-                    <span className="font-medium">{s.rotulo}</span>
-                    {s.data && <span className="text-muted-foreground text-xs">{formatarData(s.data)}</span>}
-                  </div>
-                  <p className="text-muted-foreground">{s.descricao}</p>
-                  <Citacao evidencia={s.evidencia} fonte={s.fonte} />
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
+    <CardRecolhivel
+      titulo="Todos os sinais encontrados"
+      descricao="O que o sistema leu no cadastro, no texto do médico e nos eventos."
+      className="flex flex-col gap-4"
+    >
+      {grupos.length === 0 && <p className="text-muted-foreground text-sm">Nenhum sinal encontrado.</p>}
+      {grupos.map((g) => (
+        <div key={g.chave}>
+          <h3 className="text-muted-foreground mb-2 text-xs font-semibold tracking-wide uppercase">
+            {g.rotulo} ({g.itens.length})
+          </h3>
+          <ul className="flex flex-col gap-2.5">
+            {g.itens.map((s, i) => (
+              <li key={`${s.tipo}-${i}`} className="text-sm">
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <span className="font-medium">{s.rotulo}</span>
+                  {s.data && <span className="text-muted-foreground text-xs">{formatarData(s.data)}</span>}
+                </div>
+                <p className="text-muted-foreground">{s.descricao}</p>
+                <Citacao evidencia={s.evidencia} fonte={s.fonte} />
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
+    </CardRecolhivel>
   );
 }
 
 function LinhaDoTempo({ d }: { d: PacienteDetalhe }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Linha do tempo</CardTitle>
-        <CardDescription>
+    <CardRecolhivel
+      titulo="Linha do tempo"
+      descricao={
+        <>
           Entrada na fila em {formatarData(d.dados.dataEntrada)}
           {d.dados.dataUltimaRevisao && ` · última revisão em ${formatarData(d.dados.dataUltimaRevisao)}`}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        {d.eventos.length === 0 ? (
-          <Vazio texto="Nenhum evento clínico registrado." />
-        ) : (
-          <ol className="border-muted relative ml-1.5 flex flex-col gap-4 border-l pl-4">
-            {d.eventos.map((e) => (
-              <li key={e.id} className="relative text-sm">
-                <span
-                  className={cn(
-                    "bg-background absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2",
-                    e.sintetico ? "border-primary" : "border-muted-foreground",
-                  )}
-                />
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-muted-foreground text-xs tabular-nums">{formatarData(e.data)}</span>
-                  <span className="font-medium">{rotuloTipoEvento(e.tipo)}</span>
-                  {e.resultado && <Badge variant="outline">{rotuloResultado(e.resultado)}</Badge>}
-                  {e.valor !== null && <span className="text-xs tabular-nums">valor {e.valor}</span>}
-                  {e.sintetico && <Badge>demo</Badge>}
-                </div>
-                {e.descricao && <p className="mt-0.5">{e.descricao}</p>}
-                <p className="text-muted-foreground text-xs">
-                  {[e.origem && `Origem: ${e.origem}`, e.id, e.solicitacaoOriginal !== d.item.solicitacaoId && `da solicitação ${e.solicitacaoOriginal}`]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-              </li>
-            ))}
-          </ol>
-        )}
-      </CardContent>
-    </Card>
+        </>
+      }
+    >
+      {d.eventos.length === 0 ? (
+        <Vazio texto="Nenhum evento clínico registrado." />
+      ) : (
+        <ol className="border-muted relative ml-1.5 flex flex-col gap-4 border-l pl-4">
+          {d.eventos.map((e) => (
+            <li key={e.id} className="relative text-sm">
+              <span
+                className={cn(
+                  "bg-background absolute top-1.5 -left-[21px] size-2.5 rounded-full border-2",
+                  e.sintetico ? "border-primary" : "border-muted-foreground",
+                )}
+              />
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-muted-foreground text-xs tabular-nums">{formatarData(e.data)}</span>
+                <span className="font-medium">{rotuloTipoEvento(e.tipo)}</span>
+                {e.resultado && <Badge variant="outline">{rotuloResultado(e.resultado)}</Badge>}
+                {e.valor !== null && <span className="text-xs tabular-nums">valor {e.valor}</span>}
+                {e.sintetico && <Badge>demo</Badge>}
+              </div>
+              {e.descricao && <p className="mt-0.5">{e.descricao}</p>}
+              <p className="text-muted-foreground text-xs">
+                {[e.origem && `Origem: ${e.origem}`, e.id, e.solicitacaoOriginal !== d.item.solicitacaoId && `da solicitação ${e.solicitacaoOriginal}`]
+                  .filter(Boolean)
+                  .join(" · ")}
+              </p>
+            </li>
+          ))}
+        </ol>
+      )}
+    </CardRecolhivel>
   );
 }
 
@@ -386,43 +424,37 @@ function DadosClinicosCard({ d }: { d: PacienteDetalhe }) {
     { rotulo: "Piora", v: x.flagPiora },
   ];
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Dados clínicos</CardTitle>
-        <CardDescription>Como vieram do cadastro da solicitação.</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        <div>
-          <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">Justificativa do médico</h3>
-          <p className="bg-muted/40 rounded-md p-3 text-sm whitespace-pre-wrap">
-            {x.justificativa || <span className="text-muted-foreground">Sem justificativa.</span>}
-          </p>
-        </div>
-        <div>
-          <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">Observações</h3>
-          <p className="bg-muted/40 rounded-md p-3 text-sm whitespace-pre-wrap">
-            {x.observacoes || <span className="text-muted-foreground">Sem observações.</span>}
-          </p>
-        </div>
-        <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
-          <Campo rotulo="Comorbidades">{x.comorbidades}</Campo>
-          <Campo rotulo="Dor (0–10)">{x.dor}</Campo>
-          <Campo rotulo="Limitação">{x.limitacao}</Campo>
-          <Campo rotulo="ASA">{x.asa}</Campo>
-          <Campo rotulo="Risco cirúrgico">{x.riscoCirurgico}</Campo>
-          <Campo rotulo="Prioridade manual">{x.prioridadeManual}</Campo>
-          <Campo rotulo="Entrada">{formatarData(x.dataEntrada)}</Campo>
-          <Campo rotulo="Código do procedimento">{x.procedimentoId}</Campo>
-        </dl>
-        <div className="flex flex-wrap gap-2">
-          {flags.map((f) => (
-            <Badge key={f.rotulo} variant={f.v && /^(s|sim|1|true)$/i.test(f.v) ? "secondary" : "outline"}>
-              {f.rotulo}: {f.v ?? "—"}
-            </Badge>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
+    <CardRecolhivel titulo="Dados clínicos" descricao="Como vieram do cadastro da solicitação." className="flex flex-col gap-4">
+      <div>
+        <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">Justificativa do médico</h3>
+        <p className="bg-muted/40 rounded-md p-3 text-sm whitespace-pre-wrap">
+          {x.justificativa || <span className="text-muted-foreground">Sem justificativa.</span>}
+        </p>
+      </div>
+      <div>
+        <h3 className="text-muted-foreground mb-1 text-xs font-semibold tracking-wide uppercase">Observações</h3>
+        <p className="bg-muted/40 rounded-md p-3 text-sm whitespace-pre-wrap">
+          {x.observacoes || <span className="text-muted-foreground">Sem observações.</span>}
+        </p>
+      </div>
+      <dl className="grid grid-cols-2 gap-x-4 gap-y-3 sm:grid-cols-4">
+        <Campo rotulo="Comorbidades">{x.comorbidades}</Campo>
+        <Campo rotulo="Dor (0–10)">{x.dor}</Campo>
+        <Campo rotulo="Limitação">{x.limitacao}</Campo>
+        <Campo rotulo="ASA">{x.asa}</Campo>
+        <Campo rotulo="Risco cirúrgico">{x.riscoCirurgico}</Campo>
+        <Campo rotulo="Prioridade manual">{x.prioridadeManual}</Campo>
+        <Campo rotulo="Entrada">{formatarData(x.dataEntrada)}</Campo>
+        <Campo rotulo="Código do procedimento">{x.procedimentoId}</Campo>
+      </dl>
+      <div className="flex flex-wrap gap-2">
+        {flags.map((f) => (
+          <Badge key={f.rotulo} variant={f.v && /^(s|sim|1|true)$/i.test(f.v) ? "secondary" : "outline"}>
+            {f.rotulo}: {f.v ?? "—"}
+          </Badge>
+        ))}
+      </div>
+    </CardRecolhivel>
   );
 }
 
@@ -445,49 +477,47 @@ function formatarDataHora(iso: string): string {
 
 function Auditoria({ d }: { d: PacienteDetalhe }) {
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Histórico de decisões</CardTitle>
-        <CardDescription>Auditoria de tudo que o regulador decidiu neste paciente.</CardDescription>
-      </CardHeader>
-      <CardContent className="flex flex-col gap-4">
-        {d.ajustes.length === 0 ? (
-          <p className="text-muted-foreground text-sm">Nenhuma decisão registrada ainda.</p>
-        ) : (
-          <ul className="flex flex-col divide-y">
-            {d.ajustes.map((a) => (
-              <li key={a.id} className="py-2 text-sm first:pt-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium">{ROTULO_AJUSTE[a.tipo] ?? a.tipo}</span>
-                  {a.classeAnterior && a.classeNova && a.classeAnterior !== a.classeNova ? (
-                    <span className="flex items-center gap-1">
-                      <SeloClasse classe={a.classeAnterior} /> → <SeloClasse classe={a.classeNova} />
-                    </span>
-                  ) : (
-                    a.classeNova && <SeloClasse classe={a.classeNova} />
-                  )}
-                  <span className="text-muted-foreground ml-auto text-xs">
-                    {a.autor} · {formatarDataHora(a.criadoEm)}
+    <CardRecolhivel
+      titulo="Histórico de decisões"
+      descricao="Auditoria de tudo que o regulador decidiu neste paciente."
+      className="flex flex-col gap-4"
+    >
+      {d.ajustes.length === 0 ? (
+        <p className="text-muted-foreground text-sm">Nenhuma decisão registrada ainda.</p>
+      ) : (
+        <ul className="flex flex-col divide-y">
+          {d.ajustes.map((a) => (
+            <li key={a.id} className="py-2 text-sm first:pt-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="font-medium">{ROTULO_AJUSTE[a.tipo] ?? a.tipo}</span>
+                {a.classeAnterior && a.classeNova && a.classeAnterior !== a.classeNova ? (
+                  <span className="flex items-center gap-1">
+                    <SeloClasse classe={a.classeAnterior} /> → <SeloClasse classe={a.classeNova} />
                   </span>
-                </div>
-                <p className="mt-0.5 italic">“{a.justificativa}”</p>
-              </li>
+                ) : (
+                  a.classeNova && <SeloClasse classe={a.classeNova} />
+                )}
+                <span className="text-muted-foreground ml-auto text-xs">
+                  {a.autor} · {formatarDataHora(a.criadoEm)}
+                </span>
+              </div>
+              <p className="mt-0.5 italic">“{a.justificativa}”</p>
+            </li>
+          ))}
+        </ul>
+      )}
+      {d.duplicatas.length > 0 && (
+        <div className="border-t pt-3 text-sm">
+          <p className="font-medium">Solicitações duplicadas mescladas nesta</p>
+          <div className="mt-1 flex flex-wrap gap-1.5">
+            {d.duplicatas.map((s) => (
+              <Badge key={s} variant="outline" className="font-mono">
+                {s}
+              </Badge>
             ))}
-          </ul>
-        )}
-        {d.duplicatas.length > 0 && (
-          <div className="border-t pt-3 text-sm">
-            <p className="font-medium">Solicitações duplicadas mescladas nesta</p>
-            <div className="mt-1 flex flex-wrap gap-1.5">
-              {d.duplicatas.map((s) => (
-                <Badge key={s} variant="outline" className="font-mono">
-                  {s}
-                </Badge>
-              ))}
-            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </div>
+      )}
+    </CardRecolhivel>
   );
 }
