@@ -63,7 +63,7 @@ class AvaliacaoRealTest {
         int maxChamadas = Integer.parseInt(env("AGENTE_AVALIACAO_MAX_CHAMADAS", "300"));
 
         var cfg = new AgenteProperties.Provedor("avaliacao", env("IA_PROVEDOR_1_URL", "https://api.openai.com/v1"), chave,
-                modelo, "omni-moderation-latest", "max_completion_tokens", true, true);
+                modelo, "omni-moderation-latest", "max_completion_tokens", true, true, env("IA_PROVEDOR_1_ESFORCO", ""));
         var roteador = new ProvedoresIA(List.of(new ProvedorOpenAiCompativel(cfg, 60)), Duration.ofMinutes(60),
                 Duration.ofSeconds(30), 2, 1000, Clock.systemUTC());
         var props = new AgenteProperties(true, false, 60, 1500, 60, 30, 2, 1000, true, List.of(),

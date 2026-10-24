@@ -23,6 +23,7 @@ O agente sobe **desligado** até existirem (1) regras de negócio preenchidas (j
    export IA_PROVEDOR_2_CHAVE=...   IA_PROVEDOR_2_MODELO=...   # reserva, assume quando o crédito do 1º acabar
    ```
    Ou, sem exportar nada: `cp backend/.env.example backend/.env`, preencha a chave e o modelo no `backend/.env` (está no `.gitignore`) e rode o backend com o perfil `dotenv` (IntelliJ: *Active profiles* = `dotenv`; terminal: `./mvnw spring-boot:run -Dspring-boot.run.profiles=dotenv`).
+   Para modelos que raciocinam, `IA_PROVEDOR_1_ESFORCO` (`low`, `medium`, `high`) vira o campo `reasoning_effort` da resposta principal; o filtro de escopo e a categorização usam sempre `low`, e o teto de tokens ganha uma folga de 4000 para o raciocínio não esvaziar a resposta. Deixe vazio para modelos que não raciocinam.
 3. Reinicie o backend. Para só **ver a tela** funcionando sem as regras de negócio, use `AGENTE_EXIGIR_REGRAS=false` (as chaves continuam obrigatórias).
 
 **Vários provedores:** a ordem é a de `agente.provedores[0]`, `[1]`… no `application.properties`. Cada um aceita `IA_PROVEDOR_N_URL`: qualquer API no formato `chat/completions` da OpenAI serve (outra conta OpenAI, Azure OpenAI…). A URL precisa ser `https` (ou `http` em localhost), senão o provedor é ignorado. APIs em outro formato precisam de uma implementação própria de `ProvedorIA`.

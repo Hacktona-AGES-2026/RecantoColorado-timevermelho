@@ -75,8 +75,46 @@ class ProvedorOpenAiCompativelTest {
     }
 
     private ProvedorOpenAiCompativel provedor(String baseUrl, boolean naoArmazenar) {
+        return provedor(baseUrl, naoArmazenar, null);
+    }
+
+    private ProvedorOpenAiCompativel provedor(String baseUrl, boolean naoArmazenar, String esforco) {
         return new ProvedorOpenAiCompativel(new AgenteProperties.Provedor("openai-teste", baseUrl, CHAVE, "modelo-teste",
-                "moderacao-teste", "max_completion_tokens", true, naoArmazenar), 5);
+                "moderacao-teste", "max_completion_tokens", true, naoArmazenar, esforco), 5);
+    }
+
+    private String urlTeste() {
+        return "http://127.0.0.1:" + servidor.getAddress().getPort() + "/v1";
+    }
+
+    @Test
+    void semEsforcoConfiguradoNaoEnviaReasoningEffort() {
+        corpoDaResposta = "{\"choices\":[{\"message\":{\"content\":\"ok\"}}]}";
+        provedor().gerar(PEDIDO, ProvedorIA.Opcoes.texto(10));
+        assertThat(corpos.getFirst()).doesNotContain("reasoning_effort").contains("\"max_completion_tokens\":10");
+    }
+
+    @Test
+    void respostaPrincipalUsaOEsforcoConfiguradoComFolgaDeTokens() {
+        tipoDaResposta = "text/event-stream";
+        corpoDaResposta = "data: [DONE]\n\n";
+        provedor(urlTeste(), true, " Medium ").gerarStreaming(PEDIDO, ProvedorIA.Opcoes.texto(10), t -> { });
+        assertThat(corpos.getFirst()).contains("\"reasoning_effort\":\"medium\"")
+                .contains("\"max_completion_tokens\":" + (10 + ProvedorOpenAiCompativel.FOLGA_RACIOCINIO));
+    }
+
+    @Test
+    void classificacaoEmJsonPensaPoucoMesmoComEsforcoMedio() {
+        corpoDaResposta = "{\"choices\":[{\"message\":{\"content\":\"{}\"}}]}";
+        provedor(urlTeste(), true, "medium").gerar(PEDIDO, ProvedorIA.Opcoes.json(120));
+        assertThat(corpos.getFirst()).contains("\"reasoning_effort\":\"low\"")
+                .contains("\"max_completion_tokens\":" + (120 + ProvedorOpenAiCompativel.FOLGA_RACIOCINIO));
+    }
+
+    @Test
+    void esforcoComCaracteresEstranhosEhRecusadoNaConfiguracao() {
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> provedor(urlTeste(), true, "medium\",\"x\":\"y"))
+                .isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

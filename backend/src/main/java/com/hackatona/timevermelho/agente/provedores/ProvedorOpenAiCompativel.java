@@ -29,6 +29,8 @@ import tools.jackson.databind.json.JsonMapper;
 public class ProvedorOpenAiCompativel implements ProvedorIA {
 
     private static final JsonMapper JSON = JsonMapper.builder().build();
+    /** Tokens a mais no teto quando o modelo raciocina. */
+    static final int FOLGA_RACIOCINIO = 4000;
 
     private final String nome;
     private final String baseUrl;
@@ -38,6 +40,8 @@ public class ProvedorOpenAiCompativel implements ProvedorIA {
     private final String campoLimiteTokens;
     private final boolean moderacao;
     private final boolean naoArmazenar;
+    /** Esforço de raciocínio da resposta principal; {@code null} quando o modelo não raciocina. */
+    private final String esforcoRaciocinio;
     private final Duration timeout;
     private final HttpClient http;
 
@@ -51,6 +55,11 @@ public class ProvedorOpenAiCompativel implements ProvedorIA {
         this.campoLimiteTokens = config.campoLimiteTokens();
         this.moderacao = config.moderacao();
         this.naoArmazenar = config.naoArmazenar();
+        String esforco = config.esforcoRaciocinio() == null ? "" : config.esforcoRaciocinio().trim().toLowerCase();
+        if (!esforco.isEmpty() && !esforco.matches("[a-z]{1,20}")) {
+            throw new IllegalArgumentException("esforço de raciocínio inválido: use algo como low, medium ou high");
+        }
+        this.esforcoRaciocinio = esforco.isEmpty() ? null : esforco;
         this.timeout = Duration.ofSeconds(Math.max(1, timeoutSegundos));
         this.http = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).build();
     }
@@ -132,7 +141,15 @@ public class ProvedorOpenAiCompativel implements ProvedorIA {
         List<Map<String, String>> msgs = new ArrayList<>();
         for (Mensagem m : mensagens) msgs.add(Map.of("role", m.papel(), "content", m.conteudo()));
         corpo.put("messages", msgs);
-        corpo.put(campoLimiteTokens, opcoes.maxTokens());
+        if (esforcoRaciocinio == null) {
+            corpo.put(campoLimiteTokens, opcoes.maxTokens());
+        } else {
+            // Nos modelos que raciocinam, o raciocínio gasta do mesmo limite de tokens da resposta: sem folga, o
+            // filtro de escopo (120 tokens) voltaria vazio e recusaria tudo. A folga é teto, não custo.
+            corpo.put(campoLimiteTokens, opcoes.maxTokens() + FOLGA_RACIOCINIO);
+            // Classificações curtas em JSON (filtro, categorização) não precisam pensar muito: sempre "low".
+            corpo.put("reasoning_effort", opcoes.json() ? "low" : esforcoRaciocinio);
+        }
         if (naoArmazenar) corpo.put("store", false); // pede ao provedor para não guardar a conversa
         if (opcoes.json()) corpo.put("response_format", Map.of("type", "json_object"));
         if (streaming) {

@@ -43,7 +43,12 @@ public record AgenteProperties(
             @DefaultValue("max_completion_tokens") String campoLimiteTokens,
             @DefaultValue("true") boolean moderacao,
             /** Pede ao provedor para não guardar a conversa (store=false). Desligue só se a API recusar o campo. */
-            @DefaultValue("true") boolean naoArmazenar) {
+            @DefaultValue("true") boolean naoArmazenar,
+            /**
+             * Esforço de raciocínio (campo reasoning_effort) para modelos que raciocinam, por exemplo "low",
+             * "medium" ou "high". Vazio: o campo não é enviado (modelos que não raciocinam recusam o campo).
+             */
+            String esforcoRaciocinio) {
 
         public boolean configurado() {
             return chave != null && !chave.isBlank() && modelo != null && !modelo.isBlank();

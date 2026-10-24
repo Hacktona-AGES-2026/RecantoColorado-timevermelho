@@ -57,7 +57,8 @@ public class AgenteConfig {
             String nome = cfg.nome() == null || cfg.nome().isBlank() ? "provedor-" + n : cfg.nome();
             lista.add(new ProvedorOpenAiCompativel(
                     new AgenteProperties.Provedor(nome, cfg.baseUrl(), cfg.chave(), cfg.modelo(),
-                            cfg.modeloModeracao(), cfg.campoLimiteTokens(), cfg.moderacao(), cfg.naoArmazenar()),
+                            cfg.modeloModeracao(), cfg.campoLimiteTokens(), cfg.moderacao(), cfg.naoArmazenar(),
+                            cfg.esforcoRaciocinio()),
                     p.timeoutSegundos()));
         }
         log.info("agente: {} provedor(es) de IA configurado(s): {}", lista.size(),
