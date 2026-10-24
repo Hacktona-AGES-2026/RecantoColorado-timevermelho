@@ -14,14 +14,15 @@ Assistente para tirar dúvidas (chat), organizar textos por assunto (categoriza�
 
 ## Como ligar
 
-O agente sobe **desligado** até existirem (1) regras de negócio preenchidas e (2) ao menos uma chave de API. O motivo aparece em `GET /api/agente/status` e no aviso amarelo do chat.
+O agente sobe **desligado** até existirem (1) regras de negócio preenchidas (já estão) e (2) ao menos uma chave de API. O motivo aparece em `GET /api/agente/status` e no aviso amarelo do chat.
 
-1. Preencha `backend/src/main/resources/agente/regras-negocio.md` (por Pull Request revisado).
+1. As regras de negócio já estão em `backend/src/main/resources/agente/regras-negocio.md`; qualquer mudança nelas vai por Pull Request revisado.
 2. Exporte as chaves (modelo em `backend/.env.example`; o Spring não lê `.env` sozinho):
    ```bash
    export IA_PROVEDOR_1_CHAVE=...   IA_PROVEDOR_1_MODELO=...   # ChatGPT/OpenAI
    export IA_PROVEDOR_2_CHAVE=...   IA_PROVEDOR_2_MODELO=...   # reserva, assume quando o crédito do 1º acabar
    ```
+   Ou, sem exportar nada: `cp backend/.env.example backend/.env`, preencha a chave e o modelo no `backend/.env` (está no `.gitignore`) e rode o backend com o perfil `dotenv` (IntelliJ: *Active profiles* = `dotenv`; terminal: `./mvnw spring-boot:run -Dspring-boot.run.profiles=dotenv`).
 3. Reinicie o backend. Para só **ver a tela** funcionando sem as regras de negócio, use `AGENTE_EXIGIR_REGRAS=false` (as chaves continuam obrigatórias).
 
 **Vários provedores:** a ordem é a de `agente.provedores[0]`, `[1]`… no `application.properties`. Cada um aceita `IA_PROVEDOR_N_URL`: qualquer API no formato `chat/completions` da OpenAI serve (outra conta OpenAI, Azure OpenAI…). A URL precisa ser `https` (ou `http` em localhost), senão o provedor é ignorado. APIs em outro formato precisam de uma implementação própria de `ProvedorIA`.
@@ -82,13 +83,25 @@ Camadas, da primeira à última. Qualquer uma que falhe **recusa** (a falha fech
 
 **Testes de guarda** (`AgenteGuardaTest`, `seguranca-agente.test.ts`) falham se alguém der ao agente o poder de gravar na aplicação, rodar comandos, abrir outras conexões de rede, receber ferramentas, ou se uma chave/`dangerouslySetInnerHTML` aparecer no frontend. **Se um deles quebrar, a mudança precisa de revisão de segurança.**
 
+## Limites do contexto do Desafio 1
+
+O agente fica preso ao que o desafio pede: **apoiar a priorização da fila cirúrgica, com o humano decidindo**. Os limites ficam em três camadas:
+
+| Camada | Onde | O que segura |
+|---|---|---|
+| Regras de negócio (texto) | `resources/agente/regras-negocio.md` | Contexto do desafio, regra de ouro, classes e prazos, o que muda a posição, proteções (dado faltando, saída sugerida, HbA1c), o que está fora do escopo (agenda, preparo, cancelamento) e os limites do assistente. |
+| Filtro de escopo (IA) | categoria `PACIENTE_ESPECIFICO` em `filtro-escopo.md` | Pedido de dado de uma pessoa ou para o assistente decidir, prever ou mudar classe, posição, data ou saída de alguém. Resposta fixa, sem gerar texto; não conta como abuso. |
+| Barreira em código (sem IA) | `protecao/LimitesDoContexto.java` | CPF ou cartão do SUS (a mensagem **não vai** ao provedor nem ao histórico), número de solicitação `SOL-…`, pedido para rebaixar oncológico e pedido para "furar a fila". Resposta fixa, antes da moderação. |
+
+Casos na bateria de avaliação: `L01`–`L10`, `P02` e `C03`.
+
 ## Decisões tomadas por padrão (revisar)
 
 O pedido foi executar as tasks sem as respostas das decisões D1–D12; os padrões abaixo são escolhas minhas, todas reversíveis.
 
 | Decisão | Padrão adotado |
 |---|---|
-| D1 regras de negócio | **Pendente.** O agente fica desligado até o arquivo ser preenchido. |
+| D1 regras de negócio | **Preenchidas** a partir do documento do Desafio 1 e do `DECISOES.md` (`regras-negocio.md`). Falta a revisão por Pull Request (D11). |
 | D2/D3 provedores e modelos | Provedor genérico no formato da OpenAI; lista e modelos por variável de ambiente. |
 | D4 "dúvida de consulta" | Consulta agendada ou de reavaliação, o que esperar e como o resultado aparece na aplicação. |
 | D5 privacidade | Só dados agregados; sem login. |

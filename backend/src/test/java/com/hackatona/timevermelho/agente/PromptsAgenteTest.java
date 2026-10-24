@@ -81,7 +81,8 @@ class PromptsAgenteTest {
         var p = PromptsAgente.carregar(false);
         assertThat(p.pronto()).as(p.motivoDesligado()).isTrue();
         assertThat(p.textoSistema()).contains("Assistente do FilaVIVA").contains("O que você nunca faz");
-        assertThat(p.promptFiltro()).contains("INFRA_OU_CODIGO").contains("TENTATIVA_DE_BURLAR");
+        assertThat(p.promptFiltro()).contains("INFRA_OU_CODIGO").contains("TENTATIVA_DE_BURLAR")
+                .contains("PACIENTE_ESPECIFICO");
     }
 
     @Test
@@ -92,13 +93,22 @@ class PromptsAgenteTest {
     }
 
     @Test
-    void enquantoAsRegrasDeNegocioNaoForemPreenchidasOAgenteContinuaDesligado() throws Exception {
+    void asRegrasDeNegocioEstaoPreenchidasEOAgenteFicaPronto() throws Exception {
         String regras = Files.readString(Path.of("src/main/resources/agente/regras-negocio.md"));
         String sistema = Files.readString(Path.of("src/main/resources/agente/system-prompt.md"));
         String filtro = Files.readString(Path.of("src/main/resources/agente/filtro-escopo.md"));
         var p = PromptsAgente.montar(sistema, regras, filtro, true);
-        // Quando o time preencher o arquivo (D1), este teste deve passar a esperar "pronto".
-        assertThat(p.pronto()).isFalse();
-        assertThat(p.motivoDesligado()).contains("regras de negócio ainda não preenchidas");
+        assertThat(p.pronto()).as(p.motivoDesligado()).isTrue();
+        assertThat(p.textoSistema()).contains("## Regras de negócio do FilaVIVA").doesNotContain("<!--");
+    }
+
+    @Test
+    void asRegrasDeNegocioCobremOsPontosFixosDoDesafio() throws Exception {
+        String regras = Files.readString(Path.of("src/main/resources/agente/regras-negocio.md"));
+        assertThat(regras).contains("Regra de ouro").contains("CID que começa com C").contains("classe A2")
+                .contains("o profissional de saúde decide").contains("sintéticos")
+                .contains("agenda de sala").contains("preparo pré-operatório").contains("cancelamentos")
+                .contains("Dado faltando não rebaixa").contains("Ninguém sai da fila sem decisão humana")
+                .contains("furar a fila").contains("CPF").contains("SWALIS").contains("8,5%");
     }
 }

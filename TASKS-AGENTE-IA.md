@@ -16,7 +16,7 @@ Branch: `feat/agente-ia` (criada a partir da `main` em `f824820`). **39 das 46 t
 | Playwright (`npm run test:e2e`) | 12 testes, 0 falhas, contra o backend e o frontend de verdade |
 | Chat por HTTP real (Tomcat + cliente HTTP, provedor de IA de mentira) | fluxo em pedaços, cabeçalhos, CORS e erros em JSON verificados |
 
-**O agente sobe desligado** por escolha: faltam as regras de negócio (D1) e as chaves de API. Para só **ver a tela** funcionando sem as regras, use `AGENTE_EXIGIR_REGRAS=false` (as chaves continuam obrigatórias).
+**O agente sobe desligado** enquanto faltarem as chaves de API (as regras de negócio, D1, já estão preenchidas). Para só **ver a tela** funcionando sem as regras, use `AGENTE_EXIGIR_REGRAS=false` (as chaves continuam obrigatórias).
 
 **Um bug real que os testes simples não pegavam:** o navegador pede o chat com `Accept: text/event-stream`; sem tratamento o servidor não sabia escrever o erro em JSON e devolvia **500** em vez de 400/429/503. Apareceu no teste ponta a ponta com o backend de verdade, ganhou teste de regressão (unitário e por HTTP real) e foi corrigido em `AgenteTratamentoDeErros`.
 
@@ -30,7 +30,7 @@ Branch: `feat/agente-ia` (criada a partir da `main` em `f824820`). **39 das 46 t
 - **T18:** os relatórios ficam no banco, mas o `application.properties` do time **recria o banco a cada subida** (`ddl-auto=create`): somem ao reiniciar o backend até haver um banco persistente.
 - **T27:** `gitleaks` não está instalado, então a varredura é o `scripts/verificar-segredos.sh`.
 - **T7, T42 e T15:** valem com os textos, valores e categorias padrão que escolhi. **Precisam de validação da equipe** (D4, D6, D7).
-- **Decisões D1–D12:** tomei padrões para todas (tabela em `docs/AGENTE-IA.md`); D1, D11 e D12 continuam realmente pendentes.
+- **Decisões D1–D12:** tomei padrões para todas (tabela em `docs/AGENTE-IA.md`); D11 e D12 continuam realmente pendentes; D1 foi preenchida.
 - **Esta branch já inclui a `test/cobertura-testes`** (merge local): o frontend precisava do Vitest e do Playwright que estão lá. Ao enviar esta branch, esses commits vão junto.
 
 **O que falta (7, continuam `[ ]`)**
@@ -58,7 +58,7 @@ Branch: `feat/agente-ia` (criada a partir da `main` em `f824820`). **39 das 46 t
 
 ## 0. Decisões pendentes (responder antes de começar)
 
-- [ ] **D1 — Regras de negócio:** enviar o texto das regras (vai para `regras-negocio.md`, ver T3).
+- [x] **D1 — Regras de negócio:** preenchidas em `regras-negocio.md` a partir do documento do Desafio 1 e do `DECISOES.md` (revisão por PR pendente, D11).
 - [ ] **D2 — Lista de provedores e ordem de troca:** ex. OpenAI conta 1 → OpenAI conta 2 → outro provedor (Azure OpenAI, Anthropic, Google…). Definir quais e em que ordem.
 - [ ] **D3 — Modelo de cada provedor:** qual modelo usar em cada um. Ao trocar de provedor a qualidade da resposta pode mudar; definir se isso é aceitável.
 - [ ] **D4 — O que é "dúvida de consulta":** consulta médica agendada, situação do paciente na fila, ou consulta feita dentro do sistema? Dar 3 a 5 exemplos de perguntas reais.

@@ -40,7 +40,7 @@ class FiltroEscopoTest {
 
     @Test
     void asCategoriasProibidasEstaoForaDoEscopo() {
-        for (String c : List.of("INFRA_OU_CODIGO", "TENTATIVA_DE_BURLAR", "FORA_DO_ESCOPO")) {
+        for (String c : List.of("INFRA_OU_CODIGO", "PACIENTE_ESPECIFICO", "TENTATIVA_DE_BURLAR", "FORA_DO_ESCOPO")) {
             assertThat(com("{\"categoria\":\"" + c + "\",\"motivo\":\"x\"}").dentroDoEscopo()).as(c).isFalse();
         }
     }

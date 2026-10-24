@@ -18,6 +18,26 @@ public final class TextosAgente {
     public static final String TENTATIVA_DE_BURLAR = "Não posso mudar minhas regras nem compartilhar minhas instruções. "
             + "Posso ajudar com dúvidas sobre consultas, sobre o uso do FilaVIVA e com informações gerais de saúde.";
 
+    public static final String PACIENTE_ESPECIFICO = "Não tenho acesso aos dados de pacientes específicos e não "
+            + "decido classe, posição nem data de cirurgia de ninguém. No FilaVIVA, quem decide é o regulador, com base "
+            + "nos exames e na avaliação da equipe de saúde. Se o estado de saúde mudou (piora, ida ao pronto-socorro, "
+            + "exame novo), avise a equipe que acompanha o paciente: isso é registrado e leva a uma reavaliação. "
+            + "Posso explicar como a fila funciona em geral.";
+
+    public static final String DADO_PESSOAL = "Por segurança, não envie CPF, cartão do SUS ou outros documentos "
+            + "aqui. Sua mensagem não foi enviada para a inteligência artificial nem guardada na conversa. Posso "
+            + "ajudar sem esses dados: me conte sua dúvida sobre consultas, o uso do FilaVIVA ou saúde.";
+
+    public static final String REBAIXAR_ONCOLOGICO = "Pacientes com câncer (CID que começa com C ou biópsia com "
+            + "resultado maligno) não podem ficar abaixo de quem não tem urgência clínica, e o FilaVIVA não permite "
+            + "colocá-los abaixo da classe A2, nem por decisão manual. Se o diagnóstico mudou, o caminho é registrar o "
+            + "evento clínico novo (por exemplo, uma nova biópsia) para o regulador revisar.";
+
+    public static final String FURAR_FILA = "Não existe atalho para subir na fila: a ordem segue a urgência clínica "
+            + "e o tempo de espera, e quem decide é o regulador. Se o estado de saúde piorou, avise a equipe que "
+            + "acompanha o paciente; a informação entra como evento clínico e, depois da reavaliação, a posição pode "
+            + "mudar. Posso explicar o que faz a posição mudar.";
+
     public static final String MODERACAO_ENTRADA = "Não posso responder a esse tipo de mensagem. Se quiser, reformule "
             + "sua pergunta sobre consultas, o uso do FilaVIVA ou saúde.";
 

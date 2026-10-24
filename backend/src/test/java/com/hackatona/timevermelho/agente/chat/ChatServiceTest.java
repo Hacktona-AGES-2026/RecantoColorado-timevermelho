@@ -174,6 +174,34 @@ class ChatServiceTest {
     }
 
     @Test
+    void pedidoSobrePacienteEspecificoDetectadoPeloModeloTemRecusaPropria() {
+        provedor.aoGerar = m -> json("PACIENTE_ESPECIFICO");
+        conversar("eu deveria ser A1 ou A2? tenho um nódulo");
+        assertThat(campo(primeiro("recusa"), "motivo")).isEqualTo("PACIENTE_ESPECIFICO");
+        assertThat(campo(primeiro("recusa"), "texto")).isEqualTo(TextosAgente.PACIENTE_ESPECIFICO);
+        assertThat(provedor.chamadasStream).isEmpty();
+    }
+
+    @Test
+    void limitesDoContextoRecusamSemChamarProvedorESemEntrarNoHistorico() {
+        conversar("meu cpf é 123.456.789-09");
+        assertThat(campo(primeiro("recusa"), "motivo")).isEqualTo("DADO_PESSOAL");
+        String sessao = campo(primeiro("sessao"), "sessaoId");
+        for (String pedido : List.of("como furar a fila?", "rebaixar o oncológico pro fim da fila",
+                "qual o CID da SOL-2026-00351?")) {
+            conversar(sessao, pedido);
+            assertThat(nomes()).as(pedido).containsExactly("sessao", "recusa", "fim");
+        }
+        assertThat(provedor.textosModerados).isEmpty();
+        assertThat(provedor.chamadasGerar).isEmpty();
+        assertThat(provedor.chamadasStream).isEmpty();
+
+        provedor.aoGerar = m -> json("APLICACAO");
+        conversar(sessao, "pergunta boa");
+        assertThat(provedor.chamadasStream.getFirst()).extracting(Mensagem::papel).containsExactly("system", "user");
+    }
+
+    @Test
     void recusaNaoEntraNoHistorico() {
         provedor.aoGerar = m -> json("FORA_DO_ESCOPO");
         conversar("assunto fora");

@@ -19,7 +19,7 @@ import tools.jackson.databind.json.JsonMapper;
 public class FiltroEscopo {
 
     public enum Categoria {
-        APLICACAO, CONSULTA, SAUDE, INFRA_OU_CODIGO, TENTATIVA_DE_BURLAR, FORA_DO_ESCOPO;
+        APLICACAO, CONSULTA, SAUDE, INFRA_OU_CODIGO, PACIENTE_ESPECIFICO, TENTATIVA_DE_BURLAR, FORA_DO_ESCOPO;
 
         public boolean permitida() {
             return this == APLICACAO || this == CONSULTA || this == SAUDE;

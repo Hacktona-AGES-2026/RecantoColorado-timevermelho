@@ -17,6 +17,7 @@ import com.hackatona.timevermelho.agente.chat.Excecoes.LimiteExcedidoException;
 import com.hackatona.timevermelho.agente.chat.Excecoes.MensagemInvalidaException;
 import com.hackatona.timevermelho.agente.chat.Excecoes.RespostaBloqueadaException;
 import com.hackatona.timevermelho.agente.protecao.FiltroEscopo;
+import com.hackatona.timevermelho.agente.protecao.LimitesDoContexto;
 import com.hackatona.timevermelho.agente.protecao.ProtecaoEntrada;
 import com.hackatona.timevermelho.agente.protecao.TextosAgente;
 import com.hackatona.timevermelho.agente.protecao.VazamentoDePrompt;
@@ -27,7 +28,8 @@ import com.hackatona.timevermelho.agente.provedores.ProvedorIA;
 import com.hackatona.timevermelho.agente.provedores.ProvedoresIA;
 
 /**
- * Uma volta do chat, na ordem das barreiras: emergência e tentativa óbvia de burlar (sem IA) → moderação da
+ * Uma volta do chat, na ordem das barreiras: emergência e tentativa óbvia de burlar (sem IA) → limites do
+ * contexto da fila: dado pessoal, paciente específico, rebaixar oncológico, furar a fila (sem IA) → moderação da
  * pergunta → filtro de escopo → geração em streaming (com trava contra vazamento do prompt) → moderação da
  * resposta → aviso de saúde. Qualquer barreira que falhe recusa (a falha fecha, não abre).
  *
@@ -58,6 +60,7 @@ public class ChatService {
     private final BloqueioTemporario bloqueio;
     private final MonitorUso monitor;
     private final VazamentoDePrompt vazamento;
+    private final LimitesDoContexto limites = new LimitesDoContexto();
 
     /** Versão enxuta: sem dados da aplicação, com bloqueio e monitor padrão (usada nos testes simples). */
     public ChatService(AgenteProperties props, PromptsAgente prompts, ProvedoresIA provedores,
@@ -158,6 +161,15 @@ public class ChatService {
             return;
         }
 
+        // 1b. Limites do contexto da fila (sem IA): nada disso sai da aplicação nem entra no histórico.
+        // Não conta como abuso: são perguntas honestas que recebem uma resposta fixa e segura.
+        var limite = limites.avaliar(msg);
+        if (limite.isPresent()) {
+            recusar(emitir, limite.get().tipo().name(), limite.get().texto());
+            registrar(id, limite.get().tipo().name(), "recusada", 0, 0);
+            return;
+        }
+
         // 2. Moderação da pergunta
         if (props.moderacaoAtiva()) {
             boolean sinalizada;
@@ -188,12 +200,14 @@ public class ChatService {
         if (!classe.dentroDoEscopo()) {
             String texto = switch (classe.categoria()) {
                 case INFRA_OU_CODIGO -> TextosAgente.INFRA_OU_CODIGO;
+                case PACIENTE_ESPECIFICO -> TextosAgente.PACIENTE_ESPECIFICO;
                 case TENTATIVA_DE_BURLAR -> TextosAgente.TENTATIVA_DE_BURLAR;
                 default -> TextosAgente.FORA_DO_ESCOPO;
             };
             recusar(emitir, classe.categoria().name(), texto);
             registrar(id, classe.categoria().name(), "recusada", 0, 0);
-            contarRecusa(turno);
+            // perguntar sobre a própria situação não é abuso: só os outros desvios contam para o bloqueio
+            if (classe.categoria() != FiltroEscopo.Categoria.PACIENTE_ESPECIFICO) contarRecusa(turno);
             return;
         }
 
