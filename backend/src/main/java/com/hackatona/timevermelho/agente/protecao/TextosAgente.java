@@ -22,7 +22,8 @@ public final class TextosAgente {
             + "de cirurgia de ninguém, nem comparo pacientes. No FilaVIVA, quem decide é o regulador, com base nos exames "
             + "e na avaliação da equipe de saúde. Se o estado de saúde mudou (piora, ida ao pronto-socorro, exame novo), "
             + "avise a equipe que acompanha o paciente: isso é registrado e leva a uma reavaliação. Posso mostrar os dados "
-            + "cadastrados de um paciente (pelo nome ou pelo número de solicitação) e explicar como a fila funciona.";
+            + "cadastrados de um paciente (pelo nome, pelo número de solicitação ou pelo ID do paciente) e explicar como "
+            + "a fila funciona.";
 
     public static final String DADO_PESSOAL = "Por segurança, não envie CPF, cartão do SUS ou outros documentos "
             + "aqui. Sua mensagem não foi enviada para a inteligência artificial nem guardada na conversa. Posso "

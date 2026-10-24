@@ -8,7 +8,7 @@ Responda SOMENTE com JSON, neste formato:
   "procedimentos": [], "especialidades": [], "classes": [], "cidPrefixo": null, "oncologico": null,
   "municipios": [], "sexo": null, "idadeMin": null, "idadeMax": null, "status": "ATIVA",
   "acimaDoPrazo": null, "comReavaliacao": null, "ordem": "POSICAO", "limite": 200,
-  "nomes": [], "solicitacoes": []
+  "nomes": [], "solicitacoes": [], "pacientes": []
 }}
 
 Regras:
@@ -21,5 +21,5 @@ Regras:
 - "acimaDoPrazo": true para quem passou do prazo da classe ("atrasados", "esquecidos"). "comReavaliacao": true para quem tem motivo de reavaliação (alertas).
 - "ordem": "POSICAO" (padrão), "ESPERA" (mais tempo na fila primeiro) ou "SCORE". "limite": quantos pacientes listar (padrão 200, máximo 1000); "os 10 primeiros" é limite 10.
 - Deixe nulo ou vazio todo filtro que a pessoa não pediu. Mensagens curtas de continuação ("e os da classe B?", "agora liste") herdam os filtros do contexto anterior.
-- Pedido sobre um paciente específico (classe, posição, procedimento, tempo de espera, "dados da paciente X"): coloque o nome como a pessoa escreveu em "nomes" (ex.: ["Maria Exemplo Souza"]) ou o número em "solicitacoes" (ex.: ["SOL-2000-00001"]), use "listar": true e deixe "status" vazio (o sistema procura em todos os status). Vários pacientes de uma vez também valem.
+- Pedido sobre um paciente específico (classe, posição, procedimento, tempo de espera, "dados da paciente X"): coloque o nome como a pessoa escreveu em "nomes" (ex.: ["Maria Exemplo Souza"]) ou o número em "solicitacoes" (ex.: ["SOL-2000-00001"]) ou o ID do paciente em "pacientes" (ex.: ["PAC-00001"]; um paciente pode ter mais de uma solicitação), use "listar": true e deixe "status" vazio (o sistema procura em todos os status). Vários pacientes de uma vez também valem.
 - CPF, cartão do SUS, telefone ou endereço nunca são filtro: ignore-os.

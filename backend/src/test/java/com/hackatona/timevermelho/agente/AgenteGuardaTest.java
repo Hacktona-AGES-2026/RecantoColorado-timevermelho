@@ -104,6 +104,28 @@ class AgenteGuardaTest {
     }
 
     @Test
+    void oUnicoArquivoQueOAgenteAbreEOCsvOriginalESoParaLeitura() throws IOException {
+        List<String> abremArquivo = new ArrayList<>();
+        for (Path p : fontes()) {
+            String t = texto(p);
+            if (t.contains("Files.") || t.contains("FileInputStream") || t.contains("FileReader")
+                    || t.contains("RandomAccessFile") || t.contains("FileChannel")) abremArquivo.add(p.getFileName().toString());
+        }
+        assertThat(abremArquivo).containsExactly("CsvOriginal.java");
+
+        String csv = texto(RAIZ.resolve("contexto/CsvOriginal.java"));
+        assertThat(csv).contains("Files.newInputStream(caminho, StandardOpenOption.READ)")
+                .contains("resolve(ARQUIVO)").contains("\"fila_cirurgica.csv\"");
+        // nada que escreva, crie, apague ou mude o arquivo
+        for (String proibido : List.of("Files.write", "Files.newOutputStream", "Files.newBufferedWriter", "OutputStream",
+                "Writer", "StandardOpenOption.WRITE", "StandardOpenOption.APPEND", "StandardOpenOption.CREATE",
+                "TRUNCATE_EXISTING", "Files.delete", "Files.move", "Files.copy", "setLastModified", "setAttribute",
+                "CSVPrinter")) {
+            assertThat(csv).as("CsvOriginal não pode usar " + proibido).doesNotContain(proibido);
+        }
+    }
+
+    @Test
     void sohOProvedorFalaComARedeEOGuardaDeUrlEstaNoLugar() throws IOException {
         List<String> comRede = new ArrayList<>();
         for (Path p : fontes()) {

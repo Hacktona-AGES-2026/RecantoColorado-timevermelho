@@ -66,10 +66,12 @@ public class PlanejadorConsulta {
             pedido.append("<<<MENSAGEM\n").append(mensagem).append("\nMENSAGEM>>>");
             msgs.add(Mensagem.usuario(pedido.toString()));
             var resposta = provedores.gerar(msgs, ProvedorIA.Opcoes.json(MAX_TOKENS));
-            return interpretar(resposta.texto(), catalogo);
+            return ConsultaFila.comIdentificadoresDa(mensagem, interpretar(resposta.texto(), catalogo));
         } catch (RuntimeException e) {
-            log.warn("agente: planejador de consulta falhou ({}); seguindo sem consulta", e.getClass().getSimpleName());
-            return Optional.empty();
+            // um número de solicitação ou ID de paciente digitado não depende da IA: ainda dá para procurar
+            log.warn("agente: planejador de consulta falhou ({}); seguindo só com os números da mensagem",
+                    e.getClass().getSimpleName());
+            return ConsultaFila.comIdentificadoresDa(mensagem, Optional.empty());
         }
     }
 
