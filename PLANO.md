@@ -68,10 +68,10 @@ Dado faltando (dor/limitação vazias) **não rebaixa**: marca `DADO_INCOMPLETO`
 
 **Passo 4 — Ordem da fila:**
 1. Classe (A1 > A2 > B > C > D) — **tempo de espera nunca passa por cima de urgência clínica**.
-2. Dentro da classe: **% do prazo consumido** (`dias_em_fila / prazo`) — quem está mais perto de estourar (ou já estourou) vai primeiro.
-3. Desempate: score de 0–100 (componentes abaixo) e depois data de entrada.
+2. Dentro da classe: **score de 0–100** (componentes abaixo; o tempo de espera relativo ao prazo é um deles). Assim os pesos ajustáveis fazem diferença na ordem.
+3. Desempate: % do prazo consumido e depois data de entrada.
 
-**Score explicável (só para desempate e explicação):** pesos iniciais, ajustáveis na tela do regulador
+**Score explicável (ordena dentro da classe):** pesos iniciais, ajustáveis na tela do regulador
 `diagnóstico 30 · sinais de piora 25 · dor 15 · limitação 10 · tempo de espera relativo 15 · ASA/risco 5`.
 Cada componente aparece separado na tela ("+25 biópsia positiva em 13/09").
 
