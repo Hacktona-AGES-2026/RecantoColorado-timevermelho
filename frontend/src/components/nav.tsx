@@ -10,6 +10,8 @@ const LINKS = [
   { href: "/alertas", rotulo: "Alertas e reavaliação" },
   { href: "/simulador", rotulo: "Simulador" },
   { href: "/indicadores", rotulo: "Antes × depois" },
+  { href: "/relatorios", rotulo: "Relatórios" },
+  { href: "/assistente", rotulo: "Assistente" },
 ];
 
 export function Nav() {

@@ -57,7 +57,7 @@ export function ErroApi({ erro, aoTentar }: { erro: string; aoTentar?: () => voi
       <div>
         <p className="font-medium">{foraDoAr ? "API fora do ar" : "Não foi possível carregar"}</p>
         <p className="text-muted-foreground mt-1">
-          {foraDoAr ? `Não conseguimos falar com ${API_URL}. Verifique se o backend está rodando.` : erro}
+          {foraDoAr ? `Não conseguimos falar com ${API_URL || "o backend (localhost:8080)"}. Verifique se o backend está rodando.` : erro}
         </p>
       </div>
       {aoTentar && (

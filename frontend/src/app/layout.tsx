@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Nav } from "@/components/nav";
+import { AssistenteFlutuante } from "@/components/assistente/assistente-flutuante";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,6 +28,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           <Nav />
         </Suspense>
         <main className="mx-auto flex w-full max-w-7xl flex-1 flex-col gap-6 px-4 py-6">{children}</main>
+        <Suspense fallback={null}>
+          <AssistenteFlutuante />
+        </Suspense>
       </body>
     </html>
   );
