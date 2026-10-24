@@ -145,11 +145,20 @@ class AnalisadorReavaliacaoTest {
 
     @Test
     void hba1cAcimaDoLimiteEDescompensacaoClinica() {
-        var c = caso("K409").eventos(List.of(evento("E1", "hba1c", "resultado", 9.8, 15))).build();
+        var c = caso("K409").flagDiabetico("sim").eventos(List.of(evento("E1", "hba1c", "resultado", 9.8, 15))).build();
         var r = analisar(c);
         assertThat(tipos(r)).contains(TipoReavaliacao.DESCOMPENSACAO_CLINICA);
         assertThat(r.getReavaliacoes().stream().filter(x -> x.tipo() == TipoReavaliacao.DESCOMPENSACAO_CLINICA).findFirst()
                 .orElseThrow().mensagem()).contains("diabetes descontrolado");
+    }
+
+    @Test
+    void hba1cAltaSemDiabetesNoCadastroNaoFalaEmDiabetesDescontrolado() {
+        var c = caso("K409").eventos(List.of(evento("E1", "hba1c", "resultado", 9.8, 15))).build();
+        var r = analisar(c);
+        String msg = r.getReavaliacoes().stream().filter(x -> x.tipo() == TipoReavaliacao.DESCOMPENSACAO_CLINICA).findFirst()
+                .orElseThrow().mensagem();
+        assertThat(msg).doesNotContain("diabetes descontrolado").contains("sem diabetes registrado no cadastro");
     }
 
     @Test

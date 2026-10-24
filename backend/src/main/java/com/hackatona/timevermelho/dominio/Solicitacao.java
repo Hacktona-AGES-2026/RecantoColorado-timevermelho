@@ -61,6 +61,7 @@ public class Solicitacao {
     private String flagDiabetico;
     private String flagPiora;
     private Double hba1cUltima;
+    private java.time.LocalDate dataHba1cUltima;
     private String avaliacaoPreAnestesica;
     private String examesPreOpValidos;
 

@@ -60,6 +60,100 @@ export interface ItemFila {
   rebaixamento: EstadoRebaixamento | null; // null = nenhum rebaixamento registrado
   desejoCirurgia: RespostaCirurgia | null; // null = não informado (não muda a fila)
   posicaoFixada: number | null; // posição escolhida por um médico ou pelo regulador (null = calculada)
+  aptidao: VereditoAptidao | null; // parecer de aptidão cirúrgica (não muda a fila)
+  decisaoAptidao: DecisaoAptidaoTipo | null; // decisão humana sobre a aptidão
+  saude: SaudeItem; // diabetes, última HbA1c e comorbidades (só mostra; não muda a fila)
+}
+
+/** Saúde do paciente na fila, a partir dos dados estruturados do cadastro e dos exames. */
+export interface SaudeItem {
+  diabetes: boolean; // confirmado por comorbidades, flag do cadastro ou CID secundário E10–E14
+  fontesDiabetes: string[];
+  divergenciaDiabetes: boolean; // flag do cadastro e lista de comorbidades discordam
+  hba1c: number | null; // última medida (%)
+  dataHba1c: string | null; // AAAA-MM-DD
+  origemHba1c: "exame" | "cadastro" | null;
+  hba1cAlta: boolean; // acima de 8,5%
+  comorbidades: string[]; // rótulos em português
+}
+
+/** Aptidão cirúrgica: o paciente pode ser operado agora? Não muda a posição na fila. */
+export type VereditoAptidao = "APTO" | "APTO_COM_RESSALVAS" | "OTIMIZAR_ANTES";
+export type DecisaoAptidaoTipo = "LIBERADO" | "AGUARDAR_OTIMIZACAO" | "CONTRAINDICADO";
+export type Nivel = "BAIXO" | "MODERADO" | "ALTO";
+
+export interface FatorAptidao {
+  descricao: string;
+  pontos: number;
+  modificavel: boolean; // o paciente pode melhorar
+  bloqueante: boolean; // precisa ser controlado antes de uma cirurgia eletiva
+  fonte: string;
+}
+
+export interface RecursosAptidao {
+  tempoCirurgiaMin: number;
+  tempoBaseMin: number;
+  permanenciaDias: number;
+  uti: "NAO" | "POSSIVEL" | "PROVAVEL" | "PREVISTA";
+  consumo: Nivel;
+  explicacao: string[];
+}
+
+export interface FatoresInformados {
+  colesterolAlto: boolean;
+  pressaoDescontrolada: boolean;
+  imc: number | null;
+  tabagismoAtual: boolean;
+  adesaoRuim: boolean;
+  outros: string | null;
+  autor: string;
+  criadoEm: string;
+}
+
+export interface DecisaoAptidao {
+  decisao: DecisaoAptidaoTipo;
+  rotulo: string;
+  plano: string | null;
+  reavaliarEm: string | null;
+  justificativa: string;
+  autor: string;
+  medicoId: number | null;
+  criadoEm: string;
+}
+
+export interface Aptidao {
+  solicitacaoId: string;
+  veredito: VereditoAptidao;
+  vereditoRotulo: string;
+  risco: Nivel;
+  pontos: number;
+  fatores: FatorAptidao[];
+  acoes: string[];
+  preRequisitos: string[];
+  recursos: RecursosAptidao;
+  observacaoPrioridade: string | null;
+  fatoresInformados: FatoresInformados | null;
+  decisao: DecisaoAptidao | null;
+  historicoDecisoes: DecisaoAptidao[];
+  aviso: string;
+}
+
+export interface FatoresAptidaoRequest {
+  colesterolAlto: boolean;
+  pressaoDescontrolada: boolean;
+  imc?: number;
+  tabagismoAtual: boolean;
+  adesaoRuim: boolean;
+  outros?: string;
+  autor?: string;
+}
+
+export interface DecisaoAptidaoRequest {
+  decisao: DecisaoAptidaoTipo;
+  justificativa: string;
+  plano?: string;
+  reavaliarEm?: string; // AAAA-MM-DD
+  autor?: string;
 }
 
 /** O paciente quer ser operado? Só informa: não muda classe nem posição. */
@@ -73,6 +167,46 @@ export interface DesejoCirurgia {
   autor: string;
   medicoId: number | null;
   criadoEm: string;
+}
+
+/** BRAN: benefícios, riscos, alternativas e nada (o que acontece sem a cirurgia). */
+export type FormaComunicacao = "PRESENCIAL" | "TELEFONE" | "TELECONSULTA";
+
+export interface BranRascunho {
+  solicitacaoId: string;
+  procedimento: string;
+  beneficios: string;
+  riscos: string;
+  alternativas: string;
+  nada: string;
+  fatoresDeRisco: string[]; // fatores do próprio paciente que aumentam o risco
+  aviso: string;
+}
+
+export interface Bran {
+  id: number;
+  beneficios: string;
+  riscos: string;
+  alternativas: string;
+  nada: string;
+  forma: FormaComunicacao;
+  duvidas: string | null;
+  compreendeu: boolean;
+  autor: string;
+  medicoId: number | null;
+  criadoEm: string;
+}
+
+export interface BranRequest {
+  beneficios: string;
+  riscos: string;
+  alternativas: string;
+  nada: string;
+  forma: FormaComunicacao;
+  duvidas?: string;
+  compreendeu: boolean;
+  autor?: string;
+  medicoId?: number;
 }
 
 export interface DesejoCirurgiaRequest {
@@ -568,6 +702,14 @@ export const api = {
   medico: (id: number | string) => get<Medico>(`/api/medicos/${id}`),
   cadastrarMedico: (novo: NovoMedico) => post<Medico>("/api/medicos", novo),
   removerMedico: (id: number) => del(`/api/medicos/${id}`),
+  aptidao: (solicitacaoId: string) => get<Aptidao>(`/api/pacientes/${solicitacaoId}/aptidao`),
+  informarFatoresAptidao: (solicitacaoId: string, req: FatoresAptidaoRequest) =>
+    post<Aptidao>(`/api/pacientes/${solicitacaoId}/aptidao/fatores`, req),
+  decidirAptidao: (solicitacaoId: string, req: DecisaoAptidaoRequest) =>
+    post<Aptidao>(`/api/pacientes/${solicitacaoId}/aptidao/decisao`, req),
+  rascunhoBran: (solicitacaoId: string) => get<BranRascunho>(`/api/pacientes/${solicitacaoId}/bran/rascunho`),
+  registrarBran: (solicitacaoId: string, req: BranRequest) => post<Bran>(`/api/pacientes/${solicitacaoId}/bran`, req),
+  historicoBran: (solicitacaoId: string) => get<Bran[]>(`/api/pacientes/${solicitacaoId}/bran`),
   registrarDesejo: (solicitacaoId: string, req: DesejoCirurgiaRequest) =>
     post<DesejoCirurgia>(`/api/pacientes/${solicitacaoId}/desejo-cirurgia`, req),
   ajustarComoMedico: (id: number | string, ajuste: AjusteMedico) => post<Impacto>(`/api/medicos/${id}/ajustes`, ajuste),

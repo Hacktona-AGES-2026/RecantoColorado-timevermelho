@@ -42,6 +42,18 @@ public class FilaController {
     private final DemoService demo;
     private final FilaService fila;
     private com.hackatona.timevermelho.servico.DesejoCirurgiaService desejoCirurgia;
+    private com.hackatona.timevermelho.servico.BranService bran;
+    private com.hackatona.timevermelho.servico.AptidaoService aptidao;
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void setAptidao(com.hackatona.timevermelho.servico.AptidaoService aptidao) {
+        this.aptidao = aptidao;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
+    void setBran(com.hackatona.timevermelho.servico.BranService bran) {
+        this.bran = bran;
+    }
 
     @org.springframework.beans.factory.annotation.Autowired
     void setDesejoCirurgia(com.hackatona.timevermelho.servico.DesejoCirurgiaService desejoCirurgia) {
@@ -112,6 +124,44 @@ public class FilaController {
     @GetMapping("/pacientes/{solicitacaoId}/desejo-cirurgia")
     public java.util.List<Dtos.DesejoCirurgiaDto> historicoDesejo(@PathVariable String solicitacaoId) {
         return desejoCirurgia.historico(decisao.resolverId(solicitacaoId));
+    }
+
+    /** Aptidão cirúrgica: parecer, fatores, ações, pré-requisitos, recursos estimados e decisões. Não muda a fila. */
+    @GetMapping("/pacientes/{solicitacaoId}/aptidao")
+    public com.hackatona.timevermelho.servico.AptidaoService.Aptidao aptidao(@PathVariable String solicitacaoId) {
+        return aptidao.avaliar(solicitacaoId);
+    }
+
+    /** Fatores de saúde que o sistema não tem (colesterol, pressão descontrolada, IMC, tabagismo, adesão). */
+    @PostMapping("/pacientes/{solicitacaoId}/aptidao/fatores")
+    public com.hackatona.timevermelho.servico.AptidaoService.Aptidao informarFatores(@PathVariable String solicitacaoId,
+            @Valid @RequestBody com.hackatona.timevermelho.servico.AptidaoService.FatoresRequest req) {
+        return aptidao.informarFatores(solicitacaoId, req);
+    }
+
+    /** Decisão humana: liberar, aguardar otimização (com plano) ou contraindicar no momento. */
+    @PostMapping("/pacientes/{solicitacaoId}/aptidao/decisao")
+    public com.hackatona.timevermelho.servico.AptidaoService.Aptidao decidirAptidao(@PathVariable String solicitacaoId,
+            @Valid @RequestBody com.hackatona.timevermelho.servico.AptidaoService.DecisaoRequest req) {
+        return aptidao.decidir(solicitacaoId, req);
+    }
+
+    /** BRAN: rascunho montado pelo sistema para o médico revisar. */
+    @GetMapping("/pacientes/{solicitacaoId}/bran/rascunho")
+    public Dtos.BranRascunho rascunhoBran(@PathVariable String solicitacaoId) {
+        return bran.rascunho(solicitacaoId);
+    }
+
+    /** BRAN: registra a conversa com o paciente (benefícios, riscos, alternativas e nada). Não muda a fila. */
+    @PostMapping("/pacientes/{solicitacaoId}/bran")
+    public Dtos.BranDto registrarBran(@PathVariable String solicitacaoId, @Valid @RequestBody Dtos.BranRequest req) {
+        return bran.registrar(solicitacaoId, req);
+    }
+
+    /** BRAN: histórico de comunicações, mais recente primeiro. */
+    @GetMapping("/pacientes/{solicitacaoId}/bran")
+    public java.util.List<Dtos.BranDto> historicoBran(@PathVariable String solicitacaoId) {
+        return bran.historico(solicitacaoId);
     }
 
     @PostMapping("/eventos")

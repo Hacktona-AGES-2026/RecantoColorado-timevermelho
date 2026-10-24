@@ -1,0 +1,143 @@
+{
+  "_comentario": "Texto GERAL por procedimento para montar o rascunho do BRAN (Benefícios, Riscos, Alternativas e Nada). Linguagem simples, para o paciente. É ponto de partida: o médico revisa e adapta ao caso antes de comunicar. Conteúdo a validar com o mentor clínico; não é protocolo nem recomendação individual.",
+  "procedimentos": {
+    "PROC001": {
+      "beneficios": "Retirar a catarata e colocar uma lente nova costuma melhorar bastante a visão, a leitura, a direção e a segurança para andar, com recuperação rápida.",
+      "riscos": "Infecção ou inflamação no olho, aumento da pressão do olho, embaçamento que pode precisar de laser depois, e raramente descolamento de retina.",
+      "alternativas": "Trocar o grau dos óculos e melhorar a iluminação ajudam por um tempo, mas não tratam a catarata.",
+      "nada": "A visão tende a piorar aos poucos, aumentando o risco de quedas e a dificuldade nas tarefas do dia a dia. Em geral não é uma urgência."
+    },
+    "PROC002": {
+      "beneficios": "Corrigir a hérnia na virilha alivia a dor e o volume e evita que o intestino fique preso na hérnia.",
+      "riscos": "Dor no local por algumas semanas, hematoma, infecção, dormência na pele e, em poucos casos, a hérnia voltar.",
+      "alternativas": "Em hérnias pequenas e sem dor, dá para acompanhar com consultas (observação vigiada). Cinta ou funda pode aliviar, mas não cura.",
+      "nada": "A hérnia costuma crescer com o tempo. Existe risco de encarceramento (o intestino fica preso), que é uma emergência: dor forte, endurecimento e vômitos pedem atendimento imediato."
+    },
+    "PROC003": {
+      "beneficios": "Fechar a hérnia do umbigo ou da cicatriz alivia a dor e o volume e evita que o intestino fique preso.",
+      "riscos": "Dor, infecção ou acúmulo de líquido no local, e a hérnia pode voltar, principalmente em quem tem obesidade ou fuma.",
+      "alternativas": "Em hérnias pequenas e sem sintomas, acompanhar com consultas. Perder peso e parar de fumar melhoram o resultado de uma futura cirurgia.",
+      "nada": "A hérnia pode aumentar. Dor forte, endurecimento e vômitos podem indicar encarceramento, que é emergência."
+    },
+    "PROC004": {
+      "beneficios": "Retirar a vesícula com pedras acaba com as crises de dor e evita complicações como inflamação da vesícula, do pâncreas e icterícia.",
+      "riscos": "Sangramento, infecção, lesão das vias da bile (rara) e, às vezes, necessidade de converter para cirurgia aberta.",
+      "alternativas": "Dieta com pouca gordura reduz as crises, mas não elimina as pedras. Remédios para dissolver pedras funcionam em poucos casos.",
+      "nada": "As crises de dor podem voltar e piorar. Dor forte com febre ou pele amarelada (icterícia) pede atendimento de urgência."
+    },
+    "PROC005": {
+      "beneficios": "Retirar as hemorroidas alivia dor, sangramento e coceira quando o tratamento clínico não resolveu.",
+      "riscos": "Dor importante nos primeiros dias, sangramento, dificuldade para urinar logo após a cirurgia e, raramente, estreitamento do ânus.",
+      "alternativas": "Alimentação rica em fibras, mais água, banho de assento e pomadas; em alguns casos, ligadura elástica no consultório.",
+      "nada": "Os sintomas podem continuar ou piorar. Sangramento grande ou dor muito forte pedem avaliação."
+    },
+    "PROC006": {
+      "beneficios": "Tratar as varizes alivia dor, peso e inchaço nas pernas e reduz o risco de feridas e de inflamação nas veias.",
+      "riscos": "Hematomas, dor, dormência na pele, infecção e, raramente, trombose.",
+      "alternativas": "Meia de compressão elástica, elevar as pernas, caminhar e controlar o peso; em alguns casos, escleroterapia.",
+      "nada": "As varizes tendem a aumentar. Podem surgir manchas, feridas e flebite (veia inflamada e dolorida)."
+    },
+    "PROC007": {
+      "beneficios": "A prótese de quadril costuma aliviar muito a dor e melhorar a capacidade de andar e a independência.",
+      "riscos": "Infecção, trombose, luxação da prótese, diferença no tamanho das pernas e desgaste da prótese com os anos. Pode precisar de UTI em alguns casos.",
+      "alternativas": "Fisioterapia, analgésicos, perda de peso, bengala ou andador e infiltrações em alguns casos.",
+      "nada": "A dor e a limitação tendem a piorar com o tempo, com mais risco de quedas e perda de independência."
+    },
+    "PROC008": {
+      "beneficios": "A prótese de joelho costuma aliviar a dor e melhorar a capacidade de andar e subir escadas.",
+      "riscos": "Infecção, trombose, rigidez do joelho, dor persistente em parte dos casos e desgaste da prótese. Pode precisar de UTI em alguns casos.",
+      "alternativas": "Fisioterapia e fortalecimento, perda de peso, analgésicos, infiltrações e uso de bengala.",
+      "nada": "A artrose tende a progredir, com mais dor e limitação para andar."
+    },
+    "PROC009": {
+      "beneficios": "A artroscopia pode tratar lesões de menisco ou cartilagem, aliviando dor e travamento do joelho.",
+      "riscos": "Inchaço, rigidez, infecção e, raramente, trombose. Nem sempre resolve toda a dor.",
+      "alternativas": "Fisioterapia, fortalecimento da musculatura, gelo e analgésicos; muitas lesões melhoram sem cirurgia.",
+      "nada": "Os sintomas podem continuar ou melhorar com o tempo; travamentos frequentes podem desgastar a cartilagem."
+    },
+    "PROC010": {
+      "beneficios": "Liberar o túnel do carpo alivia formigamento, dor e perda de força na mão.",
+      "riscos": "Dor na cicatriz, infecção, rigidez e, raramente, lesão de nervo.",
+      "alternativas": "Tala para dormir, fisioterapia, mudança de atividades e infiltração.",
+      "nada": "Os sintomas podem piorar e, com o tempo, causar perda de força e atrofia dos músculos da mão, que pode não se recuperar."
+    },
+    "PROC011": {
+      "beneficios": "Retirar o tumor da mama (parcial ou total) é parte central do tratamento do câncer e aumenta a chance de controle da doença.",
+      "riscos": "Sangramento, infecção, acúmulo de líquido, dor, alteração da sensibilidade e inchaço do braço (linfedema).",
+      "alternativas": "O tratamento é planejado com a equipe de oncologia: quimioterapia, radioterapia ou hormonioterapia podem ser feitas antes ou junto, conforme o caso.",
+      "nada": "Sem tratamento, o câncer tende a crescer e se espalhar, reduzindo as chances de cura."
+    },
+    "PROC012": {
+      "beneficios": "Retirar a parte doente do intestino é parte central do tratamento do câncer de cólon e aumenta a chance de controle da doença.",
+      "riscos": "Sangramento, infecção, vazamento na emenda do intestino, necessidade de bolsa (estomia) temporária ou definitiva e trombose. Costuma precisar de UTI.",
+      "alternativas": "O plano é feito com a equipe de oncologia; quimioterapia ou radioterapia podem fazer parte do tratamento, conforme o caso.",
+      "nada": "Sem cirurgia, o tumor pode crescer, obstruir o intestino, sangrar e se espalhar."
+    },
+    "PROC013": {
+      "beneficios": "Retirar o estômago (parcial ou total) é parte central do tratamento do câncer de estômago e aumenta a chance de controle da doença.",
+      "riscos": "Sangramento, infecção, vazamento na emenda, dificuldade para se alimentar, perda de peso e trombose. Costuma precisar de UTI.",
+      "alternativas": "O plano é feito com a equipe de oncologia; quimioterapia pode ser feita antes ou depois, conforme o caso.",
+      "nada": "Sem tratamento, o tumor pode crescer, causar sangramento, obstrução e se espalhar."
+    },
+    "PROC014": {
+      "beneficios": "Retirar a tireoide (parcial ou total) trata nódulos suspeitos, bócio que comprime o pescoço ou câncer de tireoide.",
+      "riscos": "Rouquidão por lesão de nervo, queda do cálcio no sangue, sangramento e necessidade de tomar hormônio da tireoide pelo resto da vida.",
+      "alternativas": "Dependendo do caso: acompanhamento com ultrassom, remédios ou iodo radioativo.",
+      "nada": "Nódulos e bócio podem crescer e comprimir o pescoço; se houver câncer, ele pode avançar."
+    },
+    "PROC015": {
+      "beneficios": "Retirar a próstata é uma das formas de tratar o câncer de próstata localizado, com chance de controle da doença.",
+      "riscos": "Perda de urina (incontinência), disfunção erétil, sangramento, infecção e trombose. Pode precisar de UTI em alguns casos.",
+      "alternativas": "Conforme o caso: radioterapia, hormonioterapia ou vigilância ativa para tumores de baixo risco, decididas com a equipe de urologia e oncologia.",
+      "nada": "Sem tratamento, o câncer pode avançar; em alguns tumores de baixo risco, a evolução é lenta."
+    },
+    "PROC016": {
+      "beneficios": "A raspagem da próstata (RTU) melhora o jato de urina e diminui a vontade frequente de urinar e o risco de retenção.",
+      "riscos": "Sangramento, infecção urinária, ejaculação para dentro da bexiga e, raramente, perda de urina.",
+      "alternativas": "Remédios que relaxam ou diminuem a próstata e mudança de hábitos (menos líquido à noite, menos cafeína).",
+      "nada": "Os sintomas podem piorar; existe risco de retenção urinária (não conseguir urinar), que é urgência."
+    },
+    "PROC017": {
+      "beneficios": "Retirar ou quebrar o cálculo alivia a dor e evita obstrução e infecção do rim.",
+      "riscos": "Sangramento na urina, infecção, dor e necessidade de cateter (duplo J) por algumas semanas.",
+      "alternativas": "Cálculos pequenos podem sair sozinhos com muita água e remédios; em alguns casos, litotripsia por ondas de choque.",
+      "nada": "O cálculo pode causar novas crises de dor, infecção e perda de função do rim. Febre com dor lombar pede urgência."
+    },
+    "PROC018": {
+      "beneficios": "Retirar o útero resolve sangramento intenso, dor ou miomas que não melhoraram com outros tratamentos.",
+      "riscos": "Sangramento, infecção, lesão de bexiga ou intestino (rara), trombose e o fim da possibilidade de engravidar.",
+      "alternativas": "Remédios hormonais, DIU hormonal ou retirada só dos miomas, conforme o caso.",
+      "nada": "Os sintomas podem continuar; sangramento intenso pode causar anemia."
+    },
+    "PROC019": {
+      "beneficios": "Corrigir o septo e os cornetos melhora a respiração pelo nariz, o sono e pode reduzir sinusites.",
+      "riscos": "Sangramento, nariz entupido nas primeiras semanas, crostas e, raramente, perfuração do septo.",
+      "alternativas": "Sprays nasais, lavagem com soro e tratamento de rinite alérgica.",
+      "nada": "A obstrução nasal tende a continuar, com impacto no sono e na qualidade de vida. Não costuma ser urgência."
+    },
+    "PROC020": {
+      "beneficios": "Retirar parte do pulmão é parte central do tratamento do câncer de pulmão localizado e aumenta a chance de controle da doença.",
+      "riscos": "Falta de ar, pneumonia, vazamento de ar, sangramento, arritmia e trombose. Costuma precisar de UTI.",
+      "alternativas": "O plano é feito com a equipe de oncologia; radioterapia ou outros tratamentos podem ser opção, conforme o caso e a função do pulmão.",
+      "nada": "Sem tratamento, o tumor tende a crescer e se espalhar."
+    },
+    "PROC021": {
+      "beneficios": "A cirurgia bariátrica costuma levar a uma grande perda de peso e melhorar diabetes, pressão alta, apneia do sono e dores nas articulações.",
+      "riscos": "Vazamento na emenda, sangramento, trombose, falta de vitaminas, necessidade de acompanhamento pelo resto da vida. Pode precisar de UTI em alguns casos.",
+      "alternativas": "Acompanhamento com nutricionista, atividade física, tratamento psicológico e remédios para perda de peso.",
+      "nada": "A obesidade e as doenças associadas tendem a continuar ou piorar."
+    },
+    "PROC022": {
+      "beneficios": "A ponte de safena (revascularização) melhora o sangue que chega ao coração, alivia a angina e pode reduzir o risco de infarto.",
+      "riscos": "É uma cirurgia grande: sangramento, infecção, arritmia, AVC, problemas nos rins e trombose. Precisa de UTI.",
+      "alternativas": "Remédios para o coração e, em alguns casos, angioplastia com stent, conforme a avaliação da cardiologia.",
+      "nada": "A angina pode piorar e o risco de infarto continua. Dor no peito em repouso, falta de ar ou desmaio pedem atendimento imediato (SAMU 192)."
+    },
+    "PROC023": {
+      "beneficios": "Retirar o tumor de pele com margem trata a lesão e, quando é câncer, aumenta a chance de cura; a reconstrução melhora a cicatriz.",
+      "riscos": "Infecção, sangramento, cicatriz e, às vezes, necessidade de retirar mais tecido.",
+      "alternativas": "Conforme o tipo de lesão: outras formas de retirada, radioterapia ou tratamentos locais.",
+      "nada": "A lesão pode crescer; se for câncer, pode invadir tecidos próximos."
+    }
+  }
+}

@@ -33,6 +33,18 @@ export function itemFila(sobrescrever: Partial<ItemFila> = {}): ItemFila {
     rebaixamento: null,
     desejoCirurgia: null,
     posicaoFixada: null,
+    aptidao: "APTO",
+    decisaoAptidao: null,
+    saude: {
+      diabetes: false,
+      fontesDiabetes: [],
+      divergenciaDiabetes: false,
+      hba1c: null,
+      dataHba1c: null,
+      origemHba1c: null,
+      hba1cAlta: false,
+      comorbidades: [],
+    },
     ...sobrescrever,
   };
 }

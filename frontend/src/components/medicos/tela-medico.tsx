@@ -17,6 +17,8 @@ import { CampoSelect, Carregando, ErroApi, mensagemErro, Vazio } from "@/compone
 import { TelaFila } from "@/components/fila/tela-fila";
 import { BotaoPrioridade, MinhasAlteracoes } from "./prioridade-medico";
 import { SeloDesejo } from "@/components/fila/desejo-cirurgia";
+import { SeloAptidao } from "@/components/fila/aptidao";
+import { CelulaSaude } from "@/components/fila/saude";
 import { SeloPosicaoEscolhida } from "./prioridade-medico";
 
 const TAMANHO = 50;
@@ -285,6 +287,7 @@ function TabelaMedico({
           <TableHead>Paciente</TableHead>
           <TableHead>{avaliacao ? "Procedimento (outra especialidade)" : "Procedimento"}</TableHead>
           <TableHead>CID</TableHead>
+          <TableHead title="Diabetes, última HbA1c e comorbidades do cadastro">Saúde</TableHead>
           <TableHead>Espera / prazo</TableHead>
           <TableHead className="text-right">Score</TableHead>
           <TableHead>{avaliacao ? "Por que pode precisar da especialidade" : "Por que está nesta lista"}</TableHead>
@@ -317,6 +320,7 @@ function TabelaMedico({
                   {it.sexo && ` · ${it.sexo}`}
                 </span>
                 <SeloDesejo desejo={it.desejoCirurgia} />
+                <SeloAptidao aptidao={it.aptidao} decisao={it.decisaoAptidao} />
               </TableCell>
               <TableCell className="max-w-56">
                 <span className="block truncate" title={it.procedimento}>
@@ -332,6 +336,9 @@ function TabelaMedico({
                 ) : (
                   <span className="font-mono text-xs">{it.cid}</span>
                 )}
+              </TableCell>
+              <TableCell>
+                <CelulaSaude saude={it.saude} />
               </TableCell>
               <TableCell>
                 <span className="text-xs tabular-nums">

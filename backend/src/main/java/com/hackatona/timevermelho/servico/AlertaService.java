@@ -64,16 +64,37 @@ public class AlertaService {
 
         // o paciente disse que não quer ser operado, ou está em dúvida: o regulador conversa e decide (nada muda sozinho)
         List<Dtos.ItemReavaliacao> naoQuer = new ArrayList<>(), duvida = new ArrayList<>();
+        Map<String, com.hackatona.timevermelho.dominio.ComunicacaoBran> bran = new HashMap<>();
+        if (brans != null) for (var b : brans.findAllByOrderByCriadoEmAscIdAsc()) bran.put(b.getSolicitacaoId(), b);
         for (ResultadoPaciente r : snap.ativos()) {
             String d = r.getDesejoCirurgia();
             if ("NAO_QUER_OPERAR".equals(d)) naoQuer.add(new Dtos.ItemReavaliacao(r.getCaso().solicitacaoId(), r.getCaso().nome(),
                     r.classe().name(), r.getPosicao(), r.getStatus().name(),
-                    "Paciente disse que não quer ser operado. Converse sobre benefícios, riscos, alternativas e não fazer nada; "
-                            + "se ele mantiver, confirme a saída na página do paciente."));
+                    "Paciente disse que não quer ser operado. " + situacaoBran(bran.get(r.getCaso().solicitacaoId()))
+                            + " Se ele mantiver, confirme a saída na página do paciente."));
             if ("EM_DUVIDA".equals(d)) duvida.add(new Dtos.ItemReavaliacao(r.getCaso().solicitacaoId(), r.getCaso().nome(),
                     r.classe().name(), r.getPosicao(), r.getStatus().name(),
-                    "Paciente em dúvida sobre a cirurgia. Converse sobre benefícios, riscos, alternativas e não fazer nada."));
+                    "Paciente em dúvida sobre a cirurgia. " + situacaoBran(bran.get(r.getCaso().solicitacaoId()))));
         }
+        // aptidão: quem precisa otimizar a saúde antes e quem tem risco alto, ainda sem decisão de alguém
+        List<Dtos.ItemReavaliacao> otimizar = new ArrayList<>(), ressalvas = new ArrayList<>();
+        for (ResultadoPaciente r : snap.ativos()) {
+            if (r.getDecisaoAptidao() != null) continue;
+            if ("OTIMIZAR_ANTES".equals(r.getAptidao())) otimizar.add(new Dtos.ItemReavaliacao(r.getCaso().solicitacaoId(),
+                    r.getCaso().nome(), r.classe().name(), r.getPosicao(), r.getStatus().name(),
+                    "Saúde descontrolada para cirurgia eletiva (ex.: diabetes com HbA1c acima de 8,5% ou pressão descontrolada). "
+                            + "Veja a aptidão na página do paciente e decida: liberar, aguardar otimização ou contraindicar. "
+                            + "A posição na fila não muda."));
+            else if ("APTO_COM_RESSALVAS".equals(r.getAptidao())) ressalvas.add(new Dtos.ItemReavaliacao(r.getCaso().solicitacaoId(),
+                    r.getCaso().nome(), r.classe().name(), r.getPosicao(), r.getStatus().name(),
+                    "Risco cirúrgico alto e maior consumo previsto (internação/UTI). Precisa da liberação do anestesista e "
+                            + "dos especialistas antes de agendar."));
+        }
+        if (!ressalvas.isEmpty()) reavaliacao.add(0, new Dtos.GrupoReavaliacao("APTIDAO_RISCO_ALTO",
+                "Risco cirúrgico alto: liberação antes de agendar", ressalvas.size(), ressalvas.subList(0, Math.min(MAX_ITENS, ressalvas.size()))));
+        if (!otimizar.isEmpty()) reavaliacao.add(0, new Dtos.GrupoReavaliacao("APTIDAO_OTIMIZAR",
+                "Otimizar a saúde antes da cirurgia", otimizar.size(), otimizar.subList(0, Math.min(MAX_ITENS, otimizar.size()))));
+
         if (!naoQuer.isEmpty()) reavaliacao.add(0, new Dtos.GrupoReavaliacao("PACIENTE_NAO_QUER_OPERAR",
                 "Paciente não quer ser operado", naoQuer.size(), naoQuer.subList(0, Math.min(MAX_ITENS, naoQuer.size()))));
         if (!duvida.isEmpty()) reavaliacao.add(naoQuer.isEmpty() ? 0 : 1, new Dtos.GrupoReavaliacao("PACIENTE_EM_DUVIDA",
@@ -87,6 +108,20 @@ public class AlertaService {
                 .toList();
 
         return new Dtos.Alertas(recentes, reavaliacao, saidas, rebaixamentos());
+    }
+
+    private com.hackatona.timevermelho.dominio.ComunicacaoBranRepository brans;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setBrans(com.hackatona.timevermelho.dominio.ComunicacaoBranRepository brans) {
+        this.brans = brans;
+    }
+
+    /** Se a conversa BRAN (benefícios, riscos, alternativas e nada) já aconteceu. */
+    static String situacaoBran(com.hackatona.timevermelho.dominio.ComunicacaoBran b) {
+        if (b == null) return "BRAN ainda não comunicado: converse sobre benefícios, riscos, alternativas e não fazer nada.";
+        return "BRAN comunicado em " + b.getCriadoEm().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM HH:mm"))
+                + " por " + b.getAutor() + (b.isCompreendeu() ? "." : ", entendimento ainda não confirmado.");
     }
 
     /** Um ciclo de rebaixamento: a sugestão (ou o bloqueio) e, se houver, a decisão do regulador. */

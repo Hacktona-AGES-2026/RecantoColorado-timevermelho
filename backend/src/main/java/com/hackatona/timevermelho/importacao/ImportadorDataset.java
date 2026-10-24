@@ -126,6 +126,7 @@ public class ImportadorDataset {
             s.setFlagDiabetico(minusculo(r.get("flag_diabetico")));
             s.setFlagPiora(minusculo(r.get("flag_piora_clinica")));
             s.setHba1cUltima(decimal(r.get("hba1c_ultima")));
+            s.setDataHba1cUltima(data(r.get("data_hba1c_ultima")));
             s.setAvaliacaoPreAnestesica(texto(r.get("avaliacao_pre_anestesica")));
             s.setExamesPreOpValidos(texto(r.get("exames_pre_op_validos")));
             lista.add(s);

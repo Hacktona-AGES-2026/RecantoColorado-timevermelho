@@ -38,6 +38,18 @@ public class DecisaoService {
     private final AjusteReguladorRepository ajustes;
     private final AlertaRepository alertas;
     private final com.hackatona.timevermelho.dominio.DesejoCirurgiaRepository desejos;
+    private com.hackatona.timevermelho.dominio.ComunicacaoBranRepository brans;
+    private com.hackatona.timevermelho.dominio.RegistroAptidaoRepository registrosAptidao;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setRegistrosAptidao(com.hackatona.timevermelho.dominio.RegistroAptidaoRepository r) {
+        this.registrosAptidao = r;
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setBrans(com.hackatona.timevermelho.dominio.ComunicacaoBranRepository brans) {
+        this.brans = brans;
+    }
 
     public DecisaoService(FilaService fila, SolicitacaoRepository solicitacoes, EventoClinicoRepository eventos,
                           AjusteReguladorRepository ajustes, AlertaRepository alertas,
@@ -310,6 +322,8 @@ public class DecisaoService {
         ajustes.deleteAll();
         alertas.deleteAll();
         desejos.deleteAll();
+        if (brans != null) brans.deleteAll();
+        if (registrosAptidao != null) registrosAptidao.deleteAll();
         fila.recalcularComoBase();
     }
 }

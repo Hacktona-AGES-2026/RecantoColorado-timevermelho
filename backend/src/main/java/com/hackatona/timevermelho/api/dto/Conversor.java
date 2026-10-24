@@ -38,7 +38,8 @@ public final class Conversor {
                 r.getPosicao(), r.getPosicaoManual(), delta, cl.classe().name(), cl.classeCalculada().name(),
                 cl.ajustada(), cl.classe().prazoDias(), c.diasEmFila(), r.percentualPrazo(), r.getScore(),
                 c.prioridadeManual(), r.getStatus().name(), r.isMovidoPelaRegraDeOuro(), r.getReavaliacoes().size(),
-                motivos, r.getJustificativa(), r.getEstadoRebaixamento(), r.getDesejoCirurgia(), r.getPosicaoFixada());
+                motivos, r.getJustificativa(), r.getEstadoRebaixamento(), r.getDesejoCirurgia(), r.getPosicaoFixada(),
+                r.getAptidao(), r.getDecisaoAptidao(), SaudePaciente.de(c));
     }
 
     public static Dtos.AjusteDto ajuste(com.hackatona.timevermelho.dominio.AjusteRegulador a) {

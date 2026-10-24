@@ -43,6 +43,10 @@ public class ResultadoPaciente {
     private String estadoRebaixamento;
     /** O paciente quer ser operado? QUER_OPERAR, NAO_QUER_OPERAR, EM_DUVIDA ou null (não informado). Não muda a fila. */
     private String desejoCirurgia;
+    /** Parecer de aptidão cirúrgica: APTO, APTO_COM_RESSALVAS ou OTIMIZAR_ANTES. Não muda a fila. */
+    private String aptidao;
+    /** Decisão humana sobre a aptidão: LIBERADO, AGUARDAR_OTIMIZACAO, CONTRAINDICADO ou null. */
+    private String decisaoAptidao;
     /** Posição escolhida por um médico ou pelo regulador (null = calculada). */
     private Integer posicaoFixada;
     private String justificativaPosicao;

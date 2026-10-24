@@ -22,6 +22,8 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SeloDesejo } from "./desejo-cirurgia";
+import { SeloAptidao } from "./aptidao";
+import { CelulaSaude } from "./saude";
 import { SeloPosicaoEscolhida } from "@/components/medicos/prioridade-medico";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CampoSelect, Carregando, ErroApi, mensagemErro, rotuloStatus, Vazio } from "./comum";
@@ -412,6 +414,7 @@ function TabelaFila({ itens }: { itens: ItemFila[] }) {
           <TableHead>Paciente</TableHead>
           <TableHead>Procedimento</TableHead>
           <TableHead>CID</TableHead>
+          <TableHead title="Diabetes, última HbA1c e comorbidades do cadastro">Saúde</TableHead>
           <TableHead>Espera / prazo</TableHead>
           <TableHead className="text-right">Score</TableHead>
           <TableHead title="Prioridade manual na ordem de hoje">Prior. hoje</TableHead>
@@ -458,6 +461,7 @@ function TabelaFila({ itens }: { itens: ItemFila[] }) {
                   {it.sexo && ` · ${it.sexo}`}
                 </span>
                 <SeloDesejo desejo={it.desejoCirurgia} />
+                <SeloAptidao aptidao={it.aptidao} decisao={it.decisaoAptidao} />
                 {it.status === "SAIDA_SUGERIDA" && (
                   <span
                     className="mt-0.5 block w-fit rounded bg-amber-100 px-1.5 text-[10px] font-medium text-amber-900"
@@ -481,6 +485,9 @@ function TabelaFila({ itens }: { itens: ItemFila[] }) {
                 ) : (
                   <span className="font-mono text-xs">{it.cid}</span>
                 )}
+              </TableCell>
+              <TableCell>
+                <CelulaSaude saude={it.saude} />
               </TableCell>
               <TableCell>
                 <span className="text-xs tabular-nums">

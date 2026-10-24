@@ -33,7 +33,16 @@ public final class Dtos {
                            Integer delta, String classe, String classeCalculada, boolean ajustada, int prazoDias,
                            int diasEmFila, double percentualPrazo, double score, String prioridadeManual,
                            String status, boolean movidoPelaRegraDeOuro, int reavaliacoes, List<Motivo> motivos,
-                           String justificativa, String rebaixamento, String desejoCirurgia, Integer posicaoFixada) {}
+                           String justificativa, String rebaixamento, String desejoCirurgia, Integer posicaoFixada,
+                           String aptidao, String decisaoAptidao, Saude saude) {}
+
+    /**
+     * Saúde do paciente na fila (só leitura dos dados existentes; não muda a ordem).
+     * diabetes: confirmado por comorbidades, flag do cadastro ou CID secundário E10–E14 (fontesDiabetes diz quais).
+     * divergenciaDiabetes: a flag e a lista de comorbidades discordam. hba1c: última medida (exame ou cadastro).
+     */
+    public record Saude(boolean diabetes, List<String> fontesDiabetes, boolean divergenciaDiabetes, Double hba1c,
+                        LocalDate dataHba1c, String origemHba1c, boolean hba1cAlta, List<String> comorbidades) {}
 
     /** Qual fila uma resposta representa. */
     public record SnapshotDto(String tipo, String versao, java.time.Instant calculadoEm, int eventosRegistrados,
@@ -87,6 +96,27 @@ public final class Dtos {
     public record DesejoCirurgiaRequest(
             @NotNull(message = "informe a resposta do paciente") com.hackatona.timevermelho.dominio.RespostaCirurgia resposta,
             @Size(max = 1000) String observacao,
+            @Size(max = 120) String autor,
+            Long medicoId) {}
+
+    // ---------- BRAN: benefícios, riscos, alternativas e nada ----------
+
+    /** Rascunho montado pelo sistema (texto geral do procedimento + dados do paciente). O médico revisa antes. */
+    public record BranRascunho(String solicitacaoId, String procedimento, String beneficios, String riscos,
+                               String alternativas, String nada, List<String> fatoresDeRisco, String aviso) {}
+
+    /** Uma comunicação BRAN registrada (a mais recente vale). */
+    public record BranDto(Long id, String beneficios, String riscos, String alternativas, String nada, String forma,
+                          String duvidas, boolean compreendeu, String autor, Long medicoId, LocalDateTime criadoEm) {}
+
+    public record BranRequest(
+            @NotBlank @Size(min = 10, max = 4000, message = "descreva os benefícios (mínimo 10 caracteres)") String beneficios,
+            @NotBlank @Size(min = 10, max = 4000, message = "descreva os riscos (mínimo 10 caracteres)") String riscos,
+            @NotBlank @Size(min = 10, max = 4000, message = "descreva as alternativas (mínimo 10 caracteres)") String alternativas,
+            @NotBlank @Size(min = 10, max = 4000, message = "descreva o que acontece sem a cirurgia (mínimo 10 caracteres)") String nada,
+            @NotNull(message = "informe como foi a conversa") com.hackatona.timevermelho.dominio.FormaComunicacao forma,
+            @Size(max = 2000) String duvidas,
+            boolean compreendeu,
             @Size(max = 120) String autor,
             Long medicoId) {}
 

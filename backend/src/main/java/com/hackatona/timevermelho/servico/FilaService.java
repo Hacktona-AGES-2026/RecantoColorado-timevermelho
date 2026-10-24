@@ -99,6 +99,14 @@ public class FilaService {
         this.desejos = desejos;
     }
 
+    /** Opcional: marca na fila o parecer de aptidão cirúrgica e a decisão (não entra no cálculo). */
+    private com.hackatona.timevermelho.dominio.RegistroAptidaoRepository registrosAptidao;
+
+    @org.springframework.beans.factory.annotation.Autowired(required = false)
+    void setRegistrosAptidao(com.hackatona.timevermelho.dominio.RegistroAptidaoRepository registrosAptidao) {
+        this.registrosAptidao = registrosAptidao;
+    }
+
     public FilaService(SolicitacaoRepository solicitacoes, EventoClinicoRepository eventos,
                        ProcedimentoRepository procedimentos, AjusteReguladorRepository ajustes,
                        MotorPriorizacao motor, @Value("${app.data-referencia}") LocalDate referencia,
@@ -189,9 +197,15 @@ public class FilaService {
         if (desejos != null) {
             for (var d : desejos.findAllByOrderByCriadoEmAscIdAsc()) desejo.put(d.getSolicitacaoId(), d.getResposta().name());
         }
+        Map<String, com.hackatona.timevermelho.dominio.RegistroAptidao[]> aptidao = registrosAptidao == null ? Map.of()
+                : AptidaoService.ultimos(registrosAptidao.findAllByOrderByCriadoEmAscIdAsc());
         for (ResultadoPaciente r : s.todos()) {
-            r.setEstadoRebaixamento(estados.get(r.getCaso().solicitacaoId()));
-            r.setDesejoCirurgia(desejo.get(r.getCaso().solicitacaoId()));
+            String id = r.getCaso().solicitacaoId();
+            r.setEstadoRebaixamento(estados.get(id));
+            r.setDesejoCirurgia(desejo.get(id));
+            var par = aptidao.get(id);
+            r.setAptidao(AvaliadorAptidao.avaliar(r, par == null ? null : par[0]).veredito().name());
+            r.setDecisaoAptidao(par == null || par[1] == null ? null : par[1].getDecisao().name());
         }
         return s;
     }
@@ -371,6 +385,13 @@ public class FilaService {
                 .flagDiabetico(s.getFlagDiabetico())
                 .flagPiora(s.getFlagPiora())
                 .eventos(List.copyOf(evs))
+                .hba1cCadastro(s.getHba1cUltima())
+                .dataHba1cCadastro(s.getDataHba1cUltima())
+                .avaliacaoPreAnestesica(s.getAvaliacaoPreAnestesica())
+                .examesPreOpValidos(s.getExamesPreOpValidos())
+                .porte(p == null ? null : p.getPorte())
+                .duracaoMin(p == null ? null : p.getDuracaoMediaMin())
+                .necessitaUti(p == null ? null : p.getNecessitaUti())
                 .build();
     }
 

@@ -12,6 +12,8 @@ import { Button } from "@/components/ui/button";
 import { Carregando, ErroApi, mensagemErro, rotuloStatus, Vazio } from "./comum";
 import { PainelDecisao } from "./painel-decisao";
 import { CartaoDesejo } from "./desejo-cirurgia";
+import { CartaoBran } from "./bran";
+import { CartaoAptidao } from "./aptidao";
 import { FormEvento, rotuloResultado, rotuloTipoEvento } from "./form-evento";
 import { cn } from "@/lib/utils";
 
@@ -102,11 +104,23 @@ export function TelaPaciente() {
           <Auditoria d={detalhe} />
         </div>
         <div className="flex flex-col gap-4 lg:sticky lg:top-[calc(var(--altura-cabecalho,0px)+1rem)] lg:self-start">
+          <CartaoAptidao
+            key={`aptidao-${detalhe.item.solicitacaoId}`}
+            solicitacaoId={detalhe.item.solicitacaoId}
+            aoRegistrar={recarregar}
+          />
           <CartaoDesejo
             key={`desejo-${detalhe.item.solicitacaoId}`}
             solicitacaoId={detalhe.item.solicitacaoId}
             atual={detalhe.desejoCirurgia}
             historico={detalhe.historicoDesejo}
+            aoRegistrar={recarregar}
+          />
+          <CartaoBran
+            key={`bran-${detalhe.item.solicitacaoId}`}
+            solicitacaoId={detalhe.item.solicitacaoId}
+            nome={detalhe.item.nome}
+            procedimento={detalhe.item.procedimento}
             aoRegistrar={recarregar}
           />
           <PainelDecisao key={detalhe.item.solicitacaoId} detalhe={detalhe} aoDecidir={recarregar} />

@@ -37,8 +37,9 @@ public class AnalisadorReavaliacao {
                 case FLAG_ONCO_DIVERGENTE, FLAG_PIORA_DESATUALIZADA -> add(r, TipoReavaliacao.FLAG_DIVERGENTE, s.descricao());
                 case DADO_INCOMPLETO -> add(r, TipoReavaliacao.DADO_INCOMPLETO, s.descricao());
                 case SEM_CONTATO -> add(r, TipoReavaliacao.SEM_CONTATO, s.descricao());
-                case HBA1C_ALTA -> add(r, TipoReavaliacao.DESCOMPENSACAO_CLINICA,
-                        s.descricao() + ": diabetes descontrolado para cirurgia eletiva");
+                case HBA1C_ALTA -> add(r, TipoReavaliacao.DESCOMPENSACAO_CLINICA, s.descricao()
+                        + (c.diabetesNoCadastro() ? ": diabetes descontrolado para cirurgia eletiva"
+                                : ": HbA1c alta sem diabetes registrado no cadastro, investigar antes da cirurgia eletiva"));
                 case ALARME_A_CONFIRMAR -> add(r, TipoReavaliacao.REVISAO_URGENTE,
                         s.descricao() + " — relatado em \"" + s.evidencia() + "\" (" + s.fonte() + "). Não muda a "
                                 + "classe sozinho: confirme com avaliação clínica e registre o atendimento");
