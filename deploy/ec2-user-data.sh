@@ -16,6 +16,10 @@ mkdir -p /usr/local/lib/docker/cli-plugins
 curl -fsSL "https://github.com/docker/compose/releases/download/v2.29.7/docker-compose-linux-$(uname -m)" \
   -o /usr/local/lib/docker/cli-plugins/docker-compose
 chmod +x /usr/local/lib/docker/cli-plugins/docker-compose
+# buildx: o Docker do Amazon Linux pode vir sem ele, e o compose precisa dele para construir as imagens
+case "$(uname -m)" in aarch64) ARQ=arm64 ;; *) ARQ=amd64 ;; esac
+curl -fsSL "https://github.com/docker/buildx/releases/download/v0.17.1/buildx-v0.17.1.linux-$ARQ"   -o /usr/local/lib/docker/cli-plugins/docker-buildx
+chmod +x /usr/local/lib/docker/cli-plugins/docker-buildx
 
 # 2 GB de swap: o build do frontend e do backend passa de 2 GB de memória em máquinas pequenas
 if [ ! -f /swapfile ]; then

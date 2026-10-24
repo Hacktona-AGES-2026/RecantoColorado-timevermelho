@@ -142,6 +142,8 @@ As regras clínicas do texto livre (palavras de alarme, negações, CIDs urgente
 
 ## Deploy (AWS EC2)
 
+**No ar:** <http://18.218.2.12> (EC2 `m7i-flex.large` em us-east-2, desde 24/10/2026).
+
 Uma máquina com Docker roda tudo: `docker compose -f docker-compose.prod.yml up -d --build` e o FilaVIVA abre na porta 80. Passo a passo completo, custos e como colocar a chave da IA: [docs/DEPLOY-AWS.md](docs/DEPLOY-AWS.md).
 
 ## Fluxo do time
