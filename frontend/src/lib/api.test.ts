@@ -22,7 +22,7 @@ describe("api: GET", () => {
     await api.fila({ classe: "A1", busca: "", especialidade: undefined, status: "ATIVA", oncologico: true, pagina: 0 });
     const url = fetchFalso.mock.calls[0][0] as string;
     expect(url.startsWith(`${API_URL}/api/fila?`)).toBe(true);
-    const params = new URL(url).searchParams;
+    const params = new URL(url, "http://localhost").searchParams; // API_URL vazio = URL relativa
     expect(params.get("classe")).toBe("A1");
     expect(params.get("status")).toBe("ATIVA");
     expect(params.get("oncologico")).toBe("true");

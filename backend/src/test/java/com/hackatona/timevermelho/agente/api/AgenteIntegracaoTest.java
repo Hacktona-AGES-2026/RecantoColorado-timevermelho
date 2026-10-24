@@ -34,10 +34,11 @@ class AgenteIntegracaoTest {
                 .getContentAsString();
 
         assertThat((Boolean) JsonPath.read(json, "$.pronto")).isFalse();
-        // o motivo mais cedo na fila é o das regras de negócio ainda não preenchidas (D1)
-        assertThat((String) JsonPath.read(json, "$.motivoDesligado")).contains("regras de negócio ainda não preenchidas");
+        // as regras de negócio já estão preenchidas (D1), então o motivo é a falta de chave
+        assertThat((String) JsonPath.read(json, "$.motivoDesligado")).contains("nenhum provedor de IA configurado");
         assertThat((java.util.List<?>) JsonPath.read(json, "$.provedores")).isEmpty();
-        assertThat(json).doesNotContainIgnoringCase("chave");
+        // nenhum valor ou nome de variável de chave aparece no status
+        assertThat(json).doesNotContain("sk-").doesNotContain("IA_PROVEDOR").doesNotContain("Bearer");
     }
 
     @Test

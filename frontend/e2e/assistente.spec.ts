@@ -36,10 +36,10 @@ function sse(...eventos: [string, object][]): string {
 /** Assistente "ligado" de mentira: só para ver a tela funcionando sem gastar crédito. */
 async function assistenteDeMentira(page: Page, respostas: string[]) {
   const pedidos: unknown[] = [];
-  await page.route(`${API}/api/agente/status`, (route) =>
+  await page.route(`**/api/agente/status`, (route) =>
     comCors(route, () => route.fulfill({ status: 200, headers: CORS, contentType: "application/json", body: JSON.stringify(STATUS_PRONTO) })),
   );
-  await page.route(`${API}/api/agente/chat`, (route) =>
+  await page.route(`**/api/agente/chat`, (route) =>
     comCors(route, async () => {
       pedidos.push(route.request().postDataJSON());
       const texto = respostas[Math.min(pedidos.length - 1, respostas.length - 1)];
@@ -128,10 +128,10 @@ test("resposta da IA com HTML aparece escrita e nunca é executada", async ({ pa
 });
 
 test("recusa e emergência chegam como mensagens do assistente", async ({ page }) => {
-  await page.route(`${API}/api/agente/status`, (route) =>
+  await page.route(`**/api/agente/status`, (route) =>
     comCors(route, () => route.fulfill({ status: 200, headers: CORS, contentType: "application/json", body: JSON.stringify(STATUS_PRONTO) })),
   );
-  await page.route(`${API}/api/agente/chat`, (route) =>
+  await page.route(`**/api/agente/chat`, (route) =>
     comCors(route, () =>
       route.fulfill({
         status: 200,
@@ -167,10 +167,10 @@ test("relatórios: pedir, ler com o aviso de IA e baixar", async ({ page }) => {
   const { texto: _texto, dadosUsados: _dados, versaoPrompt: _versao, geradoPorIA: _ia, ...resumo } = relatorio;
   void [_texto, _dados, _versao, _ia];
   let gerado = false;
-  await page.route(`${API}/api/agente/relatorios/especialidades`, (route) =>
+  await page.route(`**/api/agente/relatorios/especialidades`, (route) =>
     comCors(route, () => route.fulfill({ status: 200, headers: CORS, contentType: "application/json", body: JSON.stringify({ especialidades: ["Cirurgia Geral", "Urologia"] }) })),
   );
-  await page.route(`${API}/api/agente/relatorios`, (route) =>
+  await page.route(`**/api/agente/relatorios`, (route) =>
     comCors(route, async () => {
       if (route.request().method() === "POST") {
         gerado = true;
@@ -190,7 +190,7 @@ test("relatórios: pedir, ler com o aviso de IA e baixar", async ({ page }) => {
   await expect(page.getByText(/A fila tem 919 pacientes/)).toBeVisible();
   await expect(page.getByRole("link", { name: /Baixar em Markdown/ })).toHaveAttribute(
     "href",
-    `${API}/api/agente/relatorios/${relatorio.id}/download`,
+    `/api/agente/relatorios/${relatorio.id}/download`, // relativo: o Next repassa para o backend
   );
   await expect(page.getByRole("button", { name: /Relatório da fila — visão geral/ })).toBeVisible();
 });

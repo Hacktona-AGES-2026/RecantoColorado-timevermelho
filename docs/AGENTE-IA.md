@@ -17,13 +17,9 @@ Assistente para tirar dúvidas (chat), organizar textos por assunto (categoriza�
 O agente sobe **desligado** até existirem (1) regras de negócio preenchidas (já estão) e (2) ao menos uma chave de API. O motivo aparece em `GET /api/agente/status` e no aviso amarelo do chat.
 
 1. As regras de negócio já estão em `backend/src/main/resources/agente/regras-negocio.md`; qualquer mudança nelas vai por Pull Request revisado.
-2. Exporte as chaves (modelo em `backend/.env.example`; o Spring não lê `.env` sozinho):
-   ```bash
-   export IA_PROVEDOR_1_CHAVE=...   IA_PROVEDOR_1_MODELO=...   # ChatGPT/OpenAI
-   export IA_PROVEDOR_2_CHAVE=...   IA_PROVEDOR_2_MODELO=...   # reserva, assume quando o crédito do 1º acabar
-   ```
-   Ou, sem exportar nada: `cp backend/.env.example backend/.env`, preencha a chave e o modelo no `backend/.env` (está no `.gitignore`) e rode o backend com o perfil `dotenv` (IntelliJ: *Active profiles* = `dotenv`; terminal: `./mvnw spring-boot:run -Dspring-boot.run.profiles=dotenv`).
-   Para modelos que raciocinam, `IA_PROVEDOR_1_ESFORCO` (`low`, `medium`, `high`) vira o campo `reasoning_effort` da resposta principal; o filtro de escopo e a categorização usam sempre `low`, e o teto de tokens ganha uma folga de 4000 para o raciocínio não esvaziar a resposta. Deixe vazio para modelos que não raciocinam.
+2. Coloque a chave: `cp backend/.env.example backend/.env` e cole a chave em `IA_PROVEDOR_1_CHAVE` (o arquivo está no `.gitignore`). O backend lê `backend/.env` sozinho ao subir, sem perfil e sem exportar nada, seja pelo terminal ou pelo IntelliJ. Uma variável de ambiente com o mesmo nome também funciona.
+   Modelo (`gpt-6.1-sol`), esforço (`medium`) e endereço já estão no `application.properties`; dá para trocar com `IA_PROVEDOR_1_MODELO`, `IA_PROVEDOR_1_ESFORCO` e `IA_PROVEDOR_1_URL`. O esforço (`low`, `medium`, `high`) vira o campo `reasoning_effort` da resposta principal; o filtro de escopo e a categorização usam sempre `low`, e o teto de tokens ganha uma folga de 4000 para o raciocínio não esvaziar a resposta. Deixe vazio para modelos que não raciocinam.
+   A chave **nunca** vai para o código nem para o Git: cada pessoa do time coloca a sua no próprio `backend/.env` (ou recebe a do time por um canal privado).
 3. Reinicie o backend. Para só **ver a tela** funcionando sem as regras de negócio, use `AGENTE_EXIGIR_REGRAS=false` (as chaves continuam obrigatórias).
 
 **Vários provedores:** a ordem é a de `agente.provedores[0]`, `[1]`… no `application.properties`. Cada um aceita `IA_PROVEDOR_N_URL`: qualquer API no formato `chat/completions` da OpenAI serve (outra conta OpenAI, Azure OpenAI…). A URL precisa ser `https` (ou `http` em localhost), senão o provedor é ignorado. APIs em outro formato precisam de uma implementação própria de `ProvedorIA`.

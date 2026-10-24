@@ -34,18 +34,12 @@ docker-compose.yml   PostgreSQL 16
 
 - JDK 25 ou mais novo (`java -version`)
 - Node.js 20+ (`node -v`)
-- Docker Desktop aberto (para o Postgres)
 - Python 3 (só para rodar o verificador da fila)
+- Docker **não** é necessário: por padrão o backend usa banco H2 em memória
 
 ## Como rodar
 
-**1. Banco**
-
-```bash
-docker compose up -d db
-```
-
-**2. Backend** (porta 8080; importa o dataset de `data/` ao subir)
+**1. Backend** (porta 8080; importa o dataset de `data/` ao subir)
 
 ```bash
 cd backend
@@ -54,8 +48,9 @@ cd backend
 
 No Windows (PowerShell/cmd): `.\mvnw.cmd spring-boot:run`.
 Teste rápido: <http://localhost:8080/api/status>.
+Para ligar o assistente de IA: `cp backend/.env.example backend/.env` e cole a chave (o backend lê esse arquivo sozinho). Modelo e demais configurações já estão no código; veja [docs/AGENTE-IA.md](docs/AGENTE-IA.md).
 
-**3. Frontend** (porta 3000)
+**2. Frontend** (porta 3000)
 
 ```bash
 cd frontend
@@ -64,7 +59,9 @@ npm run dev
 ```
 
 Abra <http://localhost:3000>. A página inicial mostra se a API está no ar.
-Para apontar para outra API, copie `frontend/.env.example` para `frontend/.env.local` e ajuste `NEXT_PUBLIC_API_URL`.
+O navegador chama `/api/...` no próprio Next, que repassa para `http://localhost:8080` (`next.config.ts`). Por isso funciona também em `127.0.0.1`, pelo IP da rede ou em outra porta. Backend em outro endereço: rode o front com `BACKEND_URL=http://host:porta`.
+
+**Opcional: PostgreSQL** em vez do H2: `docker compose up -d db` e suba o backend com `DB_URL=jdbc:postgresql://localhost:5432/filaviva DB_USER=filaviva DB_PASSWORD=filaviva`.
 
 ## Testes
 
@@ -99,12 +96,14 @@ python scripts/conferir_csv.py
 
 ## Variáveis de ambiente do backend
 
+Nenhuma é obrigatória.
+
 | Variável | Padrão |
 |---|---|
-| `DB_URL` | `jdbc:postgresql://localhost:5432/filaviva` |
-| `DB_USER` / `DB_PASSWORD` | `filaviva` / `filaviva` |
+| `DB_URL` | `jdbc:h2:mem:filaviva;MODE=PostgreSQL;DB_CLOSE_DELAY=-1` (H2 em memória) |
+| `DB_USER` / `DB_PASSWORD` | `sa` / vazio |
 | `DATASET_DIR` | `../data` |
-| `CORS_ORIGINS` | `http://localhost:3000` |
+| `CORS_ORIGINS` | `http://localhost:[*],http://127.0.0.1:[*]` |
 | `PORT` | `8080` |
 | `EXPORT_ARQUIVO` | `../fila_priorizada.csv` (vazio = não grava) |
 
