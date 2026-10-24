@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.hackatona.timevermelho.api.dto.Dtos;
 import com.hackatona.timevermelho.dominio.TipoAjuste;
 import com.hackatona.timevermelho.motor.GuardRegraDeOuro;
+import com.hackatona.timevermelho.motor.StatusFila;
 import com.hackatona.timevermelho.servico.DecisaoService;
 import com.hackatona.timevermelho.servico.Erros;
 import com.hackatona.timevermelho.servico.ExportService;
@@ -39,10 +40,16 @@ class DatasetCompletoTest {
     }
 
     @Test
-    void exportTemCabecalhoEUmaLinhaPorAtivo() {
+    void exportTrazTodosNaFilaInclusiveSaidasSugeridas() {
+        var snap = fila.atual();
+        var sugeridas = snap.todos().stream().filter(r -> r.getStatus() == StatusFila.SAIDA_SUGERIDA).toList();
+        assertThat(sugeridas).isNotEmpty();
+        // sem decisão do regulador, ninguém sai: todos os 919 casos (941 menos duplicatas) estão no arquivo
+        assertThat(snap.ativos()).hasSize(919).containsAll(sugeridas);
         String csv = export.csv();
         assertThat(csv).startsWith("solicitacao_id,posicao,justificativa\n");
-        assertThat(csv.lines().count()).isEqualTo(fila.atual().ativos().size() + 1L);
+        assertThat(csv.lines().count()).isEqualTo(919 + 1L);
+        assertThat(csv).contains("saída sugerida aguardando o regulador");
     }
 
     @Test

@@ -46,14 +46,14 @@ public class MotorPriorizacao {
         }
 
         List<ResultadoPaciente> ativos = new ArrayList<>(todos.stream()
-                .filter(r -> r.getStatus() == StatusFila.ATIVA).sorted(ORDEM_CLINICA).toList());
+                .filter(r -> r.getStatus().naFila()).sorted(ORDEM_CLINICA).toList());
         ativos = guard.aplicar(ativos);
         for (int i = 0; i < ativos.size(); i++) ativos.get(i).setPosicao(i + 1);
 
         List<ResultadoPaciente> manual = ativos.stream().sorted(ORDEM_MANUAL).toList();
         for (int i = 0; i < manual.size(); i++) manual.get(i).setPosicaoManual(i + 1);
 
-        List<ResultadoPaciente> fora = todos.stream().filter(r -> r.getStatus() != StatusFila.ATIVA)
+        List<ResultadoPaciente> fora = todos.stream().filter(r -> !r.getStatus().naFila())
                 .sorted(ORDEM_CLINICA).toList();
 
         List<ResultadoPaciente> resultado = new ArrayList<>(ativos);
@@ -85,9 +85,10 @@ public class MotorPriorizacao {
 
         Sinal saida = sinais.stream().filter(s -> s.tipo().categoria() == CategoriaSinal.SAIDA).findFirst().orElse(null);
         r.setSinalSaida(saida);
+        // Só o regulador tira alguém da fila. A sugestão mantém o paciente na posição calculada.
         if (Boolean.TRUE.equals(d.saidaConfirmada())) {
             r.setStatus(StatusFila.SAIDA_CONFIRMADA);
-        } else if (saida != null && d.saidaConfirmada() == null && !r.oncologico()) {
+        } else if (saida != null && d.saidaConfirmada() == null) {
             r.setStatus(StatusFila.SAIDA_SUGERIDA);
         }
         return r;

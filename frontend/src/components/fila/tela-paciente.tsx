@@ -129,8 +129,11 @@ function Cabecalho({ d }: { d: PacienteDetalhe }) {
             {item.oncologico && <Badge variant="destructive">Oncológico</Badge>}
             {item.status !== "ATIVA" && <Badge variant="outline">{rotuloStatus(item.status)}</Badge>}
             {item.movidoPelaRegraDeOuro && (
-              <Badge variant="secondary" title="Oncológico nunca abaixo de quem não tem urgência">
-                ★ Posição garantida pela regra de ouro
+              <Badge
+                variant="secondary"
+                title="Sem urgência pela definição oficial (dor e limitação baixas, sem evento de piora): fica abaixo de todos os oncológicos"
+              >
+                ★ Posição limitada pela regra de ouro
               </Badge>
             )}
           </div>

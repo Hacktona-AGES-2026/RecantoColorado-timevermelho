@@ -6,8 +6,9 @@
     { "padrao": "colangite", "rotulo": "colangite" },
     { "padrao": "icteri", "rotulo": "icterícia" },
     { "padrao": "pancreatite", "rotulo": "pancreatite" },
-    { "padrao": "sepse|septic", "rotulo": "sepse" },
+    { "padrao": "sepse|(?<!as)septic", "rotulo": "sepse" },
     { "padrao": "angina instavel|angina em repouso", "rotulo": "angina instável / em repouso" },
+    { "padrao": "lesao de tronco|tronco[^.;]{0,25}\\d{2}\\s?%", "rotulo": "lesão de tronco de coronária" },
     { "padrao": "sincope", "rotulo": "síncope" },
     { "padrao": "suboclus|obstrucao intestinal|semi-?oclus", "rotulo": "obstrução intestinal" },
     { "padrao": "enterorragia|melena|hematemese", "rotulo": "sangramento digestivo" },
@@ -37,6 +38,11 @@
     { "padrao": "transfu", "rotulo": "necessidade de transfusão" },
     { "padrao": "dor em repouso", "rotulo": "dor em repouso" },
     { "padrao": "uso de muletas|cadeira de rodas", "rotulo": "marcha com apoio" }
+  ],
+  "gravidadeClinica": [
+    { "padrao": "triarterial|multiarterial", "rotulo": "doença coronária triarterial / multiarterial" },
+    { "padrao": "ccs (iii|iv|3|4)\\b", "rotulo": "angina limitante (CCS III/IV)" },
+    { "padrao": "\\bfe (de )?([1-3]\\d)\\s?%", "rotulo": "fração de ejeção abaixo de 40%" }
   ],
   "psNoTexto": [
     { "padrao": "\\d+\\s*idas? ao ps", "rotulo": "idas ao PS" },

@@ -36,17 +36,16 @@ public class AnalisadorReavaliacao {
             }
         }
 
-        if (r.getSinalSaida() != null && r.getStatus() != StatusFila.SAIDA_CONFIRMADA) {
-            boolean recusada = r.getStatus() == StatusFila.ATIVA && !r.oncologico();
-            if (!recusada) {
-                add(r, TipoReavaliacao.CONFIRMAR_SAIDA, r.getSinalSaida().descricao()
-                        + (r.oncologico() ? " — paciente oncológico: mantido na fila até o regulador confirmar" : ""));
-            }
+        if (r.getStatus() == StatusFila.SAIDA_SUGERIDA) {
+            add(r, TipoReavaliacao.CONFIRMAR_SAIDA, r.getSinalSaida().descricao()
+                    + (r.oncologico() ? " — paciente oncológico: confirmar com cuidado" : "")
+                    + ". Continua na posição " + r.getPosicao() + " até o regulador decidir");
         }
 
         if (r.isMovidoPelaRegraDeOuro()) {
             add(r, TipoReavaliacao.REGRA_DE_OURO,
-                    "Oncológico colocado acima do primeiro paciente sem urgência clínica");
+                    "Classe " + r.classe() + " pelo FilaVIVA, mas sem urgência pela definição oficial (dor e limitação baixas, "
+                            + "sem evento de piora): ficou abaixo de todos os oncológicos. Revisar se o texto do médico indica urgência");
         }
     }
 

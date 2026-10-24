@@ -16,7 +16,7 @@ public class CalculadoraScore {
     private static final Map<TipoSinal, Double> PIORA = Map.ofEntries(
             Map.entry(ALARME_GRAVE, 0.6), Map.entry(PROGRESSAO_IMAGEM, 0.6), Map.entry(INTERNACAO_RECENTE, 0.4),
             Map.entry(PS_RECENTE, 0.3), Map.entry(REAVALIACAO_PIORA, 0.3), Map.entry(ALARME_FUNCIONAL, 0.3),
-            Map.entry(SUSPEITA_MALIGNIDADE, 0.3), Map.entry(PS_TEXTO, 0.25), Map.entry(RELATA_PIORA, 0.2),
+            Map.entry(SUSPEITA_MALIGNIDADE, 0.3), Map.entry(GRAVIDADE_CLINICA, 0.3), Map.entry(PS_TEXTO, 0.25), Map.entry(RELATA_PIORA, 0.2),
             Map.entry(HBA1C_ALTA, 0.2), Map.entry(HBA1C_SUBINDO, 0.1));
 
     public record Resultado(double total, List<ComponenteScore> componentes) {}

@@ -29,8 +29,8 @@ final class ImpactoCalculadora {
         StringBuilder sb = new StringBuilder();
         Integer pa = antes.getPosicao();
         Integer pd = depois.getPosicao();
-        if (depois.getStatus() != StatusFila.ATIVA && antes.getStatus() == StatusFila.ATIVA) {
-            sb.append("Saiu da fila ativa (estava na posição ").append(pa).append(")");
+        if (depois.getStatus() == StatusFila.SAIDA_CONFIRMADA && antes.getStatus().naFila()) {
+            sb.append("Saiu da fila (estava na posição ").append(pa).append(")");
         } else if (pa == null && pd != null) {
             sb.append("Voltou para a fila na posição ").append(pd);
         } else if (pa != null && pd != null && !pa.equals(pd)) {

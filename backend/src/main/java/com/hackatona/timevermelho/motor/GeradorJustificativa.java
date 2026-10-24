@@ -25,7 +25,10 @@ public class GeradorJustificativa {
         partes.add(r.getCaso().diasEmFila() + " dias de fila (" + Math.round(r.percentualPrazo()) + "% do prazo)");
         partes.add("score " + Math.round(r.getScore()));
         if (r.isMovidoPelaRegraDeOuro()) {
-            partes.add("posição garantida pela regra de ouro");
+            partes.add("posição limitada pela regra de ouro: sem urgência pela definição oficial, fica abaixo de todos os oncológicos");
+        }
+        if (r.getStatus() == StatusFila.SAIDA_SUGERIDA) {
+            partes.add("saída sugerida aguardando o regulador (" + r.getSinalSaida().descricao() + ")");
         }
         return String.join(" · ", partes);
     }

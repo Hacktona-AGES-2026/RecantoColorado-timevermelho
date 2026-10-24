@@ -351,6 +351,14 @@ function TabelaFila({ itens }: { itens: ItemFila[] }) {
                   {it.idade !== null && ` · ${it.idade} a`}
                   {it.sexo && ` · ${it.sexo}`}
                 </span>
+                {it.status === "SAIDA_SUGERIDA" && (
+                  <span
+                    className="mt-0.5 block w-fit rounded bg-amber-100 px-1.5 text-[10px] font-medium text-amber-900"
+                    title="Há sinal de desistência ou de cirurgia em outro serviço. Continua na fila até o regulador decidir."
+                  >
+                    saída sugerida · aguarda regulador
+                  </span>
+                )}
               </TableCell>
               <TableCell className="max-w-56">
                 <span className="block truncate" title={it.procedimento}>
@@ -391,7 +399,7 @@ function TabelaFila({ itens }: { itens: ItemFila[] }) {
                   {it.movidoPelaRegraDeOuro && (
                     <span
                       className="rounded bg-red-500/10 px-1 text-[10px] font-semibold text-red-700 dark:text-red-400"
-                      title="Posição garantida pela regra de ouro: oncológico nunca abaixo de quem não tem urgência"
+                      title="Posição limitada pela regra de ouro: sem urgência pela definição oficial, fica abaixo de todos os oncológicos"
                     >
                       ★ regra
                     </span>

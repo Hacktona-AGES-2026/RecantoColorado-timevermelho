@@ -32,7 +32,6 @@ import com.hackatona.timevermelho.motor.GuardRegraDeOuro;
 import com.hackatona.timevermelho.motor.MotorPriorizacao;
 import com.hackatona.timevermelho.motor.Pesos;
 import com.hackatona.timevermelho.motor.ResultadoPaciente;
-import com.hackatona.timevermelho.motor.StatusFila;
 
 /**
  * Mantém a fila calculada em memória (941 pacientes cabem com folga) e recalcula
@@ -99,7 +98,7 @@ public class FilaService {
         List<ResultadoPaciente> todos = motor.priorizar(casos, pesos, decisoes);
         Map<String, ResultadoPaciente> porId = todos.stream()
                 .collect(Collectors.toMap(r -> r.getCaso().solicitacaoId(), Function.identity(), (a, b) -> a, LinkedHashMap::new));
-        List<ResultadoPaciente> ativos = todos.stream().filter(r -> r.getStatus() == StatusFila.ATIVA).toList();
+        List<ResultadoPaciente> ativos = todos.stream().filter(r -> r.getStatus().naFila()).toList();
         return new Snapshot(casos, decisoes, todos, porId, ativos);
     }
 

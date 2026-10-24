@@ -10,7 +10,10 @@ import org.springframework.stereotype.Service;
 
 import com.hackatona.timevermelho.motor.ResultadoPaciente;
 
-/** Gera o entregável comum: fila_priorizada.csv (solicitacao_id, posicao, justificativa). */
+/**
+ * Gera o entregável comum: fila_priorizada.csv (solicitacao_id, posicao, justificativa).
+ * Saídas sugeridas continuam na posição calculada, com aviso na justificativa, até o regulador confirmar.
+ */
 @Service
 public class ExportService {
 
@@ -25,6 +28,7 @@ public class ExportService {
         CSVFormat formato = CSVFormat.DEFAULT.builder()
                 .setHeader("solicitacao_id", "posicao", "justificativa").setRecordSeparator("\n").get();
         try (CSVPrinter p = new CSVPrinter(out, formato)) {
+            // todos que estão na fila, inclusive saídas sugeridas ainda não confirmadas
             for (ResultadoPaciente r : fila.atual().ativos()) {
                 p.printRecord(r.getCaso().solicitacaoId(), r.getPosicao(), r.getJustificativa());
             }
