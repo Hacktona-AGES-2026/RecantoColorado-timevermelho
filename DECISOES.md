@@ -29,7 +29,7 @@ Um **framework clínico explícito (SWALIS adaptado)** decide a urgência; um **
 ## Decisões difíceis
 
 - **O tempo de espera nunca passa por cima da urgência clínica.** Um paciente classe D esperando 4 anos não fica à frente de um câncer esperando 3 meses. O tempo pesa dentro da classe (15 pontos) e alimenta a lista de **esquecidos** (mais que o dobro do prazo e prioridade nunca revisada), que vai para reavaliação humana. Preferimos tornar o esquecido visível para o regulador a deixar o relógio reordenar a fila sozinho.
-- **Biópsia positiva vale mais que o CID do cadastro.** 24 pacientes têm laudo de malignidade e CID benigno ou incerto. Para nós eles são oncológicos (A2), e o sistema avisa que o cadastro está errado. Exemplo: `SOL-2026-00351` (CID D44.0, prioridade "baixa", laudo "NEOPLASIA MALIGNA") sai da posição 842 para a 244.
+- **Biópsia positiva vale mais que o CID do cadastro.** 23 pacientes têm laudo de malignidade e CID benigno ou incerto. Para nós eles são oncológicos (A2), e o sistema avisa que o cadastro está errado. Exemplo: `SOL-2026-00351` (CID D44.0, prioridade "baixa", laudo "NEOPLASIA MALIGNA") sai da posição 842 para a 243.
 - **Usamos o CID, não a flag.** 44 flags oncológicas não batem com o CID. A flag não entra em nenhuma regra; só gera aviso de "cadastro com flag errada".
 - **Dado faltando não rebaixa.** Sem dor ou limitação informadas, o paciente fica no mínimo em C e vai para a lista de reavaliação. Não colocamos ninguém no fim da fila por falta de informação.
 - **Oncológico nunca é rebaixado, nem pelo regulador.** O regulador pode promover qualquer um e rebaixar quem não tem câncer, sempre com justificativa. Tentar colocar um câncer abaixo de A2 é recusado com mensagem clara: se o diagnóstico mudou, registre a nova biópsia.
@@ -37,14 +37,16 @@ Um **framework clínico explícito (SWALIS adaptado)** decide a urgência; um **
 - **Negação no texto.** "Sem sinais de encarceramento" não é encarceramento. O leitor de texto ignora termos negados na mesma frase. A trava da regra de ouro, de propósito, **não** trata negação (é mais conservadora, como o verificador).
 - **Sem LLM no caminho da decisão.** As regras ficam em `backend/src/main/resources/regras.json`, legíveis e auditáveis por um médico. Uma decisão sobre quem opera primeiro precisa ser reproduzível: a mesma entrada dá sempre a mesma fila.
 
-## O que ficou de fora do `fila_priorizada.csv` (46 de 941)
+## Como o `fila_priorizada.csv` está montado (919 de 941)
 
-| Quantidade | Motivo |
+| Posições | O que são |
 |---|---|
-| 22 | **Solicitações duplicadas** (mesmo paciente e mesmo procedimento). Mesclamos na de entrada mais antiga, porque o paciente espera desde lá. Eventos e observações da duplicata passam para a principal. 5 delas são oncológicas (`SOL-2023-00088`, `SOL-2026-00865`, `SOL-2026-00864`, `SOL-2026-01014`, `SOL-2026-00816`) e **a principal de cada uma está no arquivo**, com o mesmo CID. |
-| 24 | **Saídas sugeridas de pacientes não oncológicos** (desistiu, operou em outro serviço ou pelo convênio). Ficam na tela "Alertas → Saídas sugeridas" para o regulador confirmar ou recusar. Se ele recusar, o paciente volta para a fila na posição calculada. |
+| 1 a 895 | **Fila ativa**, na ordem do FilaVIVA |
+| 896 a 919 | **24 saídas sugeridas** de pacientes não oncológicos (desistiu, operou em outro serviço ou pelo convênio). Ninguém sai da fila sem decisão humana: elas ficam no fim, com a justificativa começando por "SAÍDA SUGERIDA, aguardando confirmação do regulador" e a classe que teriam se continuassem. O regulador confirma ou recusa na tela "Alertas → Saídas sugeridas"; se recusar, o paciente volta para a posição calculada. |
 
-O arquivo passa no `verificar_fila_priorizada.py`: regra de ouro respeitada, 100% dos oncológicos no primeiro terço, 94% dos pacientes com PS ou internação recente na primeira metade e 95% dos sem urgência no último terço.
+**Ficaram fora só as 22 solicitações duplicadas** (mesmo paciente e mesmo procedimento). Mesclamos na de entrada mais antiga, porque o paciente espera desde lá; eventos e observações da duplicata passam para a principal. 5 delas são oncológicas (`SOL-2023-00088`, `SOL-2026-00865`, `SOL-2026-00864`, `SOL-2026-01014`, `SOL-2026-00816`) e **a principal de cada uma está no arquivo**, com o mesmo CID. Se uma duplicata tivesse CID de câncer e a principal não, o CID de câncer passaria para a principal.
+
+O arquivo passa no `verificar_fila_priorizada.py`: regra de ouro respeitada, 100% dos oncológicos no primeiro terço, 95% dos pacientes com PS ou internação recente na primeira metade e 94% dos sem urgência no último terço.
 
 ## Tratamento dos defeitos dos dados
 

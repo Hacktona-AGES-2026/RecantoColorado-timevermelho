@@ -1,36 +1,31 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# FilaVIVA — frontend
 
-## Getting Started
+Telas do regulador: Fila, Paciente, Alertas e reavaliação, Simulador e Antes × depois.
+Como rodar o projeto inteiro (banco, backend e frontend): veja o [README da raiz](../README.md).
 
-First, run the development server:
+## Rodar só o frontend
+
+Precisa do backend no ar em `http://localhost:8080`.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev      # http://localhost:3000
+npm run build    # confere se compila
+npm run lint
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Para apontar para outra API, copie `.env.example` para `.env.local` e ajuste `NEXT_PUBLIC_API_URL`.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Onde fica cada coisa
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+| Caminho | O que é |
+|---|---|
+| `src/lib/api.ts` | Contrato da API: todos os tipos e o cliente. Espelha `backend/.../api/dto/Dtos.java`; se mudar um, mude o outro |
+| `src/components/nav.tsx`, `fila-ui.tsx` | Navegação e peças comuns (selo da classe, barra de prazo, mudança de posição) |
+| `src/app/page.tsx`, `src/components/fila/` | Telas da Fila e do Paciente |
+| `src/app/simulador`, `alertas`, `indicadores`, `src/components/painel/` | Simulador, Alertas e Antes × depois |
+| `src/components/ui/` | Componentes shadcn/ui (estilo base-nova, baseados em Base UI, não em Radix) |
 
-## Learn More
+## Atenção: Next.js 16
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Esta versão tem mudanças em relação às anteriores (leia `AGENTS.md`). Com `cacheComponents` ligado, componentes que usam `usePathname` ou `useSearchParams` precisam estar dentro de `<Suspense>`.

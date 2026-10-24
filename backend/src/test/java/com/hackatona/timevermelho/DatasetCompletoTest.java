@@ -10,6 +10,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import com.hackatona.timevermelho.api.dto.Dtos;
 import com.hackatona.timevermelho.dominio.TipoAjuste;
 import com.hackatona.timevermelho.motor.GuardRegraDeOuro;
+import com.hackatona.timevermelho.motor.StatusFila;
 import com.hackatona.timevermelho.servico.DecisaoService;
 import com.hackatona.timevermelho.servico.Erros;
 import com.hackatona.timevermelho.servico.ExportService;
@@ -39,10 +40,14 @@ class DatasetCompletoTest {
     }
 
     @Test
-    void exportTemCabecalhoEUmaLinhaPorAtivo() {
+    void exportTrazAtivosESaidasSugeridasNoFim() {
+        var snap = fila.atual();
+        long sugeridas = snap.todos().stream().filter(r -> r.getStatus() == StatusFila.SAIDA_SUGERIDA).count();
         String csv = export.csv();
         assertThat(csv).startsWith("solicitacao_id,posicao,justificativa\n");
-        assertThat(csv.lines().count()).isEqualTo(fila.atual().ativos().size() + 1L);
+        assertThat(sugeridas).isPositive();
+        assertThat(csv.lines().count()).isEqualTo(snap.ativos().size() + sugeridas + 1);
+        assertThat(csv.lines().toList().getLast()).contains("SAÍDA SUGERIDA");
     }
 
     @Test
