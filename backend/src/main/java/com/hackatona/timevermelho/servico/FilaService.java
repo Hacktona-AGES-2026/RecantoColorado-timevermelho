@@ -111,6 +111,7 @@ public class FilaService {
     /** Fila de referência da entrega: só o dataset, independente de eventos e decisões registrados. */
     public Snapshot oficial() {
         if (oficial == null) recalcular();
+        if (oficial == null) throw new Erros.Conflito("O sistema ainda está importando o dataset. Tente de novo em alguns segundos.");
         return oficial;
     }
 
@@ -129,8 +130,9 @@ public class FilaService {
         Snapshot novo = calcular(casos, decisoes, Pesos.PADRAO, Referencia.ATUAL, info);
         exigirRegraDeOuro(novo);
         atual = novo;
-        // a referência oficial não muda enquanto o sistema roda: calcula uma vez
-        if (oficial == null) oficial = calcularOficial(casos);
+        // a referência oficial não muda enquanto o sistema roda: calcula uma vez, e só com o dataset já importado
+        // (um pedido durante a subida não pode fixar uma referência vazia nem gerar um CSV só com cabeçalho)
+        if (oficial == null && !casos.isEmpty()) oficial = calcularOficial(casos);
         log.info("Fila operacional {} recalculada: {} na fila de {} em {} ms ({} eventos novos, {} decisões)",
                 info.versao(), atual.ativos().size(), casos.size(), System.currentTimeMillis() - inicio,
                 eventosNovos, decisoes.size());
@@ -234,6 +236,7 @@ public class FilaService {
                 .cid(s.getCid())
                 .cidFormatado(Normalizacao.cidFormatado(s.getCid()))
                 .cidDescricao(s.getCidDescricao())
+                .cidSecundario(Normalizacao.cid(s.getCidSecundario()))
                 .asa(s.getAsa())
                 .comorbidades(s.getComorbidades())
                 .dor(s.getDor())

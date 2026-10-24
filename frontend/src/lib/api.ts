@@ -377,7 +377,69 @@ async function post<T>(rota: string, corpo?: unknown): Promise<T> {
   return resp.json() as Promise<T>;
 }
 
-function query(filtros: FiltrosFila): string {
+async function del(rota: string): Promise<void> {
+  const resp = await fetch(`${API_URL}${rota}`, { method: "DELETE" });
+  if (!resp.ok) throw new Error(await lerErro(resp));
+}
+
+// ---------- médicos (backend: medico/MedicoDtos.java) ----------
+
+export interface Especialidade {
+  codigo: string; // ex.: "CARDIOLOGIA"
+  nome: string;
+  descricao: string;
+  pacientesCirurgicos: number; // fila operacional: procedimento desta especialidade (atribuídos)
+  pacientesPossivelAvaliacao: number; // só CID/comorbidade relacionados (não atribuídos)
+}
+
+export interface Medico {
+  id: number;
+  nome: string;
+  crm: string;
+  especialidade: string; // código
+  especialidadeNome: string;
+  criadoEm: string;
+}
+
+export interface NovoMedico {
+  nome: string;
+  crm: string;
+  especialidade: string;
+}
+
+/** CIRURGICO: procedimento da especialidade (atribuído ao médico). POSSIVEL_AVALIACAO: só CID/comorbidade relacionados. */
+export type GrupoMedico = "CIRURGICO" | "POSSIVEL_AVALIACAO";
+
+/** Paciente numa lista do médico. posicaoNaLista: 1 = mais grave do grupo; item é o da fila geral, sem alteração. */
+export interface ItemMedico {
+  posicaoNaLista: number;
+  grupo: GrupoMedico;
+  motivosEspecialidade: string[]; // por que está na lista desta especialidade
+  item: ItemFila;
+}
+
+export interface FilaMedico {
+  medico: Medico;
+  especialidade: Especialidade;
+  grupo: GrupoMedico;
+  itens: ItemMedico[];
+  total: number; // depois da busca/filtro
+  pagina: number;
+  tamanho: number;
+  totalFilaGeral: number;
+  porClasse: Record<ClasseSwalis, number>; // grupo pedido inteiro
+  snapshot: SnapshotInfo;
+}
+
+export interface FiltrosFilaMedico {
+  grupo?: GrupoMedico;
+  busca?: string;
+  classe?: ClasseSwalis | "";
+  pagina?: number;
+  tamanho?: number;
+}
+
+function query(filtros: FiltrosFila | FiltrosFilaMedico): string {
   const p = new URLSearchParams();
   for (const [k, v] of Object.entries(filtros)) {
     if (v !== undefined && v !== null && v !== "") p.set(k, String(v));
@@ -425,6 +487,13 @@ export const api = {
   indicadores: () => get<Indicadores>("/api/indicadores"),
   cenarioDemo: () => post<Impacto[]>("/api/demo/cenario"),
   resetDemo: () => post<{ ok: boolean }>("/api/demo/reset"),
+  especialidades: () => get<Especialidade[]>("/api/especialidades"),
+  medicos: () => get<Medico[]>("/api/medicos"),
+  medico: (id: number | string) => get<Medico>(`/api/medicos/${id}`),
+  cadastrarMedico: (novo: NovoMedico) => post<Medico>("/api/medicos", novo),
+  removerMedico: (id: number) => del(`/api/medicos/${id}`),
+  filaMedico: (id: number | string, filtros: FiltrosFilaMedico = {}) =>
+    get<FilaMedico>(`/api/medicos/${id}/fila?${query(filtros)}`),
   /** Fila de referência — entrega oficial (fila_priorizada.csv). Sempre explícito: nunca a operacional. */
   exportCsvUrl: `${API_URL}/api/fila/export.csv?snapshot=oficial`,
   exportarCsvOficial: () => baixarCsv(`${API_URL}/api/fila/export.csv?snapshot=oficial`, "oficial"),

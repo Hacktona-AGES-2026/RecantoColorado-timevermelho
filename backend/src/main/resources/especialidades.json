@@ -1,0 +1,132 @@
+{
+  "_comentario": "Que pacientes cada especialidade médica atende. Um paciente entra na lista se bater em QUALQUER critério: especialidade cirúrgica do pedido, faixa do CID principal, faixa do CID secundário, termo nas comorbidades, ser oncológico. idadeMaxima, quando existe, é obrigatória. Faixas comparam letra + 2 dígitos do CID (I05-I52 inclui I25.1).",
+  "especialidades": [
+    {
+      "codigo": "CARDIOLOGIA",
+      "nome": "Cardiologia",
+      "descricao": "Doenças do coração: isquemia, insuficiência cardíaca, arritmias e valvopatias.",
+      "especialidadesCirurgicas": ["Cirurgia Cardiaca"],
+      "cidFaixas": ["I05-I09", "I20-I52"],
+      "cidSecundarioFaixas": ["I05-I09", "I20-I52"],
+      "termosComorbidade": ["icc", "insuficiencia cardiaca", "fibrilacao", "arritmia", "cardiopatia", "coronari", "infarto", "valvopatia", "marcapasso"]
+    },
+    {
+      "codigo": "CIRURGIA_VASCULAR",
+      "nome": "Cirurgia Vascular / Angiologia",
+      "descricao": "Artérias, veias e linfáticos: varizes, doença arterial periférica, aneurismas.",
+      "especialidadesCirurgicas": ["Cirurgia Vascular"],
+      "cidFaixas": ["I70-I89"],
+      "cidSecundarioFaixas": ["I70-I89"],
+      "termosComorbidade": ["doenca arterial periferica", "trombose"]
+    },
+    {
+      "codigo": "ONCOLOGIA",
+      "nome": "Oncologia",
+      "descricao": "Neoplasias malignas (CID C), câncer in situ e biópsia positiva.",
+      "especialidadesCirurgicas": ["Cirurgia Oncologica"],
+      "cidFaixas": ["C00-C97", "D00-D09"],
+      "oncologico": true
+    },
+    {
+      "codigo": "ORTOPEDIA",
+      "nome": "Ortopedia",
+      "descricao": "Ossos, articulações, tendões e nervos periféricos dos membros.",
+      "especialidadesCirurgicas": ["Ortopedia"],
+      "cidFaixas": ["M00-M99", "G56-G56"]
+    },
+    {
+      "codigo": "UROLOGIA",
+      "nome": "Urologia",
+      "descricao": "Rins, vias urinárias e próstata.",
+      "especialidadesCirurgicas": ["Urologia"],
+      "cidFaixas": ["N10-N51", "C61-C68"]
+    },
+    {
+      "codigo": "NEFROLOGIA",
+      "nome": "Nefrologia",
+      "descricao": "Doença renal (cálculo, doença renal crônica).",
+      "cidFaixas": ["N00-N29"],
+      "cidSecundarioFaixas": ["N00-N29"],
+      "termosComorbidade": ["drc", "doenca renal", "insuficiencia renal", "dialise"]
+    },
+    {
+      "codigo": "OFTALMOLOGIA",
+      "nome": "Oftalmologia",
+      "descricao": "Olhos: catarata, glaucoma, retina.",
+      "especialidadesCirurgicas": ["Oftalmologia"],
+      "cidFaixas": ["H00-H59"]
+    },
+    {
+      "codigo": "GINECOLOGIA",
+      "nome": "Ginecologia",
+      "descricao": "Útero, ovários e trato genital feminino.",
+      "especialidadesCirurgicas": ["Ginecologia"],
+      "cidFaixas": ["N70-N98", "D25-D28", "C51-C58"]
+    },
+    {
+      "codigo": "MASTOLOGIA",
+      "nome": "Mastologia",
+      "descricao": "Mama.",
+      "especialidadesCirurgicas": ["Mastologia"],
+      "cidFaixas": ["C50-C50", "D05-D05", "D24-D24", "N60-N64"]
+    },
+    {
+      "codigo": "CIRURGIA_GERAL",
+      "nome": "Cirurgia Geral / Aparelho Digestivo",
+      "descricao": "Hérnias, vesícula, estômago e intestino.",
+      "especialidadesCirurgicas": ["Cirurgia Geral"],
+      "cidFaixas": ["K20-K93", "C15-C17", "C22-C25"]
+    },
+    {
+      "codigo": "COLOPROCTOLOGIA",
+      "nome": "Coloproctologia",
+      "descricao": "Cólon, reto e ânus.",
+      "especialidadesCirurgicas": ["Coloproctologia"],
+      "cidFaixas": ["K50-K52", "K55-K64", "C18-C21"]
+    },
+    {
+      "codigo": "CABECA_PESCOCO",
+      "nome": "Cirurgia de Cabeça e Pescoço",
+      "descricao": "Tireoide, glândulas salivares e tumores de cabeça e pescoço.",
+      "especialidadesCirurgicas": ["Cirurgia de Cabeca e Pescoco"],
+      "cidFaixas": ["E00-E07", "C00-C14", "C30-C32", "C73-C73", "D34-D34"]
+    },
+    {
+      "codigo": "ENDOCRINOLOGIA",
+      "nome": "Endocrinologia",
+      "descricao": "Diabetes, tireoide e obesidade.",
+      "cidFaixas": ["E00-E35", "E66-E66"],
+      "cidSecundarioFaixas": ["E00-E35", "E66-E66"],
+      "termosComorbidade": ["dm2", "dm1", "diabetes", "hipotireoidismo", "hipertireoidismo"]
+    },
+    {
+      "codigo": "CIRURGIA_BARIATRICA",
+      "nome": "Cirurgia Bariátrica",
+      "descricao": "Obesidade com indicação cirúrgica.",
+      "especialidadesCirurgicas": ["Cirurgia Bariatrica"],
+      "cidFaixas": ["E66-E66"]
+    },
+    {
+      "codigo": "PNEUMOLOGIA",
+      "nome": "Pneumologia / Cirurgia Torácica",
+      "descricao": "Pulmão e tórax: tumores, DPOC, asma.",
+      "especialidadesCirurgicas": ["Cirurgia Toracica"],
+      "cidFaixas": ["C33-C39", "J40-J99"],
+      "cidSecundarioFaixas": ["J40-J99"],
+      "termosComorbidade": ["dpoc", "asma", "enfisema"]
+    },
+    {
+      "codigo": "OTORRINOLARINGOLOGIA",
+      "nome": "Otorrinolaringologia",
+      "descricao": "Nariz, seios da face, ouvido e garganta.",
+      "especialidadesCirurgicas": ["Otorrinolaringologia"],
+      "cidFaixas": ["J30-J39", "H60-H95"]
+    },
+    {
+      "codigo": "PEDIATRIA",
+      "nome": "Pediatria",
+      "descricao": "Pacientes com menos de 18 anos.",
+      "idadeMaxima": 17
+    }
+  ]
+}

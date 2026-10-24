@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import com.hackatona.timevermelho.medico.CatalogoEspecialidades;
 import com.hackatona.timevermelho.motor.MotorPriorizacao;
 import com.hackatona.timevermelho.motor.texto.RegrasClinicas;
 
@@ -16,6 +17,11 @@ public class MotorConfig {
     @Bean
     RegrasClinicas regrasClinicas() {
         return RegrasClinicas.carregarPadrao();
+    }
+
+    @Bean
+    CatalogoEspecialidades catalogoEspecialidades() {
+        return CatalogoEspecialidades.carregarPadrao();
     }
 
     @Bean

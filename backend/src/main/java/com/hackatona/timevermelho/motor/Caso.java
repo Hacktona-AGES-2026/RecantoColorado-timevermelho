@@ -22,6 +22,7 @@ public record Caso(
         String cid,
         String cidFormatado,
         String cidDescricao,
+        String cidSecundario,
         Integer asa,
         String comorbidades,
         Integer dor,

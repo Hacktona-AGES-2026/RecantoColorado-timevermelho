@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 
 const LINKS = [
   { href: "/", rotulo: "Fila" },
+  { href: "/medicos", rotulo: "Médicos" },
   { href: "/alertas", rotulo: "Alertas e reavaliação" },
   { href: "/simulador", rotulo: "Simulador" },
   { href: "/indicadores", rotulo: "Antes × depois" },
