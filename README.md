@@ -3,7 +3,22 @@
 Plataforma de priorização cirúrgica explicável para o regulador do SUS.
 Organiza a fila por critérios clínicos (SWALIS adaptado), explica cada posição, reage a cada evento novo, permite simular mudanças no quadro do paciente e deixa a decisão final com o profissional de saúde.
 
-9ª Hackatona de Engenharia de Software · PUCRS · Desafio 1 (Fin-x) — plano completo em [PLANO.md](PLANO.md).
+9ª Hackatona de Engenharia de Software · PUCRS · Desafio 1 (Fin-x).
+Por que decidimos assim: [DECISOES.md](DECISOES.md) · plano e divisão do time: [PLANO.md](PLANO.md) e [TASKS.md](TASKS.md).
+
+## O que tem
+
+| Tela | Para quê |
+|---|---|
+| **Fila** (`/`) | A fila inteira ordenada por classe SWALIS e score, com a mudança de posição em relação à ordem de hoje, filtros e download do `fila_priorizada.csv` |
+| **Paciente** (`/paciente/{id}`) | Por que o paciente está nessa posição: regra que decidiu a classe, evidências citadas, composição do score, linha do tempo. O regulador confirma, muda a classe ou decide uma saída, com justificativa obrigatória, e pode registrar um evento clínico novo |
+| **Alertas e reavaliação** (`/alertas`) | O que mudou, quem precisa ser revisto (prioridade divergente, esquecidos, flags erradas, dados faltando) e saídas sugeridas |
+| **Simulador** (`/simulador`) | "E se?" para um paciente (dor, limitação, evento hipotético) e para os pesos do score, sem salvar nada |
+| **Antes × depois** (`/indicadores`) | A ordem de hoje comparada com a do FilaVIVA |
+
+Garantias: a regra de ouro é checada a cada recálculo com a mesma definição do verificador oficial, e o regulador não consegue rebaixar um paciente com câncer abaixo de A2.
+
+**Demo ao vivo:** na tela de Alertas, "Simular chegada de novos eventos" registra eventos sintéticos em pacientes reais e mostra a fila reagindo. "Reiniciar demo" volta ao dataset original (reiniciar o backend também volta).
 
 ## Estrutura
 
@@ -62,8 +77,10 @@ Os testes usam banco H2 em memória: não precisam do Docker.
 
 ## Verificar a fila priorizada
 
+O backend grava `fila_priorizada.csv` na raiz do repositório toda vez que sobe. Também dá para baixar em <http://localhost:8080/api/fila/export.csv>. Para conferir (precisa de `pip install pandas`):
+
 ```bash
-python data/verificar_fila_priorizada.py fila_priorizada.csv
+python data/verificar_fila_priorizada.py fila_priorizada.csv --dataset data
 ```
 
 ## Variáveis de ambiente do backend
@@ -75,6 +92,9 @@ python data/verificar_fila_priorizada.py fila_priorizada.csv
 | `DATASET_DIR` | `../data` |
 | `CORS_ORIGINS` | `http://localhost:3000` |
 | `PORT` | `8080` |
+| `EXPORT_ARQUIVO` | `../fila_priorizada.csv` (vazio = não grava) |
+
+As regras clínicas do texto livre (palavras de alarme, negações, CIDs urgentes) ficam em `backend/src/main/resources/regras.json` e podem ser editadas sem mexer no código.
 
 ## Fluxo do time
 
