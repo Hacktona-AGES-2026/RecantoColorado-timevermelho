@@ -126,5 +126,7 @@
   }
   html {
     @apply font-sans;
+    /* Âncoras e scrollIntoView param abaixo do cabeçalho fixo (altura medida em nav.tsx). */
+    scroll-padding-top: var(--altura-cabecalho, 0px);
   }
 }
