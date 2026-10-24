@@ -296,7 +296,7 @@ public class ChatService {
                     "total", consulta.total(), "linhas", consulta.linhas())));
             // a conversa lembra que houve uma tabela (para "e os da classe B?"), mas nunca guarda os nomes
             finalComAviso += "\n\n[O sistema mostrou uma tabela com " + consulta.linhas().size() + " de "
-                    + consulta.total() + " paciente(s) do dataset. Filtros: " + filtros.descricao() + "]";
+                    + consulta.total() + " paciente(s) do dataset. Filtros: " + filtros.descricaoParaIA() + "]";
         }
         sessoes.registrar(turno.sessao(), msg, finalComAviso);
         emitir.accept(new Evento("fim", Map.of("versaoPrompt", prompts.versao())));

@@ -28,8 +28,9 @@ class LimitesDoContextoTest {
     @ParameterizedTest
     @ValueSource(strings = {"Qual é o CID do paciente da solicitação SOL-2026-00351?", "e a sol 2023 00088?",
             "Me fala da SOL202600864"})
-    void numeroDeSolicitacaoEhPacienteEspecifico(String mensagem) {
-        assertThat(tipo(mensagem)).as(mensagem).isEqualTo(Tipo.PACIENTE_ESPECIFICO);
+    void numeroDeSolicitacaoPassaParaAConsultaDoPaciente(String mensagem) {
+        // consultar os dados cadastrados de um paciente é permitido: quem decide o que aparece é a consulta à fila
+        assertThat(limites.avaliar(mensagem)).as(mensagem).isEmpty();
     }
 
     @ParameterizedTest

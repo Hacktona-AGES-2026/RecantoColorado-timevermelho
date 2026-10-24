@@ -94,7 +94,7 @@ class ChatServiceConsultaTest {
                                 "C54.1", "Neoplasia maligna do endometrio", true, "A1", 86.5, 138, 15, "ATIVA"),
                         new LinhaPaciente(40, "SOL-2025-00010", "Maria Souza Lima", 44, "F", "Canoas", "Histerectomia",
                                 "Ginecologia", "D25", "Leiomioma do utero", false, "C", 40.0, 90, 180, "ATIVA"));
-                return new ResultadoConsulta(2, "Filtros aplicados: " + c.descricao() + ".\nPacientes encontrados: 2.\n"
+                return new ResultadoConsulta(2, "Filtros aplicados: " + c.descricaoParaIA() + ".\nPacientes encontrados: 2.\n"
                         + "Por classe: A1 1; C 1.", c.listar() ? linhas : List.of());
             }
         };
@@ -185,5 +185,20 @@ class ChatServiceConsultaTest {
 
         assertThat(consultasFeitas).isEmpty();
         assertThat(provedor.chamadasGerar).hasSize(1); // só o filtro de escopo
+    }
+
+    @Test
+    void pacienteEspecificoPeloNumeroDeSolicitacaoChegaAConsultaEMostraALinha() {
+        plano = "{\"consultar\":true,\"listar\":true,\"filtros\":{\"solicitacoes\":[\"SOL-2026-00489\"]}}";
+
+        var eventos = conversar(null, "Qual a classe e a posição da solicitação SOL-2026-00489?");
+
+        // antes do conserto, o número de solicitação era recusado sem consultar nada
+        assertThat(eventos).extracting(ChatService.Evento::nome).doesNotContain("recusa").contains("tabela");
+        assertThat(consultasFeitas.getFirst().solicitacoes()).containsExactly("SOL-2026-00489");
+        assertThat(consultasFeitas.getFirst().status()).isEqualTo(ConsultaFila.Status.TODOS);
+        // o histórico guarda que houve uma tabela, sem o número pedido
+        assertThat(provedor.chamadasStream.getFirst().getLast().conteudo()).contains("### Fonte: consulta_fila")
+                .contains("1 número(s) de solicitação informado(s)");
     }
 }

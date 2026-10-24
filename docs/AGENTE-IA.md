@@ -10,7 +10,7 @@ Assistente para tirar dúvidas (chat), organizar textos por assunto (categoriza�
 | **Categorização** | `POST /api/agente/categorizar` | Classifica o assunto de um texto. **Só organiza**: nunca diz gravidade, urgência nem posição. Sugestão fica pendente até um humano aceitar ou corrigir. |
 | **Relatórios** | página `/relatorios` e `POST /api/agente/relatorios` | Resumo da fila (geral ou por especialidade) a partir de números agregados, sempre com "Gerado por IA — revisar antes de usar". |
 
-**Nunca faz:** alterar fila, eventos, decisões ou dados; mostrar dados de paciente individual; dar diagnóstico, dose ou prescrição; definir urgência; falar de infraestrutura ou código; revelar suas instruções.
+**Nunca faz:** alterar fila, eventos, decisões ou dados; decidir, prever ou julgar a classe, a posição ou a data de um paciente (mostrar o que está cadastrado e calculado, sim); dar diagnóstico, dose ou prescrição; definir urgência; falar de infraestrutura ou código; revelar suas instruções.
 
 ## Como ligar
 
@@ -78,7 +78,8 @@ Camadas, da primeira à última. Qualquer uma que falhe **recusa** (a falha fech
 - **Validação dos filtros:** o código valida tudo em `ConsultaFila`. Os nomes só valem se existirem no catálogo da fila, os números têm limites e o que não existe vira aviso ("não existe na fila"), nunca filtro inventado.
 - **Consulta:** quem consulta é `LeituraAplicacaoSpring`. A IA recebe só os números agregados do resultado. A **tabela de pacientes** (posição, solicitação, nome, idade, CID, classe, espera) vai num evento SSE `tabela` direto para a tela, com botão "Baixar CSV", sem passar pela IA. Por isso não há como a IA inventar paciente, e nenhum nome sai para o provedor externo.
 - **Relatórios:** a página `/relatorios` tem o tipo **Por procedimento**: o texto da IA usa os agregados, e a tabela de pacientes é escrita pelo código no próprio relatório.
-- **Pessoa específica** (por nome ou número de solicitação) continua bloqueada no chat. Para isso existe a tela Fila.
+- **Paciente específico** (pelo nome ou pelo número de solicitação, como "classe e posição da paciente X" ou "dados da SOL-2026-00489"): o planejador usa os filtros `nomes` e `solicitacoes`, procurando em todos os status. A tela mostra a linha do paciente. Para até 5 encontrados, a IA recebe o detalhe de cada um **sem nome, número nem CID** (classe, posição, procedimento, idade, espera, status) e responde com esses dados. O nome digitado pelo usuário vai na própria mensagem dele; o que o sistema acrescenta não identifica ninguém.
+- **Continua recusado** (`PACIENTE_ESPECIFICO`): pedir para a IA decidir, prever, julgar ou mudar classe, posição ou data de alguém, ou comparar quem merece mais. CPF e cartão do SUS continuam barrados sem IA.
 - **Limpeza:** todo rótulo vindo do banco é limpo (caracteres permitidos, 80 caracteres e as mesmas barreiras contra "ignore as instruções").
 - **Visibilidade:** a lista mostra o mesmo que a tela Fila já mostra a quem abre a aplicação. Como **não há login nem perfis** (T12), qualquer pessoa com acesso à aplicação vê essas listas. Em uso real, com dados reais, T12 (login e perfis) precisa vir antes.
 

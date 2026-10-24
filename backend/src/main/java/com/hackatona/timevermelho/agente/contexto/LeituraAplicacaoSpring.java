@@ -29,6 +29,9 @@ import com.hackatona.timevermelho.servico.IndicadoresService;
 @Component
 public class LeituraAplicacaoSpring implements LeituraAplicacao {
 
+    /** Até quantos pacientes encontrados a IA recebe o detalhe de cada um (sem identificação). */
+    static final int DETALHE_ATE = 5;
+
     private final FilaService fila;
     private final IndicadoresService indicadores;
     private final AlertaService alertas;
@@ -135,7 +138,16 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
         if (c.idadeMax() != null && (caso.idade() == null || caso.idade() > c.idadeMax())) return false;
         if (c.acimaDoPrazo() != null && (r.percentualPrazo() > 100) != c.acimaDoPrazo()) return false;
         if (c.comReavaliacao() != null && r.getReavaliacoes().isEmpty() == c.comReavaliacao()) return false;
+        if (!c.solicitacoes().isEmpty() && !c.solicitacoes().contains(caso.solicitacaoId())) return false;
+        if (!c.nomes().isEmpty() && c.nomes().stream().noneMatch(n -> nomeContem(caso.nome(), n))) return false;
         return true;
+    }
+
+    /** Cada palavra pedida começa uma palavra do nome (sem acento e sem caixa): "eliane ramos" acha "Eliane Lopes Ramos". */
+    private static boolean nomeContem(String nome, String pedido) {
+        if (nome == null) return false;
+        List<String> palavras = List.of(ExtratorDeTexto.normalizar(nome).split("\\s+"));
+        return java.util.Arrays.stream(pedido.split(" ")).allMatch(p -> palavras.stream().anyMatch(w -> w.startsWith(p)));
     }
 
     private static LinhaPaciente linha(ResultadoPaciente r) {
@@ -149,13 +161,19 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
     /** Os números da consulta, em texto, para a IA: nada de nome, identificador ou CID de alguém. */
     private static String resumir(ConsultaFila c, List<ResultadoPaciente> achados) {
         StringBuilder sb = new StringBuilder();
-        sb.append("Filtros aplicados: ").append(ContextoDados.rotulo(c.descricao())).append(".\n");
+        sb.append("Filtros aplicados: ").append(ContextoDados.rotulo(c.descricaoParaIA())).append(".\n");
         if (!c.naoEncontrados().isEmpty()) {
             sb.append("Termos pedidos que NÃO existem na fila: ")
                     .append(c.naoEncontrados().stream().map(ContextoDados::rotulo).collect(Collectors.joining(", "))).append(".\n");
         }
+        if (!c.solicitacoes().isEmpty()) {
+            long faltam = c.solicitacoes().stream()
+                    .filter(id -> achados.stream().noneMatch(r -> id.equals(r.getCaso().solicitacaoId()))).count();
+            if (faltam > 0) sb.append("Números de solicitação informados que NÃO existem no dataset: ").append(faltam).append(".\n");
+        }
         sb.append("Pacientes encontrados: ").append(achados.size()).append(".\n");
         if (achados.isEmpty()) return sb.toString().strip();
+        if (achados.size() <= DETALHE_ATE) sb.append(detalhes(achados));
 
         Map<String, Long> porClasse = new LinkedHashMap<>();
         for (ClasseSwalis cl : ClasseSwalis.values()) porClasse.put(cl.name() + " (prazo " + cl.prazoDias() + " d)", 0L);
@@ -189,6 +207,30 @@ public class LeituraAplicacaoSpring implements LeituraAplicacao {
             sb.append("Posições na fila geral: da ").append(posicoes.getMin()).append("ª à ").append(posicoes.getMax()).append("ª.");
         }
         return sb.toString().strip();
+    }
+
+    /**
+     * Para resultados pequenos (um paciente procurado pelo nome, por exemplo), os dados de cada um, na ordem da tabela,
+     * SEM nome, número de solicitação nem CID: a IA consegue responder "qual a classe e a posição" sem identificar ninguém.
+     */
+    private static String detalhes(List<ResultadoPaciente> achados) {
+        StringBuilder sb = new StringBuilder("Detalhe de cada paciente encontrado, na ordem da tabela (sem identificação):\n");
+        for (int i = 0; i < achados.size(); i++) {
+            ResultadoPaciente r = achados.get(i);
+            Caso c = r.getCaso();
+            sb.append("- Paciente ").append(i + 1).append(" da tabela: classe ").append(r.classe().name()).append(" (prazo ")
+                    .append(r.classe().prazoDias()).append(" d)")
+                    .append(r.getPosicao() == null ? ", fora da fila ativa" : ", " + r.getPosicao() + "ª posição na fila geral")
+                    .append(", status ").append(r.getStatus().name())
+                    .append(", procedimento ").append(ContextoDados.rotulo(c.procedimento()))
+                    .append(" (").append(ContextoDados.rotulo(c.especialidade())).append(")")
+                    .append(c.idade() == null ? "" : ", " + c.idade() + " anos")
+                    .append(r.oncologico() ? ", oncológico" : ", não oncológico")
+                    .append(", ").append(c.diasEmFila()).append(" dias em fila (").append(r.percentualPrazo()).append("% do prazo)")
+                    .append(", score ").append(Math.round(r.getScore() * 10) / 10.0)
+                    .append(", motivos de reavaliação: ").append(r.getReavaliacoes().size()).append(".\n");
+        }
+        return sb.toString();
     }
 
     private static Map<String, Long> contar(List<ResultadoPaciente> lista, Function<ResultadoPaciente, String> chave) {

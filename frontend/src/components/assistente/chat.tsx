@@ -225,7 +225,7 @@ export function Chat({ compacto = false, className }: { compacto?: boolean; clas
         </div>
         <p className="text-muted-foreground text-[11px] leading-snug">
           Assistente de inteligência artificial: pode errar e não substitui um profissional de saúde. Não envie dados
-          pessoais (nome, CPF, número de solicitação).
+          pessoais como CPF, cartão do SUS, telefone ou endereço.
         </p>
       </form>
     </div>
