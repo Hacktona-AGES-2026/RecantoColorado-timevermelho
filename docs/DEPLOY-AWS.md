@@ -71,6 +71,14 @@ git pull
 sudo docker compose -f docker-compose.prod.yml up -d --build
 ```
 
+## Erro 403 no navegador ("Invalid CORS request")
+
+Se o assistente mostrar "Erro 403", ou se registrar evento, decidir ou reiniciar a demo falhar, o backend está recusando a origem do site. O `docker-compose.prod.yml` já aceita qualquer origem (`CORS_ORIGINS`), porque o backend não fica exposto e a API não usa cookies. Numa máquina criada antes dessa correção, atualize:
+
+```bash
+cd /opt/filaviva && git pull -q && sudo docker compose -f docker-compose.prod.yml up -d
+```
+
 ## Comandos úteis na máquina
 
 | Para | Comando (em `/opt/filaviva`) |

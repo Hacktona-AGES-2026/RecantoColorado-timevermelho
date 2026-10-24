@@ -11,6 +11,11 @@ services:
     env_file:
       - path: backend/.env
         required: false
+    environment:
+      # o navegador chama /api no próprio endereço do site (ex.: http://18.218.2.12) e o Next repassa para cá com
+      # esse Origin; sem isto o backend responde 403 "Invalid CORS request" a todo POST (chat, eventos, decisões).
+      # O backend não fica exposto (só o frontend, na porta 80) e a API não usa cookies, então qualquer origem serve.
+      CORS_ORIGINS: ${CORS_ORIGINS:-*}
     restart: unless-stopped
     # banco H2 em memória: o dataset é reimportado a cada subida (igual ao modo local da demo)
 
